@@ -9,6 +9,8 @@ public class MarionetteController : MonoBehaviour {
 	public float turnRate = 45.0f;
 	
 	void Update () {
-		transform.rotation = Quaternion.Euler (Input.GetAxis ("Vertical") * maxXAngle, 0.0f, Input.GetAxis ("Horizontal") * -maxZAngle);
+		yAngle -= turnRate * Time.deltaTime * Input.GetAxis ("HorizontalR");
+		transform.rotation = Quaternion.Euler (Input.GetAxis ("VerticalL") * maxXAngle, 0.0f, Input.GetAxis ("HorizontalL") * -maxZAngle);
+		transform.Rotate (Vector3.up * yAngle, Space.Self);
 	}
 }
