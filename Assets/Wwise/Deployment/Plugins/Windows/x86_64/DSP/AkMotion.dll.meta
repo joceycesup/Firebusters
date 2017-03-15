@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 7267be2207f5b02419fa2492318bebc8
-timeCreated: 1489574983
+guid: 92e9cf7434bf68a49945a153a9a4631d
+timeCreated: 1489619986
 licenseType: Free
 PluginImporter:
   serializedVersion: 1
@@ -16,6 +16,38 @@ PluginImporter:
       enabled: 0
       settings:
         DefaultValueInitialized: true
+    Linux:
+      enabled: 0
+      settings:
+        CPU: None
+    Linux64:
+      enabled: 0
+      settings:
+        CPU: None
+    LinuxUniversal:
+      enabled: 0
+      settings:
+        CPU: None
+    OSXIntel:
+      enabled: 0
+      settings:
+        CPU: None
+    OSXIntel64:
+      enabled: 0
+      settings:
+        CPU: None
+    OSXUniversal:
+      enabled: 0
+      settings:
+        CPU: None
+    Win:
+      enabled: 0
+      settings:
+        CPU: None
+    Win64:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
   userData: 
   assetBundleName: 
   assetBundleVariant: 
