@@ -1,0 +1,114 @@
+fileFormatVersion: 2
+guid: fd5d2b162aa137c41b4d37e51e189283
+timeCreated: 1486492511
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: bassin
+    100002: buste
+    100004: chevalier
+    100006: chevaliermagik
+    100008: cou
+    100010: coude_d
+    100012: coude_g
+    100014: epaule_d
+    100016: epaule_g
+    100018: genou_d
+    100020: genou_g
+    100022: hanche_d
+    100024: hanche_g
+    100026: //RootNode
+    100028: main_d
+    100030: main_g
+    100032: pied_d
+    100034: pied_d_2
+    100036: "t\xEAte"
+    100038: ventre
+    400000: bassin
+    400002: buste
+    400004: chevalier
+    400006: chevaliermagik
+    400008: cou
+    400010: coude_d
+    400012: coude_g
+    400014: epaule_d
+    400016: epaule_g
+    400018: genou_d
+    400020: genou_g
+    400022: hanche_d
+    400024: hanche_g
+    400026: //RootNode
+    400028: main_d
+    400030: main_g
+    400032: pied_d
+    400034: pied_d_2
+    400036: "t\xEAte"
+    400038: ventre
+    4300000: chevalier
+    9500000: //RootNode
+    13700000: chevalier
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleRotations: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 3
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: bassin
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
