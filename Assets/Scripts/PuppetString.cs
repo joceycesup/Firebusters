@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof (LineRenderer))]
+[RequireComponent (typeof (LineRenderer))]
 public class PuppetString : MonoBehaviour {
 	private LineRenderer lr;
 	public GameObject attachedObject;
@@ -12,14 +12,16 @@ public class PuppetString : MonoBehaviour {
 		private set;
 	}
 	[SerializeField]
-	[Range(0f, 100000f)]
+	[Range (0f, 1000000f)]
 	float springConstant = 10000f;
 	[SerializeField]
-	[Range(0f, 100000f)]
+	[Range (0f, 1000000f)]
 	float viscousDampingCoefficient = 10000f;
 
 	private float relaxedLength;
 	private Vector3 lastPos;
+
+	public bool absoluteAnchor = false;
 
 	//public string controllerExtension = "L";
 
@@ -28,7 +30,10 @@ public class PuppetString : MonoBehaviour {
 			return;
 		rb = attachedObject.GetComponent<Rigidbody> ();
 		lr = GetComponent<LineRenderer> ();
-		relaxedLength = Vector3.Magnitude (transform.position - attachedObject.transform.position);
+		if (absoluteAnchor)
+			relaxedLength = 0.0f;
+		else
+			relaxedLength = Vector3.Magnitude (transform.position - attachedObject.transform.position);
 	}
 
 	void Update () {
@@ -37,24 +42,30 @@ public class PuppetString : MonoBehaviour {
 		lr.SetPosition (0, transform.position);
 		lr.SetPosition (1, attachedObject.transform.position);
 	}
-	
+
 	void FixedUpdate () {
 		if (rb) {
-			//rb.velocity = Vector3.zero;
-			/*
-			acceleration = (rb.velocity - lastVelocity) / Time.fixedDeltaTime;
-			lastVelocity = rb.velocity;//*/
-			float magnitude = Vector3.Magnitude (transform.position - attachedObject.transform.position);
-			if (magnitude > relaxedLength) {
-				//spring
-				rb.AddForce (Vector3.Normalize (transform.position - attachedObject.transform.position) * Time.fixedDeltaTime * springConstant * (magnitude - relaxedLength), ForceMode.Force);
-				//dampening
-				if (viscousDampingCoefficient > 0f) {
-					rb.AddForce (-viscousDampingCoefficient * Vector3.Project (attachedObject.transform.position - lastPos, transform.position - attachedObject.transform.position) * Time.fixedDeltaTime, ForceMode.Force);
+			if (absoluteAnchor) {
+				attachedObject.transform.position = transform.position;
+			}
+			else {
+				//rb.velocity = Vector3.zero;
+				/*
+				acceleration = (rb.velocity - lastVelocity) / Time.fixedDeltaTime;
+				lastVelocity = rb.velocity;//*/
+				float magnitude = Vector3.Magnitude (transform.position - attachedObject.transform.position);
+				if (magnitude > relaxedLength) {
+					//spring
+					rb.AddForce (Vector3.Normalize (transform.position - attachedObject.transform.position) * Time.fixedDeltaTime * springConstant * (magnitude - relaxedLength), ForceMode.Force);
+					//dampening
+					if (viscousDampingCoefficient > 0f) {
+						rb.AddForce (-viscousDampingCoefficient * Vector3.Project (attachedObject.transform.position - lastPos, transform.position - attachedObject.transform.position) * Time.fixedDeltaTime, ForceMode.Force);
+					}
+					lr.SetColors (Color.red, Color.red);
 				}
-				lr.SetColors (Color.red, Color.red);
-			} else {
-				lr.SetColors (Color.green, Color.green);
+				else {
+					lr.SetColors (Color.green, Color.green);
+				}
 			}
 		}
 		lastPos = attachedObject.transform.position;
