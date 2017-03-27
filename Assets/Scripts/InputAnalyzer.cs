@@ -1,13 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class InputAnalyzer : MonoBehaviour {
 	private Texture2D tex;
 	private Renderer ren;
+	public Text output;
 	[Range (128, 1024)]
 	private int size = 512;
-	private int analyzedValues = 8;
+	public int analyzedValues = 8;
 	private int valuesOffset = 0;
 	private float[] values;
 	private float[] wave_amplitudes;
@@ -16,6 +18,7 @@ public class InputAnalyzer : MonoBehaviour {
 	private int wavesOffset = 0;
 
 	private float lastSpikeTime = 0.0f;
+	private float lastDelta = 0.0f;
 
 	void Start () {
 		size = Mathf.ClosestPowerOfTwo (size);
@@ -43,7 +46,7 @@ public class InputAnalyzer : MonoBehaviour {
 		int analyzeOffset = valuesOffset - analyzedValues;
 		if (analyzeOffset < 0)
 			analyzeOffset += size;
-		float deltas = 0.0f;
+		float delta = 0.0f;
 		//------------------------------------------------------------------------------------------------
 		//------------------------------------------------------------------------------------------------
 		//------------------------------------------------------------------------------------------------
@@ -55,9 +58,28 @@ public class InputAnalyzer : MonoBehaviour {
 		//------------------------------------------------------------------------------------------------
 		//------------------------------------------------------------------------------------------------
 		//------------------------------------------------------------------------------------------------
-		for (int i = 0; i < analyzedValues; ++i) {
-			deltas += (values[analyzeOffset + 1] - values[analyzeOffset]);
+		for (int i = 0; i < analyzedValues; ++i, ++analyzeOffset) {
+			if (analyzeOffset + 1 >= size) {
+				analyzeOffset = 0;
+				delta += (values[0] - values[size - 1]);
+			}
+			else {
+				delta += (values[analyzeOffset + 1] - values[analyzeOffset]);
+			}
 		}
+		delta /= analyzedValues;
+		if (delta * lastDelta < 0.0f) {
+			output.text = (Time.time - lastSpikeTime).ToString ();
+			wave_periods[wavesOffset] = Time.time - lastSpikeTime;
+			lastSpikeTime = Time.time;
+
+			wave_amplitudes[wavesOffset] = values[valuesOffset];
+
+			wavesOffset++;
+			if (wavesOffset >= waves)
+				wavesOffset = 0;
+		}
+		lastDelta = delta;
 		//------------------------------------------------------------------------------------------------
 		//------------------------------------------------------------------------------------------------
 		//------------------------------------------------------------------------------------------------
