@@ -9,7 +9,8 @@ public class InputAnalyzer : MonoBehaviour {
 	public Text output;
 	[Range (128, 1024)]
 	private int size = 512;
-	private int analyzedValues = 8;
+	[Range (2, 32)]
+	public int analyzedValues = 8;
 	private int valuesOffset = 0;
 	private float[] values;
 	private float[] slopes;
@@ -30,7 +31,15 @@ public class InputAnalyzer : MonoBehaviour {
 
 	public Transform controller;
 
+	public float walking {
+		get;
+		private set;
+	}
+	private int slopeDirection = 0;//if 0, any direction else use sign (-1 ; +1)
+
 	void Start () {
+		walking = -1.0f;
+
 		Debug.Log (Time.fixedDeltaTime);
 		size = Mathf.ClosestPowerOfTwo (size);
 		values = new float[size];
@@ -70,20 +79,17 @@ public class InputAnalyzer : MonoBehaviour {
 		//------------------------------------------------------------------------------------------------
 		//------------------------------------------------------------------------------------------------
 		float delta = 0.0f;
-		float absDelta = 0.0f;
 		for (int i = 0; i < analyzedValues; ++i, ++analyzeOffset) {
 			if (analyzeOffset + 1 >= size) {
 				analyzeOffset = 0;
 				delta += (values[0] - values[size - 1]);
-				absDelta += Mathf.Abs (values[0] - values[size - 1]);
 			}
 			else {
 				delta += (values[analyzeOffset + 1] - values[analyzeOffset]);
-				absDelta += Mathf.Abs (values[analyzeOffset + 1] - values[analyzeOffset]);
 			}
 		}
 		delta /= analyzedValues;
-		absDelta /= analyzedValues;
+		slopes[valuesOffset] = delta;
 		if (delta * lastDelta < 0.0f) {/*
 			if ((Time.time - lastSpikeTime) >= delayThreshold && absDelta < amplitudeThreshold)
 				lastSpikeTime = Time.time;//*/
@@ -110,6 +116,7 @@ public class InputAnalyzer : MonoBehaviour {
 		//------------------------------------------------------------------------------------------------
 		//------------------------------------------------------------------------------------------------
 		if (ren) {
+			clearLine ();
 			drawGraph (ref values, Color.white);
 			drawGraph (ref slopes, Color.yellow);
 			tex.SetPixel (valuesOffset, size / 2, Color.red);
@@ -119,6 +126,10 @@ public class InputAnalyzer : MonoBehaviour {
 		valuesOffset++;
 		if (valuesOffset >= size)
 			valuesOffset = 0;
+	}
+
+	private void clearLine () {
+		drawLine (valuesOffset, 0, valuesOffset, size, Color.black);
 	}
 
 	private void drawGraph (ref float[] array, Color color) {
@@ -136,7 +147,6 @@ public class InputAnalyzer : MonoBehaviour {
 			}
 			tex.SetPixels (cols, mip);
 		}/*/
-		drawLine (valuesOffset, 0, valuesOffset, size, Color.black);
 		if (valuesOffset < size - 1)
 			drawLine (valuesOffset + 1, 0, valuesOffset + 1, size, Color.green);
 
