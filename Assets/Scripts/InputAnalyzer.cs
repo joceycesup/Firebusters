@@ -72,8 +72,11 @@ public class InputAnalyzer : MonoBehaviour {
 	//*
 	void FixedUpdate () {
 		float value = 0.0f;
-		if (controller)
+		if (controller) {
 			value = controller.localRotation.eulerAngles.z;
+			if (value > 180.0f)
+				value -= 360.0f;
+		}
 		else
 			value = Input.GetAxis ("HorizontalL");
 		float lastWalking = walking;
@@ -92,6 +95,7 @@ public class InputAnalyzer : MonoBehaviour {
 		//----- waiting significant amplitude -----
 		if (slopeDirection == 0.0f) {
 			if (amplitudeFactor > 0.0f) {
+				//Debug.Log (lastValue + " ; " + value);
 				if (Mathf.Abs (value) >= Mathf.Abs (lastValue)) {
 					lastValue = value;
 					lastAmplitudeFactor = amplitudeFactor;
