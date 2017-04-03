@@ -17,7 +17,7 @@ public class MarionetteController : MonoBehaviour {
 
 	public bool autoControl = false;
 
-	void Update () {
+	void FixedUpdate () {
 		Time.timeScale = timeScale;
 		if (autoControl) {
 			float factor = Mathf.Sin (Time.time * period * Mathf.PI);

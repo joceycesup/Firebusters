@@ -8,7 +8,7 @@ public class InputAnalyzer : MonoBehaviour {
 	private Renderer ren;
 	public Text output;
 	[Range (128, 1024)]
-	private int size = 512;
+	private int size = 1024;
 	private int valuesOffset = 0;
 	private float[] values;
 
@@ -24,7 +24,7 @@ public class InputAnalyzer : MonoBehaviour {
 	private float lastValue = 0.0f;
 	private float currentValue = 0.0f;
 
-	private float lastSpikeTime = 0.0f;
+	public float lastSpikeTime = 0.0f;
 
 	public float amplitudeThreshold = 0.2f;
 	public AnimationCurve amplitudeThresholdFactor;
@@ -33,6 +33,11 @@ public class InputAnalyzer : MonoBehaviour {
 
 	private float amplitudeDecreaseCoeff;
 	//------------------------------------------------------------------------------------------------
+
+	public Image factorImage;
+	public Image delayImage;
+	public Image amplitudeImage;
+
 	//------------------------------------------------------------------------------------------------
 
 	public Transform controller;
@@ -71,11 +76,12 @@ public class InputAnalyzer : MonoBehaviour {
 			value = controller.localRotation.eulerAngles.z;
 		else
 			value = Input.GetAxis ("HorizontalL");
-		values[valuesOffset] = value;
 		float lastWalking = walking;
 
 		float amplitudeFactor = amplitudeThresholdFactor.Evaluate (Mathf.Abs (value) / amplitudeThreshold);
 		float delayFactor = delayThresholdFactor.Evaluate ((Time.time - lastSpikeTime) / delayThreshold);
+
+		values[valuesOffset] = amplitudeFactor;
 
 		if (delayFactor <= 0.0f) {
 			walking = -1.0f;
@@ -145,6 +151,10 @@ public class InputAnalyzer : MonoBehaviour {
 			lastDelayFactor = delayFactor;
 		}
 		//----- end waiting next spike -----
+
+		factorImage.fillAmount = walking;
+		delayImage.fillAmount = delayFactor;
+		amplitudeImage.fillAmount = amplitudeFactor;
 
 		output.text = walking.ToString ();
 

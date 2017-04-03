@@ -6,77 +6,107 @@ using System.Threading;
 
 public class PhoneSensor : MonoBehaviour {
 
-    [HideInInspector]
-    public Vector3 sensorAxis;
+	public int comNum = 1;
 
-    private SerialPort sp;
+	//[HideInInspector]
+	public Vector3 calibratedRotation;
+	private bool calibrated = false;
+	public Vector3 sensorAxis;
+
+	private SerialPort sp;
 	private int bytes;
 	private Thread serialThread;
 
+	private bool connected = false;
+
 	void Start () {
-		sp = new SerialPort("COM6", 9600);
+		sp = new SerialPort ("COM" + comNum, 9600);
 	}
 
-	void parseValues(string av) {
-
+	void parseValues (string av) {
 		string[] split = av.Split (',');
-	    sensorAxis.x = float.Parse (split [2]);
-		sensorAxis.y = float.Parse (split [3]);
-		sensorAxis.z = float.Parse(split[4]);
+		if (split.Length == 5) {
+			sensorAxis.x = float.Parse (split[2]);
+			sensorAxis.z = float.Parse (split[3]);
+			sensorAxis.y = float.Parse (split[4]);
+			if (!calibrated) {
+				calibratedRotation = sensorAxis;
+				calibrated = true;
+			}
+			sensorAxis -= calibratedRotation;
+			transform.localRotation = Quaternion.Euler (sensorAxis * -180.0f);
+		}
 	}
 
-	
-	 void recData() {
-        if ((sp != null) && (sp.IsOpen)) {
-			byte tmp;
-			string data = "";
-			string avalues="";
-			tmp = (byte) sp.ReadByte();
-			while(tmp !=255) {
-				data+=((char)tmp);
-				tmp = (byte) sp.ReadByte();
-				if((tmp=='>') && (data.Length > 30)){
-					avalues = data;
-					parseValues(avalues);
-					data="";
-				}
+
+	void recData () {
+		if ((sp != null) && (sp.IsOpen)) {
+			try {
+				byte tmp;
+				string data = "";
+				string avalues = "";
+				tmp = (byte) sp.ReadByte ();//ignore '>' character
+				do {
+					tmp = (byte) sp.ReadByte ();
+					//Debug.Log (((char) tmp) + " ; " + ((int)tmp));
+					if ((tmp == 10)) {// && (data.Length > 30)) {
+						avalues = data;
+						//parseValues (avalues);
+						data = "";
+					}
+					data += ((char) tmp);
+				} while (tmp != 10 && tmp != 255);
+				//Debug.Log ("final : " + avalues);
+				parseValues (avalues);
+			} catch (TimeoutException e) {
+				//connected = false;
+				//Debug.Log (e.Message);
 			}
 		}
 	}
 
-
-	void connect() {
+	void connect () {
 		Debug.Log ("Connection started");
 		try {
-			sp.Open();
+			sp.Open ();
 			sp.ReadTimeout = 400;
 			sp.Handshake = Handshake.None;
-			serialThread = new Thread(recData);
+			serialThread = new Thread (recData);
 			serialThread.Start ();
-			Debug.Log("Port Opened!");
-		}catch (SystemException e)
-		{
-			Debug.Log ("Error opening = "+e.Message);
+			Debug.Log ("Port Opened!");
+			connected = true;
+		} catch (SystemException e) {
+			Debug.Log ("Error opening = " + e.Message);
 		}
-	
 	}
 
-
-	void Update () { 
-
-		 if (Input.GetKeyDown ("x"))
-        {
-			Debug.Log("Connection establishing...");
+	void Update () {
+		if (Input.GetKeyDown ("x")) {
+			Debug.Log ("Connection establishing...");
 			connect ();
 		}
-
-        if (Input.GetKeyDown("w"))
-        {
-            sp.Close();
-            Debug.Log("Port Closed!");
-        }
-
+		if (connected)
+			recData ();
+		if (Input.GetKeyDown ("w")) {
+			Debug.Log ("Closing port...");
+			connected = false;
+			try {
+				sp.Close ();
+				Debug.Log ("Port Closed!");
+			} catch (SystemException e) {
+				Debug.Log ("Error closing = " + e.Message);
+			}
+		}
 	}
 
-
+	private void OnDestroy () {
+		connected = false;
+		Debug.Log ("Closing port...");
+		try {
+			sp.Close ();
+			Debug.Log ("Port Closed!");
+		} catch (SystemException e) {
+			Debug.Log ("Error closing = " + e.Message);
+		}
+	}
 }
