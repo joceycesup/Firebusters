@@ -9,7 +9,8 @@ public class PhoneSensor : MonoBehaviour {
 	public int comNum = 1;
 
 	//[HideInInspector]
-	public Vector3 calibratedRotation;
+	public Vector3 calibratedRotationE;
+	public Quaternion calibratedRotationQ;
 	private bool calibrated = false;
 	public Vector3 sensorAxis;
 
@@ -30,11 +31,17 @@ public class PhoneSensor : MonoBehaviour {
 			sensorAxis.z = float.Parse (split[3]);
 			sensorAxis.y = float.Parse (split[4]);
 			if (!calibrated) {
-				calibratedRotation = sensorAxis;
+				//calibratedRotationQ = Quaternion.Inverse (Quaternion.Euler (sensorAxis * 180.0f));
+				calibratedRotationE = sensorAxis;
 				calibrated = true;
+				transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f);
+				transform.GetChild (0).rotation = Quaternion.Euler (Vector3.zero);
 			}
-			sensorAxis -= calibratedRotation;
-			transform.localRotation = Quaternion.Euler (sensorAxis * -180.0f);
+			//*
+			transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f);// * calibratedRotationQ;
+			/*/
+			sensorAxis -= calibratedRotationE;
+			transform.localRotation = Quaternion.Euler (sensorAxis * -180.0f);//*/
 		}
 	}
 
