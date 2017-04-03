@@ -29,7 +29,7 @@ public class PhoneSensor : MonoBehaviour {
 		if (split.Length == 5) {
 			sensorAxis.x = float.Parse (split[2]);
 			sensorAxis.z = float.Parse (split[3]);
-			sensorAxis.y = float.Parse (split[4]);
+			sensorAxis.y = -float.Parse (split[4]);
 			if (!calibrated) {
 				//calibratedRotationQ = Quaternion.Inverse (Quaternion.Euler (sensorAxis * 180.0f));
 				calibratedRotationE = sensorAxis;
