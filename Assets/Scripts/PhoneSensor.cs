@@ -20,6 +20,10 @@ public class PhoneSensor : MonoBehaviour {
 
 	private bool connected = false;
 
+	public Transform target;
+
+	public float angleCorrection = 180.0f;
+
 	void Start () {
 		sp = new SerialPort ("COM" + comNum, 9600);
 	}
@@ -29,17 +33,21 @@ public class PhoneSensor : MonoBehaviour {
 		if (split.Length == 5) {
 			sensorAxis.x = float.Parse (split[2]);
 			sensorAxis.z = float.Parse (split[3]);
-			sensorAxis.y = -float.Parse (split[4]);
+			sensorAxis.y = float.Parse (split[4]);
 			if (!calibrated) {
-				//calibratedRotationQ = Quaternion.Inverse (Quaternion.Euler (sensorAxis * 180.0f));
+				calibratedRotationQ = Quaternion.Inverse (Quaternion.Euler (sensorAxis * angleCorrection));
 				calibratedRotationE = sensorAxis;
 				calibrated = true;
-				transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f);
-				calibratedRotationQ = Quaternion.FromToRotation (transform.forward, Vector3.forward);
+				//transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f);
+				//calibratedRotationQ = Quaternion.FromToRotation (transform.forward, Vector3.forward);
 				//transform.GetChild (0).rotation = Quaternion.Euler (Vector3.zero);
 			}
 			//*
-			transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f) * calibratedRotationQ;
+			sensorAxis *= angleCorrection;
+			//sensorAxis.y += 180.0f;
+			transform.localRotation = Quaternion.Euler (sensorAxis);
+			target.localRotation = calibratedRotationQ * transform.localRotation;
+			//Debug.Log ("rotation set");
 			/*/
 			sensorAxis -= calibratedRotationE;
 			transform.localRotation = Quaternion.Euler (sensorAxis * -180.0f);//*/
@@ -67,6 +75,7 @@ public class PhoneSensor : MonoBehaviour {
 				//Debug.Log ("final : " + avalues);
 				parseValues (avalues);
 			} catch (TimeoutException e) {
+				//Debug.Log ("nothing to read");
 				//connected = false;
 				//Debug.Log (e.Message);
 			}
@@ -77,6 +86,7 @@ public class PhoneSensor : MonoBehaviour {
 		Debug.Log ("Connection started");
 		try {
 			sp.Open ();
+			//sp.ReadTimeout = (int) (Time.fixedDeltaTime * 1000.0f);
 			sp.ReadTimeout = 400;
 			sp.Handshake = Handshake.None;
 			serialThread = new Thread (recData);

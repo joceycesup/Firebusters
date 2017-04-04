@@ -15,14 +15,18 @@ public class DollWalker : MonoBehaviour {
 
 	public float speed = 4.0f;
 
+	public float walking = 0.0f;
+
 	void Start () {
 
 	}
 
 	void Update () {
 		Vector3 forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
-		if (Input.GetAxis ("Forward") > 0.0f) {
-			transform.Translate (forward * speed * Time.deltaTime * Input.GetAxis ("Forward"), Space.World);
+		//walking = Input.GetAxis ("Forward");
+
+		if (walking > 0.0f) {
+			transform.Translate (forward * (speed * Time.deltaTime * walking), Space.World);
 			if (!takingStep) {
 				StartCoroutine ("Step");
 			}

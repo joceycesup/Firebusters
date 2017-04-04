@@ -40,7 +40,8 @@ public class InputAnalyzer : MonoBehaviour {
 
 	//------------------------------------------------------------------------------------------------
 
-	public Transform controller;
+	public PhoneSensor sensor;
+	public DollWalker dollWalker;
 
 	public float walking {
 		get;
@@ -72,13 +73,15 @@ public class InputAnalyzer : MonoBehaviour {
 	//*
 	void FixedUpdate () {
 		float value = 0.0f;
-		if (controller) {
-			value = controller.localRotation.eulerAngles.z;
+		if (sensor) {
+			value = sensor.sensorAxis.z;
 			if (value > 180.0f)
 				value -= 360.0f;
+			//Debug.Log ("read value");
 		}
 		else
 			value = Input.GetAxis ("HorizontalL");
+		Debug.Log ("value : " + value);
 		float lastWalking = walking;
 
 		float amplitudeFactor = amplitudeThresholdFactor.Evaluate (Mathf.Abs (value) / amplitudeThreshold);
@@ -137,30 +140,31 @@ public class InputAnalyzer : MonoBehaviour {
 
 
 
-			if (value * lastValue < 0.0f) {// user still on same side
-				if (amplitudeFactor > 0.0f) {
-					amplitudeFactor = Mathf.Max (lastAmplitudeFactor += Time.fixedDeltaTime * amplitudeDecreaseCoeff, currentAmplitudeFactor);
-				}
-				else {
-					amplitudeFactor = lastAmplitudeFactor;
-				}
+			if (value * lastValue < 0.0f && amplitudeFactor > 0.0f) {// user still on same side
+				amplitudeFactor = Mathf.Max (lastAmplitudeFactor += Time.fixedDeltaTime * amplitudeDecreaseCoeff, currentAmplitudeFactor);
 			}
 			else {
 				amplitudeFactor = lastAmplitudeFactor;
 			}
 
-			Debug.Log (amplitudeFactor);
+			//Debug.Log (amplitudeFactor);
 			walking = delayFactor * amplitudeFactor;
 
 			lastDelayFactor = delayFactor;
 		}
 		//----- end waiting next spike -----
 
-		factorImage.fillAmount = walking;
-		delayImage.fillAmount = delayFactor;
-		amplitudeImage.fillAmount = amplitudeFactor;
+		dollWalker.walking = walking;
 
-		output.text = walking.ToString ();
+		if (factorImage)
+			factorImage.fillAmount = walking;
+		if (delayImage)
+			delayImage.fillAmount = delayFactor;
+		if (amplitudeImage)
+			amplitudeImage.fillAmount = amplitudeFactor;
+
+		if (output)
+			output.text = (Time.time - lastSpikeTime).ToString ();
 
 		//------------------------------------------------------------------------------------------------
 		if (ren) {
