@@ -35,10 +35,11 @@ public class PhoneSensor : MonoBehaviour {
 				calibratedRotationE = sensorAxis;
 				calibrated = true;
 				transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f);
-				transform.GetChild (0).rotation = Quaternion.Euler (Vector3.zero);
+				calibratedRotationQ = Quaternion.FromToRotation (transform.forward, Vector3.forward);
+				//transform.GetChild (0).rotation = Quaternion.Euler (Vector3.zero);
 			}
 			//*
-			transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f);// * calibratedRotationQ;
+			transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f) * calibratedRotationQ;
 			/*/
 			sensorAxis -= calibratedRotationE;
 			transform.localRotation = Quaternion.Euler (sensorAxis * -180.0f);//*/
