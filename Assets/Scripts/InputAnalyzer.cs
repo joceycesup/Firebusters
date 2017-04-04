@@ -81,7 +81,7 @@ public class InputAnalyzer : MonoBehaviour {
 		}
 		else
 			value = Input.GetAxis ("HorizontalL");
-		Debug.Log ("value : " + value);
+		//Debug.Log ("value : " + value);
 		float lastWalking = walking;
 
 		float amplitudeFactor = amplitudeThresholdFactor.Evaluate (Mathf.Abs (value) / amplitudeThreshold);
