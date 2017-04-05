@@ -22,7 +22,7 @@ public class PhoneSensor : MonoBehaviour {
 
 	public Transform target;
 
-	public float angleCorrection = 180.0f;
+	private float angleCorrection = -180.0f;
 
 	void Start () {
 		sp = new SerialPort ("COM" + comNum, 9600);
@@ -31,11 +31,12 @@ public class PhoneSensor : MonoBehaviour {
 	void parseValues (string av) {
 		string[] split = av.Split (',');
 		if (split.Length == 5) {
-			sensorAxis.x = float.Parse (split[2]);
-			sensorAxis.z = float.Parse (split[3]);
-			sensorAxis.y = float.Parse (split[4]);
+			sensorAxis.x = float.Parse (split[3]);//x=y (but should be x=-y)
+			sensorAxis.y = float.Parse (split[4]);//y=z
+			sensorAxis.z = -float.Parse (split[2]);//z=-x
+			sensorAxis *= angleCorrection;
 			if (!calibrated) {
-				calibratedRotationQ = Quaternion.Inverse (Quaternion.Euler (sensorAxis * angleCorrection));
+				calibratedRotationQ = Quaternion.Inverse (Quaternion.Euler (sensorAxis.x, 0.0f, sensorAxis.z));
 				calibratedRotationE = sensorAxis;
 				calibrated = true;
 				//transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f);
@@ -43,10 +44,10 @@ public class PhoneSensor : MonoBehaviour {
 				//transform.GetChild (0).rotation = Quaternion.Euler (Vector3.zero);
 			}
 			//*
-			sensorAxis *= angleCorrection;
 			//sensorAxis.y += 180.0f;
-			transform.localRotation = Quaternion.Euler (sensorAxis);
-			target.localRotation = calibratedRotationQ * transform.localRotation;
+			transform.localRotation = Quaternion.Euler (sensorAxis.x, 0.0f, sensorAxis.z);
+			//target.rotation = calibratedRotationQ * transform.localRotation;
+			target.rotation = Quaternion.Euler (sensorAxis.x, 0.0f, sensorAxis.z);
 			//Debug.Log ("rotation set");
 			/*/
 			sensorAxis -= calibratedRotationE;
