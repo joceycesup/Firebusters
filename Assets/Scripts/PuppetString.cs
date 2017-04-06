@@ -37,13 +37,13 @@ public class PuppetString : MonoBehaviour {
 	}
 
 	void Update () {
+	}
+
+	void FixedUpdate () {
 		if (!attachedObject)
 			return;
 		lr.SetPosition (0, transform.position);
 		lr.SetPosition (1, attachedObject.transform.position);
-	}
-
-	void FixedUpdate () {
 		if (rb) {
 			if (absoluteAnchor) {
 				attachedObject.transform.position = transform.position;

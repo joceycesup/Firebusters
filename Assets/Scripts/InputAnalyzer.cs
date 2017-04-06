@@ -74,7 +74,7 @@ public class InputAnalyzer : MonoBehaviour {
 	void FixedUpdate () {
 		float value = 0.0f;
 		if (sensor) {
-			value = sensor.sensorAxis.z;
+			value = sensor.sensorAxis.x;
 			if (value > 180.0f)
 				value -= 360.0f;
 			//Debug.Log ("read value");
@@ -136,10 +136,7 @@ public class InputAnalyzer : MonoBehaviour {
 				slopeDirection = -slopeDirection;
 				lastAmplitudeFactor = currentAmplitudeFactor;
 			}
-
-
-
-
+			
 			if (value * lastValue < 0.0f && amplitudeFactor > 0.0f) {// user still on same side
 				amplitudeFactor = Mathf.Max (lastAmplitudeFactor += Time.fixedDeltaTime * amplitudeDecreaseCoeff, currentAmplitudeFactor);
 			}

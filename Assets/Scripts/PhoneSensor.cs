@@ -10,7 +10,6 @@ public class PhoneSensor : MonoBehaviour {
 
 	//[HideInInspector]
 	public Vector3 calibratedRotationE;
-	public Quaternion calibratedRotationQ;
 	private bool calibrated = false;
 	public Vector3 sensorAxis;
 
@@ -22,7 +21,14 @@ public class PhoneSensor : MonoBehaviour {
 
 	public Transform target;
 
-	private float angleCorrection = -180.0f;
+	private float angleCorrection = 180.0f;
+
+	public bool[] invert = { false, false, false, false };
+
+	public float steeringMax = 45.0f;
+	public AnimationCurve steeringCurve;
+	public float steeringTurnRate = 45.0f;
+	private float yRotation = 0.0f;
 
 	void Start () {
 		sp = new SerialPort ("COM" + comNum, 9600);
@@ -31,12 +37,11 @@ public class PhoneSensor : MonoBehaviour {
 	void parseValues (string av) {
 		string[] split = av.Split (',');
 		if (split.Length == 5) {
-			sensorAxis.x = float.Parse (split[3]);//x=y (but should be x=-y)
-			sensorAxis.y = float.Parse (split[4]);//y=z
-			sensorAxis.z = -float.Parse (split[2]);//z=-x
+			sensorAxis.x = (invert[1] ? -1.0f : 1.0f) * float.Parse (split[3]);//x=y (but should be x=-y)
+			sensorAxis.y = (invert[2] ? -1.0f : 1.0f) * float.Parse (split[4]);//y=z
+			sensorAxis.z = (invert[3] ? -1.0f : 1.0f) * float.Parse (split[2]);//z=-x
 			sensorAxis *= angleCorrection;
 			if (!calibrated) {
-				calibratedRotationQ = Quaternion.Inverse (Quaternion.Euler (sensorAxis.x, 0.0f, sensorAxis.z));
 				calibratedRotationE = sensorAxis;
 				calibrated = true;
 				//transform.localRotation = Quaternion.Euler (sensorAxis * 180.0f);
@@ -44,10 +49,24 @@ public class PhoneSensor : MonoBehaviour {
 				//transform.GetChild (0).rotation = Quaternion.Euler (Vector3.zero);
 			}
 			//*
-			//sensorAxis.y += 180.0f;
-			transform.localRotation = Quaternion.Euler (sensorAxis.x, 0.0f, sensorAxis.z);
-			//target.rotation = calibratedRotationQ * transform.localRotation;
-			target.rotation = Quaternion.Euler (sensorAxis.x, 0.0f, sensorAxis.z);
+			
+			{// steering
+				sensorAxis.y -= calibratedRotationE.y;
+				if (sensorAxis.y > 180.0f)
+					sensorAxis.y -= 360.0f;
+				if (sensorAxis.y < -180.0f)
+					sensorAxis.y += 360.0f;
+				float steering = steeringCurve.Evaluate (Mathf.Abs (sensorAxis.y) / steeringMax);
+				steering *= Time.fixedDeltaTime * steeringTurnRate * Mathf.Sign (sensorAxis.y);
+				yRotation += steering;
+				Debug.Log (sensorAxis.y);
+			}// end of steering
+
+			transform.localRotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
+			if (invert[0])
+				target.rotation = Quaternion.Euler (sensorAxis.z, yRotation, sensorAxis.x);
+			else
+				target.rotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
 			//Debug.Log ("rotation set");
 			/*/
 			sensorAxis -= calibratedRotationE;
