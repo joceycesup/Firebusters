@@ -49,24 +49,21 @@ public class PhoneSensor : MonoBehaviour {
 				//transform.GetChild (0).rotation = Quaternion.Euler (Vector3.zero);
 			}
 			//*
-			
+
 			{// steering
 				sensorAxis.y -= calibratedRotationE.y;
 				if (sensorAxis.y > 180.0f)
 					sensorAxis.y -= 360.0f;
 				if (sensorAxis.y < -180.0f)
 					sensorAxis.y += 360.0f;
-				float steering = steeringCurve.Evaluate (Mathf.Abs (sensorAxis.y) / steeringMax);
-				steering *= Time.fixedDeltaTime * steeringTurnRate * Mathf.Sign (sensorAxis.y);
-				yRotation += steering;
-				Debug.Log (sensorAxis.y);
+				//float steering = steeringCurve.Evaluate (Mathf.Abs (sensorAxis.y) / steeringMax) * Mathf.Sign (sensorAxis.y);
+				float steering = steeringCurve.Evaluate (Mathf.Abs (Input.GetAxis ("HorizontalL")) / steeringMax) * Mathf.Sign (Input.GetAxis ("HorizontalL"));
+				steering *= Time.fixedDeltaTime * steeringTurnRate;
+				//yRotation += steering;
+				//Debug.Log (sensorAxis.y);
 			}// end of steering
 
 			transform.localRotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
-			if (invert[0])
-				target.rotation = Quaternion.Euler (sensorAxis.z, yRotation, sensorAxis.x);
-			else
-				target.rotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
 			//Debug.Log ("rotation set");
 			/*/
 			sensorAxis -= calibratedRotationE;
@@ -119,6 +116,10 @@ public class PhoneSensor : MonoBehaviour {
 	}
 
 	void Update () {
+		float steering = steeringCurve.Evaluate (Mathf.Abs (Input.GetAxis ("HorizontalL"))) * Mathf.Sign (Input.GetAxis ("HorizontalL"));
+		steering *= Time.deltaTime * steeringTurnRate;
+		//Debug.Log (Input.GetAxis ("HorizontalL").ToString ("F3") + " ;" + yRotation.ToString ("F3") + " ; " + steering.ToString ("F3") + " ; " + steeringCurve.Evaluate (Mathf.Abs (Input.GetAxis ("HorizontalL"))).ToString ("F3"));
+		yRotation += steering;
 		if (Input.GetKeyDown ("x")) {
 			Debug.Log ("Connection establishing...");
 			connect ();
@@ -135,6 +136,10 @@ public class PhoneSensor : MonoBehaviour {
 				Debug.Log ("Error closing = " + e.Message);
 			}
 		}
+		if (invert[0])
+			target.rotation = Quaternion.Euler (sensorAxis.z, yRotation, sensorAxis.x);
+		else
+			target.rotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
 	}
 
 	private void OnDestroy () {
