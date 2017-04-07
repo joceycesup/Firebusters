@@ -35,11 +35,12 @@ public class PhoneSensor : MonoBehaviour {
 	}
 
 	void parseValues (string av) {
+		/*
 		string[] split = av.Split (',');
-		if (split.Length == 5) {
-			sensorAxis.x = (invert[1] ? -1.0f : 1.0f) * float.Parse (split[3]);//x=y (but should be x=-y)
-			sensorAxis.y = (invert[2] ? -1.0f : 1.0f) * float.Parse (split[4]);//y=z
-			sensorAxis.z = (invert[3] ? -1.0f : 1.0f) * float.Parse (split[2]);//z=-x
+		if (split.Length >= 3) {
+			sensorAxis.x = (invert[1] ? -1.0f : 1.0f) * float.Parse (split[1]);//x=y (but should be x=-y)
+			sensorAxis.y = (invert[2] ? -1.0f : 1.0f) * float.Parse (split[2]);//y=z
+			sensorAxis.z = (invert[3] ? -1.0f : 1.0f) * float.Parse (split[0]);//z=-x
 			sensorAxis *= angleCorrection;
 			if (!calibrated) {
 				calibratedRotationE = sensorAxis;
@@ -48,7 +49,6 @@ public class PhoneSensor : MonoBehaviour {
 				//calibratedRotationQ = Quaternion.FromToRotation (transform.forward, Vector3.forward);
 				//transform.GetChild (0).rotation = Quaternion.Euler (Vector3.zero);
 			}
-			//*
 
 			{// steering
 				sensorAxis.y -= calibratedRotationE.y;
@@ -65,10 +65,10 @@ public class PhoneSensor : MonoBehaviour {
 
 			transform.localRotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
 			//Debug.Log ("rotation set");
-			/*/
-			sensorAxis -= calibratedRotationE;
-			transform.localRotation = Quaternion.Euler (sensorAxis * -180.0f);//*/
 		}
+		/*/
+		Debug.Log (av);
+		//*/
 	}
 
 
@@ -78,23 +78,18 @@ public class PhoneSensor : MonoBehaviour {
 				byte tmp;
 				string data = "";
 				string avalues = "";
-				tmp = (byte) sp.ReadByte ();//ignore '>' character
+				tmp = (byte) sp.ReadByte ();
 				do {
 					tmp = (byte) sp.ReadByte ();
-					//Debug.Log (((char) tmp) + " ; " + ((int)tmp));
-					if ((tmp == 10)) {// && (data.Length > 30)) {
+					if ((tmp == 10)) {
 						avalues = data;
-						//parseValues (avalues);
 						data = "";
 					}
 					data += ((char) tmp);
 				} while (tmp != 10 && tmp != 255);
-				//Debug.Log ("final : " + avalues);
 				parseValues (avalues);
 			} catch (TimeoutException e) {
-				//Debug.Log ("nothing to read");
-				//connected = false;
-				//Debug.Log (e.Message);
+				//Debug.Log ("nothing to do here...");
 			}
 		}
 	}
