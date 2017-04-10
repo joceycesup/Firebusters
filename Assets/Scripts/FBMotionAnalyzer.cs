@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MotionAnalyzer : MonoBehaviour {
+public class FBMotionAnalyzer : MonoBehaviour {
 
 	public enum State {
 		Inactive,
@@ -15,7 +15,7 @@ public class MotionAnalyzer : MonoBehaviour {
 
 	//------------------------------------------------------------------------------------------------
 
-	public PhoneSensor sensor;
+	public FBPhoneDataHandler sensor;
 
 	//------------------------------------------------------------------------------------------------
 	public DollWalker dollWalker;
@@ -64,7 +64,7 @@ public class MotionAnalyzer : MonoBehaviour {
 	void AnalyzeOscillation () {
 		float value = 0.0f;
 		if (sensor) {
-			value = sensor.sensorAxis.x;
+			value = sensor.sensorAxis.z;
 			if (value > 180.0f)
 				value -= 360.0f;
 		}

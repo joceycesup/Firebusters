@@ -35,7 +35,7 @@ public class PhoneSensor : MonoBehaviour {
 	}
 
 	void parseValues (string av) {
-		/*
+		//*
 		string[] split = av.Split (',');
 		if (split.Length >= 3) {
 			sensorAxis.x = (invert[1] ? -1.0f : 1.0f) * float.Parse (split[1]);//x=y (but should be x=-y)
