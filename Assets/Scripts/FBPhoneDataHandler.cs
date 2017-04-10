@@ -40,7 +40,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 
 	void parseValues (string av) {
 		string[] split = av.Split (',');
-		Debug.Log (av);
+		//Debug.Log (av);
 		if (split.Length >= 5) {
 			if (split[0].CompareTo ("11") == 0) {
 				sensorAxis.x = (invert[1] ? -1.0f : 1.0f) * float.Parse (split[3]);
@@ -49,6 +49,8 @@ public class FBPhoneDataHandler : MonoBehaviour {
 				sensorAxis *= angleCorrection;
 				if (!calibrated) {
 					calibratedRotationE = sensorAxis;
+					if (calibratedRotationE.y > 180.0f)
+						calibratedRotationE.y -= 360.0f;
 					calibrated = true;
 				}
 
@@ -70,6 +72,8 @@ public class FBPhoneDataHandler : MonoBehaviour {
 				sensorAxis.z = (invert[3] ? -1.0f : 1.0f) * float.Parse (split[4]);
 				if (!calibrated) {
 					calibratedRotationE = sensorAxis;
+					if (calibratedRotationE.y > 180.0f)
+						calibratedRotationE.y -= 360.0f;
 					calibrated = true;
 				}
 
@@ -80,6 +84,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 					float steering = steeringCurve.Evaluate (Mathf.Abs (sensorAxis.y) / steeringMax) * Mathf.Sign (sensorAxis.y);
 					//float steering = steeringCurve.Evaluate (Mathf.Abs (Input.GetAxis ("HorizontalL")) / steeringMax) * Mathf.Sign (Input.GetAxis ("HorizontalL"));
 					steering *= Time.fixedDeltaTime * steeringTurnRate;
+					Debug.Log (calibratedRotationE.y + " ; " + sensorAxis.y + " ; " + Mathf.Sign (sensorAxis.y) + " ; " + steering);
 					yRotation += steering;
 				}// end of steering
 
@@ -89,7 +94,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	}
 
 	private IEnumerator ReadData () {
-		Debug.Log ("FBPhoneDataHandler : reading data...");
+		//Debug.Log ("FBPhoneDataHandler : reading data...");
 		recData ();
 		readingData = false;
 		yield return null;
@@ -111,9 +116,9 @@ public class FBPhoneDataHandler : MonoBehaviour {
 					data += ((char) tmp);
 				} while (tmp != 10 && tmp != 255);
 				parseValues (avalues);
-				Debug.Log ("FBPhoneDataHandler : parsed data");
+				//Debug.Log ("FBPhoneDataHandler : parsed data");
 			} catch (TimeoutException e) {
-				Debug.Log ("FBPhoneDataHandler : reached timeout");
+				//Debug.Log ("FBPhoneDataHandler : reached timeout");
 			}/*
 			Debug.Log (Time.time - lastDataReceivedTime);
 			lastDataReceivedTime = Time.time;//*/
@@ -159,7 +164,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		}
 		if (connected) {
 			if (readingData) {
-				Debug.Log ("FBPhoneDataHandler : skip read");
+				//Debug.Log ("FBPhoneDataHandler : skip read");
 			}
 			else {
 				readingData = true;

@@ -36,8 +36,12 @@ public class DollWalker : MonoBehaviour {
 	IEnumerator Step () {
 		takingStep = true;
 		//Debug.Log ("taking step " + (leftFootOnFloor ? "right" : "left"));
+		Vector3 forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
+
+		//if (onStairs)
+
 		do {
-			Vector3 forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
+			forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
 			Vector3 target = controller.position;
 			target.y = (leftFootOnFloor ? leftFootAnchor : rightFootAnchor).position.y;
 			target += (leftFootOnFloor ? 1.0f : -1.0f) * legsSpan * Vector3.Normalize (Vector3.ProjectOnPlane (controller.right, Vector3.up));
@@ -53,5 +57,9 @@ public class DollWalker : MonoBehaviour {
 		//Debug.Log ("finished step " + (leftFootOnFloor ? "right" : "left"));
 		leftFootOnFloor = !leftFootOnFloor;
 		takingStep = false;
+	}
+
+	IEnumerator RotateCameraForStairs () {
+		return null;
 	}
 }
