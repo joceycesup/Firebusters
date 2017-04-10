@@ -28,7 +28,7 @@ public class DollWalker : MonoBehaviour {
 		if (walking > 0.0f) {
 			transform.Translate (forward * (speed * Time.deltaTime * walking), Space.World);
 			if (!takingStep) {
-				StartCoroutine ("Step");
+				StartCoroutine ("Step2");
 			}
 		}
 	}
@@ -36,13 +36,48 @@ public class DollWalker : MonoBehaviour {
 	IEnumerator Step () {
 		takingStep = true;
 		//Debug.Log ("taking step " + (leftFootOnFloor ? "right" : "left"));
-		Vector3 forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
+		do {
+			Vector3 forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
+			Vector3 target = controller.position;
+			target.y = (leftFootOnFloor ? leftFootAnchor : rightFootAnchor).position.y;
+			target += (leftFootOnFloor ? 1.0f : -1.0f) * legsSpan * Vector3.Normalize (Vector3.ProjectOnPlane (controller.right, Vector3.up));
+			target += forward * (stepDistance + centerOffset);
 
-		//if (onStairs)
+			(leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position = Vector3.Lerp ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target,
+				(speed * 2.0f * Time.deltaTime) /
+				Vector3.Distance ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target));
+			if ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position == target)
+				break;
+			yield return null;
+		} while (true);
+		//Debug.Log ("finished step " + (leftFootOnFloor ? "right" : "left"));
+		leftFootOnFloor = !leftFootOnFloor;
+		takingStep = false;
+	}
+
+	IEnumerator Step2 () {
+		takingStep = true;
+		//Debug.Log ("taking step " + (leftFootOnFloor ? "right" : "left"));
+		Vector3 forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
+		Vector3 target = controller.position;
+		target.y = (leftFootOnFloor ? leftFootAnchor : rightFootAnchor).position.y;
+		target += (leftFootOnFloor ? 1.0f : -1.0f) * legsSpan * Vector3.Normalize (Vector3.ProjectOnPlane (controller.right, Vector3.up));
+		target += forward * (stepDistance + centerOffset);
+
+		Ray ray = new Ray ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target);
+		RaycastHit hit;
+		if (Physics.Raycast (ray, out hit, stepDistance, 1 << 10)) {
+			Debug.Log (hit.transform);
+			float distance;
+			new Plane (hit.transform.forward, hit.transform.position).Raycast (ray, out distance);
+			target = ray.GetPoint (distance);
+			Debug.Log (target);
+			Debug.Break ();
+		}
 
 		do {
 			forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
-			Vector3 target = controller.position;
+			target = controller.position;
 			target.y = (leftFootOnFloor ? leftFootAnchor : rightFootAnchor).position.y;
 			target += (leftFootOnFloor ? 1.0f : -1.0f) * legsSpan * Vector3.Normalize (Vector3.ProjectOnPlane (controller.right, Vector3.up));
 			target += forward * (stepDistance + centerOffset);
