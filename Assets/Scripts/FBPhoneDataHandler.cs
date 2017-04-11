@@ -23,16 +23,13 @@ public class FBPhoneDataHandler : MonoBehaviour {
 
 	private float angleCorrection = 180.0f;
 
-	public bool[] invert = { false, false, false, false };
-
 	public float steeringMax = 45.0f;
 	public AnimationCurve steeringCurve;
 	public float steeringTurnRate = 45.0f;
 	private float yRotation = 0.0f;
 
 	private float lastDataReceivedTime;
-
-	private bool readingData = false;
+	private float fixedDeltaTime = Time.fixedDeltaTime;
 
 	void Start () {
 		sp = new SerialPort ("COM" + comNum, 9600);
@@ -43,9 +40,9 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		//Debug.Log (av);
 		if (split.Length >= 5) {
 			if (split[0].CompareTo ("11") == 0) {
-				sensorAxis.x = (invert[1] ? -1.0f : 1.0f) * float.Parse (split[3]);
-				sensorAxis.y = (invert[2] ? -1.0f : 1.0f) * float.Parse (split[4]);
-				sensorAxis.z = (invert[3] ? -1.0f : 1.0f) * float.Parse (split[2]);
+				sensorAxis.x = float.Parse (split[3]);
+				sensorAxis.y = float.Parse (split[4]);
+				sensorAxis.z = float.Parse (split[2]);
 				sensorAxis *= angleCorrection;
 				if (!calibrated) {
 					calibratedRotationE = sensorAxis;
@@ -67,9 +64,9 @@ public class FBPhoneDataHandler : MonoBehaviour {
 				transform.localRotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
 			}
 			else if (split[0].CompareTo ("3") == 0) {
-				sensorAxis.x = (invert[1] ? -1.0f : 1.0f) * float.Parse (split[3]);
-				sensorAxis.y = (invert[2] ? -1.0f : 1.0f) * float.Parse (split[2]);
-				sensorAxis.z = (invert[3] ? -1.0f : 1.0f) * float.Parse (split[4]);
+				sensorAxis.x = float.Parse (split[3]);
+				sensorAxis.y = float.Parse (split[2]);
+				sensorAxis.z = float.Parse (split[4]);
 				if (!calibrated) {
 					calibratedRotationE = sensorAxis;
 					if (calibratedRotationE.y > 180.0f)
@@ -83,21 +80,20 @@ public class FBPhoneDataHandler : MonoBehaviour {
 						sensorAxis.y -= 360.0f;
 					float steering = steeringCurve.Evaluate (Mathf.Abs (sensorAxis.y) / steeringMax) * Mathf.Sign (sensorAxis.y);
 					//float steering = steeringCurve.Evaluate (Mathf.Abs (Input.GetAxis ("HorizontalL")) / steeringMax) * Mathf.Sign (Input.GetAxis ("HorizontalL"));
-					steering *= Time.fixedDeltaTime * steeringTurnRate;
-					Debug.Log (calibratedRotationE.y + " ; " + sensorAxis.y + " ; " + Mathf.Sign (sensorAxis.y) + " ; " + steering);
+					steering *= fixedDeltaTime * steeringTurnRate;
+					//Debug.Log (calibratedRotationE.y + " ; " + sensorAxis.y + " ; " + Mathf.Sign (sensorAxis.y) + " ; " + steering);
 					yRotation += steering;
 				}// end of steering
 
-				transform.localRotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
+				//transform.localRotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
 			}
 		}
 	}
 
-	private IEnumerator ReadData () {
-		//Debug.Log ("FBPhoneDataHandler : reading data...");
-		recData ();
-		readingData = false;
-		yield return null;
+	private void ReadData () {
+		while (connected) {
+			recData ();
+		}
 	}
 
 	void recData () {
@@ -134,10 +130,10 @@ public class FBPhoneDataHandler : MonoBehaviour {
 			sp.Open ();
 			sp.ReadTimeout = 400;
 			sp.Handshake = Handshake.None;
-			serialThread = new Thread (recData);
+			connected = true;
+			serialThread = new Thread (ReadData);
 			serialThread.Start ();
 			Debug.Log ("Port Opened!");
-			connected = true;
 		} catch (SystemException e) {
 			Debug.Log ("Error opening = " + e.Message);
 		}
@@ -162,22 +158,10 @@ public class FBPhoneDataHandler : MonoBehaviour {
 			Debug.Log ("Connection establishing...");
 			connect ();
 		}
-		if (connected) {
-			if (readingData) {
-				//Debug.Log ("FBPhoneDataHandler : skip read");
-			}
-			else {
-				readingData = true;
-				UnityMainThreadDispatcher.Instance ().Enqueue (ReadData ());
-			}
-		}
 		if (Input.GetKeyDown ("w")) {
 			close ();
 		}
-		if (invert[0])
-			target.rotation = Quaternion.Euler (sensorAxis.z, yRotation, sensorAxis.x);
-		else
-			target.rotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
+		target.rotation = transform.localRotation = Quaternion.Euler (sensorAxis.x, yRotation, sensorAxis.z);
 	}
 
 	private void OnDestroy () {
