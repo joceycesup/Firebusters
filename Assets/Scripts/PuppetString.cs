@@ -18,7 +18,7 @@ public class PuppetString : MonoBehaviour {
 	[Range (0f, 1000000f)]
 	float viscousDampingCoefficient = 10000f;
 
-	private float relaxedLength;
+	public float relaxedLength = -1.0f;
 	private Vector3 lastPos;
 
 	public bool absoluteAnchor = false;
@@ -32,7 +32,7 @@ public class PuppetString : MonoBehaviour {
 		lr = GetComponent<LineRenderer> ();
 		if (absoluteAnchor)
 			relaxedLength = 0.0f;
-		else
+		else if (relaxedLength <= 0.0f)
 			relaxedLength = Vector3.Magnitude (transform.position - attachedObject.transform.position);
 	}
 
