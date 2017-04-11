@@ -29,10 +29,11 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	private float yRotation = 0.0f;
 
 	private float lastDataReceivedTime;
-	private float fixedDeltaTime = Time.fixedDeltaTime;
+	private float fixedDeltaTime;
 
 	void Start () {
 		sp = new SerialPort ("COM" + comNum, 9600);
+		fixedDeltaTime = Time.fixedDeltaTime;
 	}
 
 	void parseValues (string av) {
