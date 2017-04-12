@@ -72,11 +72,31 @@ public class DollWalker : MonoBehaviour {
 
 		Ray ray = new Ray ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target);
 		RaycastHit hit;
-		bool hitsStep = Physics.Raycast (ray, out hit, stepDistance, 1 << 10); // hits stairs
+		bool hitsStep = Physics.Raycast (ray, out hit, stepDistance, 1 << 8); // hits stairs
 
 		if (hitsStep || walkingUpStairs) {
 			float stepHeight = hit.collider.bounds.extents.y;
+
+			if (!walkingUpStairs) { // taking the first step, may need to correct angle
+				if (Vector3.Angle (hit.transform.forward, forward) > maxStairsWalkAngle) {
+					StartCoroutine (RotateControllerOnStairs (Vector3.Cross (forward, hit.transform.forward).y * maxStairsWalkAngle + hit.transform.rotation.y));
+				}
+
+				// --------------------------------------------------------------------------
+				// need to correct distanceFactor as well to avoid errors on y axis
+				// also needed if second step... step counter? check distance to target?
+				// raycasting under foot is also an option since it also would correct height
+				// --------------------------------------------------------------------------
+
+				walkingUpStairs = true;
+			}
+			else if (!hitsStep){
+				//
+			}
+
+			//depends on the step distance
 			float stepDepth = hit.collider.bounds.extents.z * 2.0f;
+			//------------------------------
 
 			float a, b;
 			if (hitsStep && walkingUpStairs) {
@@ -92,20 +112,6 @@ public class DollWalker : MonoBehaviour {
 
 			float startY = (leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position.y;
 
-
-			if (!walkingUpStairs) { // taking the first step, may need to correct angle
-				if (Vector3.Angle (hit.transform.forward, forward) > maxStairsWalkAngle) {
-					StartCoroutine (RotateControllerOnStairs (Vector3.Cross (forward, hit.transform.forward).y * maxStairsWalkAngle + hit.transform.rotation.y));
-				}
-
-				// --------------------------------------------------------------------------
-				// need to correct distanceFactor as well to avoid errors on y axis
-				// also needed if second step... step counter? check distance to target?
-				// raycasting under foot is also an option since it also would correct height
-				// --------------------------------------------------------------------------
-
-			}
-			walkingUpStairs = true;
 
 			float distance;
 			new Plane (hit.transform.forward, hit.transform.position).Raycast (ray, out distance);
