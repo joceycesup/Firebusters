@@ -19,6 +19,9 @@ public class DollWalker : MonoBehaviour {
 
 	public float walking = 0.0f;
 
+	public float maxStairsWalkAngle = 45.0f;
+	public float turnRateCorrection = 360.0f;
+
 	void Start () {
 
 	}
@@ -30,7 +33,7 @@ public class DollWalker : MonoBehaviour {
 		if (walking > 0.0f) {
 			transform.Translate (forward * (speed * Time.deltaTime * walking), Space.World);
 			if (!takingStep) {
-				StartCoroutine ("Step2");
+				StartCoroutine ("Step");
 			}
 		}
 	}
@@ -48,7 +51,7 @@ public class DollWalker : MonoBehaviour {
 			(leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position = Vector3.Lerp ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target,
 				(speed * 2.0f * Time.deltaTime) /
 				Vector3.Distance ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target));
-			if ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position == target)
+			if ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position == target) // Vector3 comparison is already approximated
 				break;
 			yield return null;
 		} while (true);
@@ -60,6 +63,7 @@ public class DollWalker : MonoBehaviour {
 	IEnumerator Step2 () {
 		takingStep = true;
 		//Debug.Log ("taking step " + (leftFootOnFloor ? "right" : "left"));
+
 		Vector3 forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
 		Vector3 target = controller.position;
 		target.y = (leftFootOnFloor ? leftFootAnchor : rightFootAnchor).position.y;
@@ -68,41 +72,68 @@ public class DollWalker : MonoBehaviour {
 
 		Ray ray = new Ray ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target);
 		RaycastHit hit;
-		if (Physics.Raycast (ray, out hit, stepDistance, 1 << 10)) {//hits stairs
-			walkingUpStairs = true;
+		bool hitsStep = Physics.Raycast (ray, out hit, stepDistance, 1 << 10); // hits stairs
 
+		if (hitsStep || walkingUpStairs) {
 			float stepHeight = hit.collider.bounds.extents.y;
 			float stepDepth = hit.collider.bounds.extents.z * 2.0f;
 
-			//1 step coefficients
-			float a1 = -4.0f * stepHeight / (stepDepth * stepDepth);
-			float b1 = 3.0f * stepHeight / stepDepth - stepDepth * a1 / 2.0f;
-			//2 steps coefficients
-			float a2 = -1.5f * stepHeight / (stepDepth * stepDepth);
-			float b2 = 2.5f * stepHeight / stepDepth - stepDepth * a2;
+			float a, b;
+			if (hitsStep && walkingUpStairs) {
+				// 2 steps coefficients
+				a = -1.5f * stepHeight / (stepDepth * stepDepth);
+				b = 2.5f * stepHeight / stepDepth - stepDepth * a;
+			}
+			else {
+				// 1 step coefficients
+				a = -4.0f * stepHeight / (stepDepth * stepDepth);
+				b = 3.0f * stepHeight / stepDepth - stepDepth * a / 2.0f;
+			}
 
-			//si premiere marche, rectifier angle avant de determiner target
-			
+			float startY = (leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position.y;
+
+
+			if (!walkingUpStairs) { // taking the first step, may need to correct angle
+				if (Vector3.Angle (hit.transform.forward, forward) > maxStairsWalkAngle) {
+					StartCoroutine (RotateControllerOnStairs (Vector3.Cross (forward, hit.transform.forward).y * maxStairsWalkAngle + hit.transform.rotation.y));
+				}
+
+				// --------------------------------------------------------------------------
+				// need to correct distanceFactor as well to avoid errors on y axis
+				// also needed if second step... step counter? check distance to target?
+				// raycasting under foot is also an option since it also would correct height
+				// --------------------------------------------------------------------------
+
+			}
+			walkingUpStairs = true;
+
 			float distance;
 			new Plane (hit.transform.forward, hit.transform.position).Raycast (ray, out distance);
 			target = ray.GetPoint (distance);
-			target.y += stepHeight;
+
+
 			Debug.Log (target);
 			Debug.Break ();
-		}
 
-		if (!walkingUpStairs) {
+
+
 			do {
-				forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
-				target = controller.position;
-				target.y = (leftFootOnFloor ? leftFootAnchor : rightFootAnchor).position.y;
-				target += (leftFootOnFloor ? 1.0f : -1.0f) * legsSpan * Vector3.Normalize (Vector3.ProjectOnPlane (controller.right, Vector3.up));
-				target += forward * (stepDistance + centerOffset);
-
 				(leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position = Vector3.Lerp ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target,
 					(speed * 2.0f * Time.deltaTime) /
 					Vector3.Distance ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target));
-				if ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position == target)
+				if ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position == target) // Vector3 comparison is already approximated
+					break;
+				yield return null;
+			} while (true);
+			//Debug.Log ("finished step " + (leftFootOnFloor ? "right" : "left"));
+			leftFootOnFloor = !leftFootOnFloor;
+		}
+		else {
+			do {
+				(leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position = Vector3.Lerp ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target,
+					(speed * 2.0f * Time.deltaTime) /
+					Vector3.Distance ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target));
+				if ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position == target) // Vector3 comparison is already approximated
 					break;
 				yield return null;
 			} while (true);
@@ -114,5 +145,20 @@ public class DollWalker : MonoBehaviour {
 
 	IEnumerator RotateCameraForStairs () {
 		return null;
+	}
+
+	protected IEnumerator RotateControllerOnStairs (float targetRot) {
+		float newAngle = float.MaxValue;
+
+		while (true) {
+			newAngle = Mathf.MoveTowardsAngle (transform.rotation.eulerAngles.z, targetRot, turnRateCorrection * Time.deltaTime);
+			controller.rotation = Quaternion.Euler (0f, 0f, newAngle);
+			if (Mathf.Abs (Mathf.DeltaAngle (targetRot, newAngle)) > 1f) {
+				yield return null;
+			}
+			else {
+				break;
+			}
+		}
 	}
 }
