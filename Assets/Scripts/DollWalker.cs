@@ -13,7 +13,7 @@ public class DollWalker : MonoBehaviour {
 	private bool leftFootOnFloor = true;
 	private bool takingStep = false;
 
-	private bool walkingUpStairs = false;
+	private bool walkingUpStairs;
 
 	public float speed = 4.0f;
 
@@ -70,14 +70,32 @@ public class DollWalker : MonoBehaviour {
 		target += (leftFootOnFloor ? 1.0f : -1.0f) * legsSpan * Vector3.Normalize (Vector3.ProjectOnPlane (controller.right, Vector3.up));
 		target += forward * (stepDistance + centerOffset);
 
-		Ray ray = new Ray ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target);
+		Ray ray = new Ray ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, target - (leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position);
 		RaycastHit hit;
 		bool hitsStep = Physics.Raycast (ray, out hit, stepDistance, 1 << 8); // hits stairs
 
-		if (hitsStep || walkingUpStairs) {
+		if (hitsStep) {
 			float stepHeight = hit.collider.bounds.extents.y;
 
-			if (!walkingUpStairs) { // taking the first step, may need to correct angle
+			//depends on the step distance
+			float stepDepth = hit.collider.bounds.extents.z * 2.0f;
+			//------------------------------
+
+			float a, b;
+			if (walkingUpStairs) {
+				// 2 steps coefficients
+				a = -1.5f * stepHeight / (stepDepth * stepDepth);
+				b = 2.5f * stepHeight / stepDepth - stepDepth * a;
+			}
+			else {
+				// 1 step coefficients
+				a = -4.0f * stepHeight / (stepDepth * stepDepth);
+				b = 3.0f * stepHeight / stepDepth - stepDepth * a / 2.0f;
+
+				// --------------------------------------------------------------------------
+				// taking the first step, may need to correct angle
+				// need to correct angle every single step since spiral staircases are supported
+				// --------------------------------------------------------------------------
 				if (Vector3.Angle (hit.transform.forward, forward) > maxStairsWalkAngle) {
 					StartCoroutine (RotateControllerOnStairs (Vector3.Cross (forward, hit.transform.forward).y * maxStairsWalkAngle + hit.transform.rotation.y));
 				}
@@ -87,27 +105,6 @@ public class DollWalker : MonoBehaviour {
 				// also needed if second step... step counter? check distance to target?
 				// raycasting under foot is also an option since it also would correct height
 				// --------------------------------------------------------------------------
-
-				walkingUpStairs = true;
-			}
-			else if (!hitsStep){
-				//
-			}
-
-			//depends on the step distance
-			float stepDepth = hit.collider.bounds.extents.z * 2.0f;
-			//------------------------------
-
-			float a, b;
-			if (hitsStep && walkingUpStairs) {
-				// 2 steps coefficients
-				a = -1.5f * stepHeight / (stepDepth * stepDepth);
-				b = 2.5f * stepHeight / stepDepth - stepDepth * a;
-			}
-			else {
-				// 1 step coefficients
-				a = -4.0f * stepHeight / (stepDepth * stepDepth);
-				b = 3.0f * stepHeight / stepDepth - stepDepth * a / 2.0f;
 			}
 
 			float startY = (leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position.y;
@@ -131,6 +128,14 @@ public class DollWalker : MonoBehaviour {
 					break;
 				yield return null;
 			} while (true);
+
+			ray = new Ray ((leftFootOnFloor ? rightFootAnchor : leftFootAnchor).position, Vector3.down);
+			// --------------------------------------------------------------------------
+			// change stepDistance to something better
+			// --------------------------------------------------------------------------
+			walkingUpStairs = Physics.Raycast (ray, out hit, stepDistance, 1 << 8);
+
+
 			//Debug.Log ("finished step " + (leftFootOnFloor ? "right" : "left"));
 			leftFootOnFloor = !leftFootOnFloor;
 		}
