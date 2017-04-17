@@ -18,7 +18,7 @@ public class FBWWiseTests : MonoBehaviour {
 		//.600
 		if (coll.gameObject.CompareTag ("Player")) {
 			float velocity = curve.Evaluate (coll.relativeVelocity.magnitude / maxVelocity);
-			Debug.Log (this + " : " + velocity);
+			//Debug.Log (this + " : " + velocity);
 
 			AkSoundEngine.SetRTPCValue ("velocite", velocity);
 			AkSoundEngine.PostEvent ("Play_Marionnette_Autohit", gameObject);
