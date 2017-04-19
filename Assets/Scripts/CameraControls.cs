@@ -15,7 +15,7 @@ public class CameraControls : MonoBehaviour {
 	public float rotateSpeed = 90.0f;
 	private Vector3 forward;
 
-	void Awake () {
+	void Start () {
 		target.transform.position += Vector3.up * height;
 		camera = GetComponent<Camera> ();
 		forward = target.transform.forward;
