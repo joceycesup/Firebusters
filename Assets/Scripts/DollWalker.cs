@@ -76,6 +76,11 @@ public class DollWalker : MonoBehaviour {
 	}
 
 	void Step () {
+		// #########################################
+		//
+		// Initialization
+		//
+		// #########################################
 		Transform foot = (leftFootOnFloor ? rightFootAnchor : leftFootAnchor);
 		Vector3 start = foot.position;
 		Vector3 forward;
@@ -95,13 +100,15 @@ public class DollWalker : MonoBehaviour {
 		RaycastHit hit;
 
 		// #########################################
-		// Layers :
-		// - 8  : Walkable
-		// - 9  : StepFootLine
-		// - 10 : VerticalObstacle
+		//
+		// Check wall collision
+		//
+		// Layers reminder :
+		// - 8 : Walkable
+		// - 9 : VerticalObstacle
 		// #########################################
 
-		if (Physics.Raycast (ray, out hit, stepDistance, 1 << 10)) { // hits wall
+		if (Physics.Raycast (ray, out hit, stepDistance, 1 << 9)) { // hits wall
 			Debug.Log ("Hits Wall! : " + hit.transform.name);
 			//Debug.Break ();
 			Vector3 oldTarget = target;
@@ -112,6 +119,12 @@ public class DollWalker : MonoBehaviour {
 			controllerCorrection += (target - oldTarget) / 2.0f;
 			needsCorrection = true;
 		}
+
+		// #########################################
+		//
+		// Check for stairs in front of the foot
+		//
+		// #########################################
 
 		bool hitsStep = Physics.Raycast (ray, out hit, stepDistance, 1 << 8); // hits walkable -> step
 
