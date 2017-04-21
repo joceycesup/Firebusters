@@ -61,10 +61,10 @@ public class PuppetString : MonoBehaviour {
 					if (viscousDampingCoefficient > 0f) {
 						rb.AddForce (-viscousDampingCoefficient * Vector3.Project (attachedObject.transform.position - lastPos, transform.position - attachedObject.transform.position) * Time.fixedDeltaTime, ForceMode.Force);
 					}
-					lr.SetColors (Color.red, Color.red);
+					lr.startColor = lr.endColor = Color.red;
 				}
 				else {
-					lr.SetColors (Color.green, Color.green);
+					lr.startColor = lr.endColor = Color.green;
 				}
 			}
 		}

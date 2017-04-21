@@ -16,6 +16,7 @@ public class DollWalker : MonoBehaviour {
 	private bool walkingUpStairs = false;
 
 	public float speed = 4.0f;
+	public float horizontalStepHeight = 0.1f;
 
 	public float walking = 0.0f;
 
@@ -55,7 +56,7 @@ public class DollWalker : MonoBehaviour {
 	void Update () {
 		Vector3 forward = Vector3.Normalize (Vector3.ProjectOnPlane (controller.forward, Vector3.up));
 		//walking = Input.GetAxis ("Forward");
-		walking = Input.GetAxis ("VerticalL");
+		//walking = Input.GetAxis ("VerticalL");
 
 		if (walking > 0.0f) {
 			transform.Translate (forward * (speed * Time.deltaTime * walking), Space.World);
@@ -197,11 +198,11 @@ public class DollWalker : MonoBehaviour {
 			StartCoroutine (ClimbStep (foot, target, !oldWalkingUpStairs));
 		}
 		else {
-			StartCoroutine (TakeStep (foot, target));
+			StartCoroutine (HorizontalStep (foot, target));
 		}
 	}
-
-	IEnumerator TakeStep (Transform foot, Vector3 target) {
+	/*/
+	IEnumerator HorizontalStep (Transform foot, Vector3 target) {
 		takingStep = true;
 		do {
 			foot.position = Vector3.Lerp (foot.position, target,
@@ -213,7 +214,35 @@ public class DollWalker : MonoBehaviour {
 		} while (true);
 		leftFootOnFloor = !leftFootOnFloor;
 		takingStep = false;
-	}
+	}/*/
+	IEnumerator HorizontalStep (Transform foot, Vector3 target) {
+		takingStep = true;
+
+		Vector3 startPos = foot.position;
+		float distance = Vector3.Distance (foot.position, target);
+		Vector3 deltaPos = target - foot.position;
+
+		float a = -4.0f * horizontalStepHeight / (distance * distance);
+		float b = 2.0f * horizontalStepHeight / distance - distance * a * 0.5f;
+
+		do {
+			distance = new Vector2 (foot.position.x - target.x, foot.position.z - target.z).magnitude;
+			Vector3 newPos = Vector3.Lerp (foot.position, target,
+				(speed * 2.0f * Time.deltaTime) /
+				distance);
+			deltaPos = startPos - foot.position;
+			deltaPos.y = 0.0f;
+			distance = deltaPos.magnitude;
+			newPos.y = startPos.y + a * distance * distance + b * distance;
+			foot.position = newPos;
+
+			if (foot.position == target) // Vector3 comparison is already approximated
+				break;
+			yield return null;
+		} while (true);
+		leftFootOnFloor = !leftFootOnFloor;
+		takingStep = false;
+	}//*/
 
 	IEnumerator ClimbStep (Transform foot, Vector3 target, bool oneStep) {
 		Vector3 startPos = foot.position;
@@ -236,9 +265,10 @@ public class DollWalker : MonoBehaviour {
 
 		takingStep = true;
 		do {
+			distance = new Vector2 (foot.position.x - target.x, foot.position.z - target.z).magnitude;
 			Vector3 newPos = Vector3.Lerp (foot.position, target,
 				(speed * 2.0f * Time.deltaTime) /
-				Vector3.Distance (foot.position, target));
+				distance);
 			deltaPos = startPos - foot.position;
 			deltaPos.y = 0.0f;
 			distance = deltaPos.magnitude;
