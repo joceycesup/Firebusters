@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent (typeof (TMPPhoneDataHandler))]
 public class TMPMotionAnalyzer : MonoBehaviour {
 
 	public enum State {
@@ -14,7 +15,8 @@ public class TMPMotionAnalyzer : MonoBehaviour {
 
 	public State state = State.Walk;
 
-	public TMPPhoneDataHandler sensor;
+	private TMPPhoneDataHandler sensor;
+	public bool usePhoneDataHandler = true;
 	public DollWalker dollWalker;
 
 	public Transform controller;
@@ -46,6 +48,7 @@ public class TMPMotionAnalyzer : MonoBehaviour {
 	public AnimationCurve pitchFactor = AnimationCurve.EaseInOut (0.2f, 0.0f, 1.0f, 1.0f);
 
 	void Start () {
+		sensor = gameObject.GetComponent<TMPPhoneDataHandler> ();
 		walking = -1.0f;
 	}
 
@@ -56,22 +59,30 @@ public class TMPMotionAnalyzer : MonoBehaviour {
 			case State.Aim:
 				break;
 			case State.Walk:
-				UpdateValues ();
+				UpdateWalkValues ();
 				break;
 			case State.Strike:
 				break;
 		}
 	}
 
-	private void UpdateValues () {
-		steering = Mathf.Sign (sensor.sensorAxis.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.sensorAxis.z) / maxPitch);
-		yRotation -= steeringTurnRate * steering * Time.fixedDeltaTime;
+	private void UpdateWalkValues () {
+		if (usePhoneDataHandler) {
+			steering = Mathf.Sign (sensor.sensorAxis.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.sensorAxis.z) / maxPitch);
 
-		walking = rollFactor.Evaluate (Mathf.Abs (sensor.sensorAxis.x) / maxRoll);
+			walking = rollFactor.Evaluate (sensor.sensorAxis.x / maxRoll);
+			//Debug.Log (walking);
+		}
+		else {
+			float horizontal = Input.GetAxis ("HorizontalL");
+			steering = Mathf.Sign (horizontal) * pitchFactor.Evaluate (Mathf.Abs (horizontal));
 
+			walking = rollFactor.Evaluate (Input.GetAxis ("VerticalL"));
+		}
+
+		yRotation += steeringTurnRate * steering * Time.fixedDeltaTime;
 		controller.rotation = Quaternion.Euler (sensor.sensorAxis.x, yRotation, sensor.sensorAxis.z);
 
 		dollWalker.walking = walking;
-		//Debug.Log (walking);
 	}
 }

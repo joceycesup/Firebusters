@@ -129,6 +129,7 @@ public class DollWalker : MonoBehaviour {
 
 		bool hitsStep = Physics.Raycast (ray, out hit, stepDistance, 1 << 8); // hits walkable -> step
 
+		Debug.DrawRay (ray.origin, ray.direction, Color.red, 1.0f);
 		if (hitsStep) {
 			Debug.Log ("Hits Step! : " + hit.transform.name);
 			//Debug.Break ();
@@ -173,6 +174,7 @@ public class DollWalker : MonoBehaviour {
 
 		bool oldWalkingUpStairs = walkingUpStairs;
 		ray = new Ray (target, Vector3.down); // check if foot is on walkable
+		Debug.DrawRay (ray.origin, ray.direction, Color.green, 1.0f);
 		if (Physics.Raycast (ray, out hit, floorDetectionDistance, 1 << 8)) { // hits walkable
 			walkingUpStairs = (hit.transform.gameObject.tag == "Step");
 		}

@@ -27,7 +27,7 @@ public class TMPPhoneDataHandler : MonoBehaviour {
 			if (split[0].CompareTo ("3") == 0) {
 				sensorAxis.x = -float.Parse (split[4]);
 				sensorAxis.y = float.Parse (split[2]);
-				sensorAxis.z = float.Parse (split[3]);
+				sensorAxis.z = -float.Parse (split[3]);
 				if (!calibrated) {
 					calibratedRotationE = sensorAxis;
 					if (calibratedRotationE.y > 180.0f)
