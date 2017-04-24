@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent (typeof (TMPPhoneDataHandler))]
+[RequireComponent (typeof (FBPhoneDataHandler))]
 public class TMPMotionAnalyzer : MonoBehaviour {
 
 	public enum State {
@@ -15,7 +15,7 @@ public class TMPMotionAnalyzer : MonoBehaviour {
 
 	public State state = State.Walk;
 
-	private TMPPhoneDataHandler sensor;
+	private FBPhoneDataHandler sensor;
 	public bool usePhoneDataHandler = true;
 	public DollWalker dollWalker;
 
@@ -48,7 +48,7 @@ public class TMPMotionAnalyzer : MonoBehaviour {
 	public AnimationCurve pitchFactor = AnimationCurve.EaseInOut (0.2f, 0.0f, 1.0f, 1.0f);
 
 	void Start () {
-		sensor = gameObject.GetComponent<TMPPhoneDataHandler> ();
+		sensor = gameObject.GetComponent<FBPhoneDataHandler> ();
 		walking = -1.0f;
 	}
 
