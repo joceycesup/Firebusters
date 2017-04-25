@@ -114,7 +114,7 @@ public class oldFBPhoneDataHandler : MonoBehaviour {
 				} while (tmp != 10 && tmp != 255);
 				parseValues (avalues);
 				//Debug.Log ("FBPhoneDataHandler : parsed data");
-			} catch (TimeoutException e) {
+			} catch (TimeoutException) {
 				//Debug.Log ("FBPhoneDataHandler : reached timeout");
 			}/*
 			Debug.Log (Time.time - lastDataReceivedTime);

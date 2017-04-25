@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BuildingHandler : MonoBehaviour {
 	public GameObject[] floors;
-	private int currentFloor = 0;
+	//private int currentFloor = 0;
 
 	void Update () {
 	}

@@ -27,7 +27,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 			if (split[0].CompareTo ("3") == 0) {
 				sensorAxis.x = -float.Parse (split[4]);
 				sensorAxis.y = float.Parse (split[2]);
-				sensorAxis.z = -float.Parse (split[3]);
+				sensorAxis.z = float.Parse (split[3]);
 				if (!calibrated) {
 					calibratedRotationE = sensorAxis;
 					if (calibratedRotationE.y > 180.0f)
@@ -66,7 +66,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 					data += ((char) tmp);
 				} while (tmp != 10 && tmp != 255);
 				parseValues (avalues);
-			} catch (TimeoutException e) {
+			} catch (TimeoutException) {
 				//Debug.Log ("FBPhoneDataHandler : reached timeout");
 			}
 		}

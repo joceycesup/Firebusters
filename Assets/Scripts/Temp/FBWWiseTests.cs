@@ -5,13 +5,8 @@ using UnityEngine;
 [RequireComponent (typeof (Rigidbody))]
 [RequireComponent (typeof (Collider))]
 public class FBWWiseTests : MonoBehaviour {
-	private Rigidbody rb;
 	public AnimationCurve curve;
 	public float maxVelocity;
-
-	void Start () {
-		rb = GetComponent<Rigidbody> ();
-	}
 
 	void OnCollisionEnter (Collision coll) {
 		//.225

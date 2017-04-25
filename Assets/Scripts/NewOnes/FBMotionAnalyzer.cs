@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent (typeof (FBPhoneDataHandler))]
 public class FBMotionAnalyzer : MonoBehaviour {
@@ -18,8 +15,6 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	private FBPhoneDataHandler sensor;
 	public bool usePhoneDataHandler = true;
 
-	public Transform controller;
-
 	//---------- walking ----------
 	// x : roll  : walking
 	public float walking {
@@ -33,8 +28,6 @@ public class FBMotionAnalyzer : MonoBehaviour {
 		get;
 		private set;
 	}
-	public float steeringTurnRate = 90.0f;
-	private float yRotation = 0.0f;
 
 	//---------- controller rotation values ----------
 	public float maxRoll = 30.0f;
@@ -42,7 +35,11 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public float maxPitch = 30.0f;
 	public AnimationCurve pitchFactor = AnimationCurve.EaseInOut (0.2f, 0.0f, 1.0f, 1.0f);
 
-	void Start () {
+	public Vector3 rotation {
+		get { return sensor.sensorAxis; }
+	}
+
+	void Awake () {
 		sensor = gameObject.GetComponent<FBPhoneDataHandler> ();
 		walking = -1.0f;
 	}
@@ -74,8 +71,5 @@ public class FBMotionAnalyzer : MonoBehaviour {
 
 			walking = rollFactor.Evaluate (Input.GetAxis ("VerticalL"));
 		}
-
-		yRotation += steeringTurnRate * steering * Time.fixedDeltaTime;
-		controller.rotation = Quaternion.Euler (sensor.sensorAxis.x, yRotation, sensor.sensorAxis.z);
 	}
 }

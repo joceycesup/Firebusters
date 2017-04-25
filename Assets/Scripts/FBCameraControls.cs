@@ -3,7 +3,7 @@ using System.Collections;
 
 [RequireComponent (typeof (Camera))]
 public class FBCameraControls : MonoBehaviour {
-	private Camera camera;
+	private Camera _camera;
 
 	public Transform target;
 	public Transform position;
@@ -14,7 +14,7 @@ public class FBCameraControls : MonoBehaviour {
 	private Vector3 relativeTarget;
 
 	void Awake () {
-		camera = GetComponent<Camera> ();
+		_camera = GetComponent<Camera> ();
 		relativePosition = Vector3.ProjectOnPlane (position.position - direction.position, direction.right);
 		relativeTarget = Vector3.ProjectOnPlane (target.position - direction.position, direction.right);
 	}

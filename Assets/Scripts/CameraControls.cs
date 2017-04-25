@@ -3,7 +3,7 @@ using System.Collections;
 
 [RequireComponent (typeof (Camera))]
 public class CameraControls : MonoBehaviour {
-	private Camera camera;
+	private Camera _camera;
 	public GameObject target;
 	[Range (1f, 10f)]
 	public float distance;
@@ -17,7 +17,7 @@ public class CameraControls : MonoBehaviour {
 
 	void Start () {
 		target.transform.position += Vector3.up * height;
-		camera = GetComponent<Camera> ();
+		_camera = GetComponent<Camera> ();
 		forward = target.transform.forward;
 		transform.position = target.transform.position - (iso ? 10.0f : distance) * forward;
 		if (lookObject != null) {
@@ -29,8 +29,8 @@ public class CameraControls : MonoBehaviour {
 		if (locked)
 			transform.parent = target.transform;
 		if (iso) {
-			camera.orthographic = true;
-			camera.orthographicSize = 2.0f;
+			_camera.orthographic = true;
+			_camera.orthographicSize = 2.0f;
 		}
 	}
 
