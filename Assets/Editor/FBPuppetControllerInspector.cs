@@ -14,10 +14,10 @@ public class FBPuppetControllerInspector : Editor {
 		GameObject g;
 		g = (GameObject) EditorGUILayout.ObjectField ("Left foot", (controller.leftFoot != null) ? ((controller.leftFoot.transform != null) ? controller.leftFoot.transform.gameObject : null) : null, typeof (GameObject), true);
 		if (g)
-			controller.leftFoot = new FBPuppetController.FootState (g.transform);
+			controller.CreateFoot(g.transform, true);
 		g = (GameObject) EditorGUILayout.ObjectField ("Right foot", (controller.rightFoot != null) ? ((controller.rightFoot.transform != null) ? controller.rightFoot.transform.gameObject : null) : null, typeof (GameObject), true);
 		if (g)
-			controller.rightFoot = new FBPuppetController.FootState (g.transform);
+			controller.CreateFoot (g.transform, false);
 
 		EditorGUILayout.Space ();
 		controller.steeringTurnRate = EditorGUILayout.FloatField ("Steering turn rate", controller.steeringTurnRate);

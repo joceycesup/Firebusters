@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent (typeof (FBMotionAnalyzer))]
+[RequireComponent (typeof (FBPuppetController))]
 public class FBPuppetWalker : MonoBehaviour {
 	public float legsSpan = 0.6f;
 	public float stepDistance = 1.5f;
@@ -25,8 +27,8 @@ public class FBPuppetWalker : MonoBehaviour {
 
 
 
-	public FBPuppetController toto;
-	public FBMotionAnalyzer motion;
+	private FBPuppetController toto;
+	private FBMotionAnalyzer motion;
 
 	// --------------------------------------------------------------------------
 	// TO DO :
@@ -37,6 +39,8 @@ public class FBPuppetWalker : MonoBehaviour {
 	// --------------------------------------------------------------------------
 
 	void Start () {
+		toto = GetComponent<FBPuppetController> ();
+		motion = GetComponent<FBMotionAnalyzer> ();
 		Ray ray = new Ray (toto.transform.position, Vector3.down);
 		RaycastHit hit;
 		if (!Physics.Raycast (ray, out hit, Mathf.Infinity, 1 << 8)) {
@@ -44,10 +48,10 @@ public class FBPuppetWalker : MonoBehaviour {
 			Debug.Break ();
 			return;
 		}
-		Transform foot = toto.leftFoot.transform;
-		foot.position = new Vector3 (foot.position.x, hit.point.y + distanceOverFloor, foot.position.z);
-		foot = toto.leftFoot.transform;
-		foot.position = new Vector3 (foot.position.x, hit.point.y + distanceOverFloor, foot.position.z);
+		FBPuppetController.FootState foot = toto.leftFoot;
+		foot.target = new Vector3 (foot.transform.position.x, hit.point.y + distanceOverFloor, foot.transform.position.z);
+		foot = toto.rightFoot;
+		foot.target = new Vector3 (foot.transform.position.x, hit.point.y + distanceOverFloor, foot.transform.position.z);
 	}
 
 	void Update () {
@@ -82,14 +86,14 @@ public class FBPuppetWalker : MonoBehaviour {
 		FBPuppetController.FootState foot = toto.movingFoot;
 		Vector3 start = foot.transform.position;
 		Vector3 forward = toto.transform.forward;
-		Vector3 target = toto.transform.position;
+		Vector3 tmpTarget = toto.transform.position;
 		{
-			target.y = toto.fixedFoot.target.y;
-			target += (toto.leftFootOnFloor ? 1.0f : -1.0f) * legsSpan * toto.transform.right;
-			target += forward * (stepDistance + centerOffset);
+			tmpTarget.y = toto.fixedFoot.target.y;
+			tmpTarget += (toto.leftFootOnFloor ? 1.0f : -1.0f) * legsSpan * toto.transform.right;
+			tmpTarget += forward * (stepDistance + centerOffset);
 		}
 
-		Ray ray = new Ray (start, target - start);
+		Ray ray = new Ray (start, tmpTarget - start);
 		RaycastHit hit;
 
 		// #########################################
@@ -104,12 +108,13 @@ public class FBPuppetWalker : MonoBehaviour {
 		if (Physics.Raycast (ray, out hit, stepDistance, 1 << 9)) { // hits wall
 			Debug.Log ("Hits Wall! : " + hit.transform.name);
 			//Debug.Break ();
-			Vector3 oldTarget = target;
-			target = Vector3.ProjectOnPlane (target - start, hit.normal);
-			target += Vector3.Project (hit.point - start, hit.normal);
-			ray = new Ray (start, target);
-			target += start;
-			controllerCorrection += (target - oldTarget) / 2.0f;
+			Vector3 oldTarget = tmpTarget;
+			tmpTarget = Vector3.ProjectOnPlane (tmpTarget - start, hit.normal);
+			tmpTarget += Vector3.Project (hit.point - start, hit.normal);
+			tmpTarget.y = start.y;
+			ray = new Ray (start, tmpTarget);
+			tmpTarget += start;
+			controllerCorrection += (tmpTarget - oldTarget) / 2.0f;
 			needsCorrection = true;
 		}
 
@@ -124,8 +129,9 @@ public class FBPuppetWalker : MonoBehaviour {
 		Debug.DrawRay (ray.origin, ray.direction, Color.red, 1.0f);
 		if (hitsStep) {
 			Debug.Log ("Hits Step! : " + hit.transform.name);
+			Debug.Log ("Ray : " + ray);
 			//Debug.Break ();
-			Vector3 oldTarget = target;
+			Vector3 oldTarget = tmpTarget;
 			float stepHeight = hit.collider.bounds.extents.y;
 
 			if (!walkingUpStairs) {
@@ -138,7 +144,7 @@ public class FBPuppetWalker : MonoBehaviour {
 				}
 			}
 			else {
-				ray = new Ray (start + Vector3.up * stepHeight * 1.5f, target - start);
+				ray = new Ray (start + Vector3.up * stepHeight * 1.5f, tmpTarget - start);
 				Physics.Raycast (ray, out hit, stepDistance, 1 << 8); // hits step above
 			}
 
@@ -155,53 +161,72 @@ public class FBPuppetWalker : MonoBehaviour {
 			Bounds bounds = stepFootLine.GetComponent<BoxCollider> ().bounds;
 			float distance;
 			new Plane (stepFootLine.transform.forward, stepFootLine.transform.position).Raycast (ray, out distance);
-			target = ray.GetPoint (distance);
-			if ((target - stepFootLine.transform.position).sqrMagnitude > bounds.extents.x * bounds.extents.x) {
-				target = stepFootLine.transform.position + Vector3.ClampMagnitude (target - stepFootLine.transform.position, bounds.extents.x);
+			tmpTarget = ray.GetPoint (distance);
+			if ((tmpTarget - stepFootLine.transform.position).sqrMagnitude > bounds.extents.x * bounds.extents.x) {
+				tmpTarget = stepFootLine.transform.position + Vector3.ClampMagnitude (tmpTarget - stepFootLine.transform.position, bounds.extents.x);
 			}
-			controllerCorrection += (target - oldTarget) / 2.0f;
+			controllerCorrection += (tmpTarget - oldTarget) / 2.0f;
 			needsCorrection = true;
-			target.y = foot.transform.position.y + (walkingUpStairs ? 2.0f : 1.0f) * stepHeight;
+			//tmpTarget.y = foot.transform.position.y + (walkingUpStairs ? 2.0f : 1.0f) * stepHeight;
+			tmpTarget.y = foot.target.y + (walkingUpStairs ? 2.0f : 1.0f) * stepHeight;
 		}
 
 		bool oldWalkingUpStairs = walkingUpStairs;
-		ray = new Ray (target, Vector3.down); // check if foot is on walkable
+		ray = new Ray (tmpTarget, Vector3.down); // check if foot is on walkable
 		Debug.DrawRay (ray.origin, ray.direction, Color.green, 1.0f);
 		if (Physics.Raycast (ray, out hit, floorDetectionDistance, 1 << 8)) { // hits walkable
 			walkingUpStairs = (hit.transform.gameObject.tag == "Step");
+			tmpTarget.y = hit.point.y + distanceOverFloor;
 		}
 		else {
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
 			walkingUpStairs = false;
 			if (!hitsStep) { // regular walking, like... on a floor... and all that stuff
-				Vector3 oldTarget = target;
-				Vector3 direction = target - start;
-				target = Vector3.down * floorDetectionDistance;
-				ray = new Ray (target, direction);
-				if (Physics.Raycast (ray, out hit, (start - target).magnitude + 0.1f, 1 << 8)) { // hits walkable
-					target = hit.point;
-					target.y = oldTarget.y;
-					controllerCorrection += (target - oldTarget) / 2.0f;
+				Vector3 oldTarget = tmpTarget;
+				Vector3 direction = tmpTarget - start;
+				tmpTarget = Vector3.down * floorDetectionDistance;
+				ray = new Ray (tmpTarget, direction);
+				if (Physics.Raycast (ray, out hit, (start - tmpTarget).magnitude + 0.1f, 1 << 8)) { // hits walkable
+					tmpTarget = hit.point;
+					tmpTarget.y = oldTarget.y;
+					controllerCorrection += (tmpTarget - oldTarget) / 2.0f;
 					needsCorrection = true;
 				}
 			}
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
+			//#################################################################################
 		}
 
+		foot.target = tmpTarget;
 		if (hitsStep) {
-			Debug.Log ("Step target : " + target);
+			Debug.Log ("Step target : " + foot.target);
 			//Debug.Break ();
-			StartCoroutine (TakeStep (foot.transform, target, oldWalkingUpStairs ? 2 : 1));
+			StartCoroutine (TakeStep (foot, oldWalkingUpStairs ? 2 : 1));
 		}
 		else {
-			StartCoroutine (TakeStep (foot.transform, target, 0));
+			StartCoroutine (TakeStep (foot, 0));
 		}
 	}
 
-	IEnumerator TakeStep (Transform foot, Vector3 target, int steps) {
+	IEnumerator TakeStep (FBPuppetController.FootState foot, int steps) {
 		takingStep = true;
 
-		float stepHeight = target.y - foot.position.y;
-		Vector3 startPos = foot.position;
-		Vector3 deltaPos = target - foot.position;
+		Vector3 startPos = foot.transform.position;
+		Vector3 deltaPos = foot.target - foot.transform.position;
+		float stepHeight = deltaPos.y;
 		deltaPos.y = 0.0f;
 		float distance = deltaPos.magnitude;
 
@@ -222,21 +247,27 @@ public class FBPuppetWalker : MonoBehaviour {
 		}
 
 		do {
-			distance = new Vector2 (foot.position.x - target.x, foot.position.z - target.z).magnitude;
-			Vector3 newPos = Vector3.Lerp (foot.position, target,
+			distance = new Vector2 (foot.transform.position.x - foot.target.x, foot.transform.position.z - foot.target.z).magnitude;
+			Vector3 newPos = Vector3.Lerp (foot.transform.position, foot.target,
 				(speed * 2.0f * Time.deltaTime) /
 				distance);
-			deltaPos = startPos - foot.position;
-			deltaPos.y = 0.0f;
-			distance = deltaPos.magnitude;
+			distance = Horizontal (startPos, newPos).magnitude;
 			newPos.y = startPos.y + a * distance * distance + b * distance;
-			foot.position = newPos;
+			foot.transform.position = newPos;
 
-			if (foot.position == target) // Vector3 comparison is already approximated
+			Debug.Log ((foot.transform.position - foot.target).y.ToString ("F5"));
+			if (Mathf.Approximately (Horizontal (foot.transform.position, foot.target).magnitude, 0.0f))
 				break;
 			yield return null;
 		} while (true);
+		Debug.Log ("Finished step");
 		toto.leftFootOnFloor = !toto.leftFootOnFloor;
 		takingStep = false;
 	}//*/
+
+	private Vector3 Horizontal (Vector3 v1, Vector3 v2) {
+		Vector3 res = v1 - v2;
+		res.y = 0.0f;
+		return res;
+	}
 }
