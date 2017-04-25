@@ -5,12 +5,22 @@ using UnityEngine;
 //[ExecuteInEditMode]
 [RequireComponent (typeof (FBMotionAnalyzer))]
 public class FBPuppetController : MonoBehaviour {
+	//-------------------- MovementState --------------------
+	public enum MovementState {
+		Idle = 0x01,//0001
+		ClimbingStep = 0x02,//0010
+		SpinningAround = 0x05,//0101
+		Walking = 0x06 //0110
+	}
+	public MovementState state = MovementState.Idle;
+	public bool isMoving { get { return ((int) state & 2) != 0; } }
+
 	//-------------------- Feet --------------------
 	[SerializeField]
 	private FootStateInternal[] feet = new FootStateInternal[2];
 	public FootState leftFoot {
 		get { return feet[0]; }
-		private set {}
+		private set { }
 	}
 	public FootState rightFoot {
 		get { return feet[1]; }
@@ -39,7 +49,6 @@ public class FBPuppetController : MonoBehaviour {
 			}
 		}
 	}
-	public Vector3 direction;
 	private FBMotionAnalyzer motion;
 
 	public float steeringTurnRate = 90.0f;
@@ -66,10 +75,6 @@ public class FBPuppetController : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-		direction = transform.forward;
-		direction.y = 0.0f;
-		direction = Vector3.Normalize (direction);
-
 		yRotation += steeringTurnRate * motion.steering * Time.deltaTime;
 		transform.rotation = Quaternion.Euler (motion.rotation.x, yRotation, motion.rotation.z);
 
@@ -119,7 +124,7 @@ public class FBPuppetController : MonoBehaviour {
 		}
 	}
 
-	public void CreateFoot(Transform t, bool left) {
+	public void CreateFoot (Transform t, bool left) {
 		if (t == null) {
 			Debug.LogWarning ("Transform is null!");
 			return;
