@@ -13,7 +13,7 @@ public class FBPuppetController : MonoBehaviour {
 		Walking = 0x06 //0110
 	}
 	public MovementState state = MovementState.Idle;
-	public bool isMoving { get { return ((int) state & 2) != 0; } }
+	public bool insMoving { get { return ((int) state & 2) != 0; } }
 
 	//-------------------- Feet --------------------
 	[SerializeField]
@@ -54,14 +54,26 @@ public class FBPuppetController : MonoBehaviour {
 	public float steeringTurnRate = 90.0f;
 	private float yRotation = 0.0f;
 
+	public bool useMaxAngleSpan = false;
+	public float maxAngleSpan = 40.0f;
+	private Vector3 _targetDirection;
+	public Vector3 targetDirection {
+		get { return _targetDirection; }
+		set {
+			Vector3 tmp = value;
+			tmp.y = 0.0f;
+			_targetDirection = Vector3.Normalize (tmp);
+		}
+	}
+
 	//-------------------- camera --------------------
 
 	public new Camera camera;
 	public Transform cameraTarget;
 	public Transform cameraPosition;
 
-	// Use this for initialization
 	void Start () {
+		targetDirection = transform.forward;
 		motion = GetComponent<FBMotionAnalyzer> ();
 		if (feet[0] == null || feet[1] == null) {
 			Debug.LogError ("Feet are not set!");
@@ -73,10 +85,26 @@ public class FBPuppetController : MonoBehaviour {
 		}
 	}
 
-	// Update is called once per frame
 	void Update () {
 		yRotation += steeringTurnRate * motion.steering * Time.deltaTime;
-		transform.rotation = Quaternion.Euler (motion.rotation.x, yRotation, motion.rotation.z);
+		Quaternion rotation = Quaternion.Euler (0.0f, yRotation, 0.0f);
+		if (useMaxAngleSpan) {
+			Vector3 currentDirection = rotation * Vector3.forward;
+			float angle = Vector3.Angle (targetDirection, currentDirection);
+			if (angle > maxAngleSpan) {
+				Vector3 correctedDirection = Quaternion.Euler (0.0f, (Vector3.Cross (targetDirection, currentDirection).y < 0.0f ? -1.0f : 1.0f) * maxAngleSpan, 0.0f) * targetDirection;
+				rotation = Quaternion.LookRotation (currentDirection);
+				transform.rotation = Quaternion.Slerp (rotation, Quaternion.LookRotation (correctedDirection), steeringTurnRate * Time.deltaTime);
+			}
+			else {
+				transform.rotation = rotation;
+			}
+			yRotation = transform.rotation.eulerAngles.y;
+		}
+		else {
+			transform.rotation = rotation;
+			targetDirection = transform.forward;
+		}
 
 		if (feet[0].changed || feet[1].changed) {
 			controllerTarget = controllerTarget;// calls private set and sets correct y according to feet vertical position

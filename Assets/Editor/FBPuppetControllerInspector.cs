@@ -21,6 +21,8 @@ public class FBPuppetControllerInspector : Editor {
 
 		EditorGUILayout.Space ();
 		controller.steeringTurnRate = EditorGUILayout.FloatField ("Steering turn rate", controller.steeringTurnRate);
+		controller.useMaxAngleSpan = EditorGUILayout.Toggle ("Use max angle span", controller.useMaxAngleSpan);
+		controller.maxAngleSpan = EditorGUILayout.FloatField ("Max angle span", controller.maxAngleSpan);
 
 		EditorGUILayout.Space ();
 		controller.camera = (Camera) EditorGUILayout.ObjectField ("Camera", controller.camera, typeof (Camera), true);

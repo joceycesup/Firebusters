@@ -12,19 +12,17 @@ public class FBPuppetWalker : MonoBehaviour {
 	public float speed = 4.0f;
 	public float horizontalStepHeight = 0.1f;
 
-	public float maxStairsWalkAngle = 45.0f;
-	public float turnRateCorrection = 360.0f;
-
-	private Vector3 controllerCorrection = Vector3.zero;
-	private bool needsCorrection = false;
-
 	public float distanceOverFloor = 0.001f;
 	public float floorDetectionDistance = 0.10f;
 
-
+	private bool isMovingFoot = false;
 
 	private FBPuppetController controller;
 	private FBMotionAnalyzer motion;
+	private bool horizontalCorrection = false;
+
+	private Transform lastStep;
+	private Vector3 lastStepExtents;
 
 	// --------------------------------------------------------------------------
 	// TO DO :
@@ -55,18 +53,7 @@ public class FBPuppetWalker : MonoBehaviour {
 		//walking = Input.GetAxis ("VerticalL");
 
 		if (motion.walking > 0.0f) {
-			transform.Translate (controller.transform.forward * (speed * Time.deltaTime * motion.walking), Space.World);
-
-			if (needsCorrection) {
-				float factor = (Time.deltaTime * speed * motion.walking) / controllerCorrection.magnitude;
-				Vector3 correction = Vector3.Lerp (Vector3.zero, controllerCorrection, factor);
-				transform.position = transform.position + correction;
-				controllerCorrection -= correction;
-				needsCorrection = factor < 1.0f;
-				//Debug.Log (Time.time.ToString ("F3") + " : " + correction);
-			}
-
-			if (!controller.isMoving) {
+			if (!isMovingFoot) {
 				MoveFoot ();
 			}
 		}
@@ -80,17 +67,12 @@ public class FBPuppetWalker : MonoBehaviour {
 		// #########################################
 		FBPuppetController.FootState foot = controller.movingFoot;
 		Vector3 footStart = foot.target;
-		// step raycast needs to start from the foot that is in front of the next step
-		Vector3 raycastStart = controller.fixedFoot.onStep ? controller.fixedFoot.target : foot.target;
 		Vector3 forward = controller.transform.forward;
 		Vector3 tmpTarget = controller.transform.position;
 
-		tmpTarget.y = (controller.fixedFoot.onStep ? controller.fixedFoot : controller.movingFoot).target.y;
-		tmpTarget += (controller.leftFootOnFloor ? 1.0f : -1.0f) * legsSpan * controller.transform.right;
-		tmpTarget += forward * (stepDistance + centerOffset);
-
-		Ray ray = new Ray (footStart, forward); // first raycast needs to start from moving foot
+		Ray ray;
 		RaycastHit hit;
+		float raycastDistance = stepDistance;
 
 		// #########################################
 		//
@@ -100,18 +82,43 @@ public class FBPuppetWalker : MonoBehaviour {
 		// - 8 : Walkable
 		// - 9 : VerticalObstacle
 		// #########################################
+		tmpTarget.y = footStart.y;
+		//tmpTarget += (controller.leftFootOnFloor ? legsSpan : -legsSpan) * Vector3.Cross (Vector3.up, forward);
+		//tmpTarget += forward * (stepDistance + centerOffset);
+		Debug.DrawLine (footStart, tmpTarget, Color.cyan, 10.0f);
+		Debug.DrawRay (footStart, forward, Color.red, 10.0f);
+		Debug.Log ("-------------------------------------------");
+		Debug.Log ("	State : " + controller.state);
+		Debug.Log ("	Other foot : " + controller.fixedFoot.onStep);
 
-		if (Physics.Raycast (ray, out hit, stepDistance, 1 << 9)) { // hits wall
-			Debug.Log ("Hits Wall! : " + hit.transform.name);
-			//Debug.Break ();
-			Vector3 oldTarget = tmpTarget;
-			tmpTarget = Vector3.ProjectOnPlane (tmpTarget - start, hit.normal);
-			tmpTarget += Vector3.Project (hit.point - start, hit.normal);
-			tmpTarget.y = start.y;
-			ray = new Ray (start, tmpTarget);
-			tmpTarget += start;
-			controllerCorrection += (tmpTarget - oldTarget) / 2.0f;
-			needsCorrection = true;
+		if (controller.state != FBPuppetController.MovementState.ClimbingStep) {
+			// we don't need to check for walls if the puppet is walking up stairs
+
+			ray = new Ray (footStart, forward); // first raycast needs to start from moving foot
+			int i = 2;
+			while (Physics.Raycast (ray, out hit, stepDistance, 1 << 9) && i > 0) { // hits wall
+				Debug.Log ("Hits Wall! : " + hit.transform.name);
+				//Debug.Break ();
+				tmpTarget = Vector3.ProjectOnPlane (tmpTarget - footStart, hit.normal); // vector to desired target from start along wall
+				tmpTarget += Vector3.Project (hit.point - footStart, hit.normal); // vector to wall from start
+				tmpTarget += hit.normal * distanceOverFloor;
+				tmpTarget += footStart;
+				tmpTarget.y = footStart.y;
+
+				ray = new Ray (footStart, tmpTarget - footStart);
+				i--;
+			}
+			if (i < 2) {
+				correctionNeeded = true; //Hit wall, correction needed
+				raycastDistance = (tmpTarget - footStart).magnitude;
+			}
+		}
+		else {
+			raycastDistance = float.MaxValue;
+			if (controller.fixedFoot.onStep)
+				ray = new Ray (lastStep.position + Vector3.up * (lastStepExtents.y + distanceOverFloor), lastStep.forward);
+			else
+				ray = new Ray (footStart, controller.targetDirection);
 		}
 
 		// #########################################
@@ -122,26 +129,16 @@ public class FBPuppetWalker : MonoBehaviour {
 
 		bool hitsStep = Physics.Raycast (ray, out hit, stepDistance, 1 << 8); // hits walkable -> step
 
-		Debug.DrawRay (ray.origin, ray.direction, Color.red, 1.0f);
 		if (hitsStep) {
-			Debug.Log ("Hits Step! : " + hit.transform.name);
-			Debug.Log ("Ray : " + ray);
-			//Debug.Break ();
-			Vector3 oldTarget = tmpTarget;
-			float stepHeight = hit.collider.bounds.extents.y;
+			lastStep = hit.transform;
+			lastStepExtents = hit.collider.bounds.extents;
+			controller.targetDirection = lastStep.forward;
+			controller.useMaxAngleSpan = true;
+			Debug.Log ((controller.leftFootOnFloor ? "Right" : "Left") + " foot hits Step! : " + hit.transform.name);
 
-			if (!controller.fixedFoot.onStep) {
-				// --------------------------------------------------------------------------
-				// taking the first step, may need to correct angle
-				// need to correct angle every single step since spiral staircases are supported
-				// --------------------------------------------------------------------------
-				if (Vector3.Angle (hit.transform.forward, forward) > maxStairsWalkAngle) {
-					//StartCoroutine (RotateControllerOnStairs (Vector3.Cross (forward, hit.transform.forward).y * maxStairsWalkAngle + hit.transform.rotation.y));
-				}
-			}
-			else {
-				ray = new Ray (start + Vector3.up * stepHeight * 1.5f, tmpTarget - start);
-				Physics.Raycast (ray, out hit, stepDistance, 1 << 8); // hits step above
+			if (controller.state != FBPuppetController.MovementState.ClimbingStep) {
+				controller.state = FBPuppetController.MovementState.ClimbingStep;
+				//controller.state = hitsStep ? FBPuppetController.MovementState.ClimbingStep : FBPuppetController.MovementState.Walking;
 			}
 
 			GameObject stepFootLine = null;
@@ -152,6 +149,7 @@ public class FBPuppetWalker : MonoBehaviour {
 				}
 			}
 
+			ray = new Ray (footStart, tmpTarget - footStart); // we need to reset ray position and direction to avoid getting a bad hit point
 			Bounds bounds = stepFootLine.GetComponent<BoxCollider> ().bounds;
 			float distance;
 			new Plane (stepFootLine.transform.forward, stepFootLine.transform.position).Raycast (ray, out distance);
@@ -159,10 +157,8 @@ public class FBPuppetWalker : MonoBehaviour {
 			if ((tmpTarget - stepFootLine.transform.position).sqrMagnitude > bounds.extents.x * bounds.extents.x) {
 				tmpTarget = stepFootLine.transform.position + Vector3.ClampMagnitude (tmpTarget - stepFootLine.transform.position, bounds.extents.x);
 			}
-			controllerCorrection += (tmpTarget - oldTarget) / 2.0f;
-			needsCorrection = true;
 			//tmpTarget.y = foot.transform.position.y + (walkingUpStairs ? 2.0f : 1.0f) * stepHeight;
-			tmpTarget.y = foot.target.y + (walkingUpStairs ? 2.0f : 1.0f) * stepHeight;
+			tmpTarget.y = lastStep.position.y + lastStepExtents.y + distanceOverFloor;
 		}
 
 		ray = new Ray (tmpTarget, Vector3.down); // check if foot is on walkable
@@ -170,8 +166,15 @@ public class FBPuppetWalker : MonoBehaviour {
 		if (Physics.Raycast (ray, out hit, floorDetectionDistance, 1 << 8)) { // hits walkable
 			foot.onStep = (hit.transform.gameObject.tag == "Step");
 			tmpTarget.y = hit.point.y + distanceOverFloor;
+
+			// if puppet reached end of stairs, reset controller state
+			if (!controller.fixedFoot.onStep && !foot.onStep && controller.state == FBPuppetController.MovementState.ClimbingStep) {
+				controller.useMaxAngleSpan = false;
+				controller.state = FBPuppetController.MovementState.Walking;
+			}
 		}
 		else {
+			Debug.LogWarning ("Foot over nothingness!");
 			//#################################################################################
 			//#################################################################################
 			//#################################################################################
@@ -180,18 +183,18 @@ public class FBPuppetWalker : MonoBehaviour {
 			//#################################################################################
 			//#################################################################################
 			foot.onStep = false;
-			if (!hitsStep) { // regular walking, like... on a floor... and all that stuff
-				Vector3 oldTarget = tmpTarget;
-				Vector3 direction = tmpTarget - start;
-				tmpTarget = Vector3.down * floorDetectionDistance;
-				ray = new Ray (tmpTarget, direction);
-				if (Physics.Raycast (ray, out hit, (start - tmpTarget).magnitude + 0.1f, 1 << 8)) { // hits walkable
-					tmpTarget = hit.point;
-					tmpTarget.y = oldTarget.y;
-					controllerCorrection += (tmpTarget - oldTarget) / 2.0f;
-					needsCorrection = true;
-				}
+
+			tmpTarget.y -= floorDetectionDistance;
+			Vector3 deltaPos = footStart - tmpTarget;
+			ray = new Ray (tmpTarget, deltaPos);
+			if (Physics.Raycast (ray, out hit, deltaPos.magnitude, 1 << 8)) { // hits walkable
+				tmpTarget = Vector3.ProjectOnPlane (-deltaPos, hit.normal); // vector to desired target from start along wall
+				tmpTarget += Vector3.Project (footStart - hit.point, hit.normal); // vector to wall from start
+				tmpTarget -= hit.normal * distanceOverFloor;
+				tmpTarget += footStart;
+				tmpTarget.y = footStart.y;
 			}
+
 			//#################################################################################
 			//#################################################################################
 			//#################################################################################
@@ -205,8 +208,6 @@ public class FBPuppetWalker : MonoBehaviour {
 
 		foot.target = tmpTarget;
 		if (hitsStep) {
-			Debug.Log ("Step target : " + foot.target);
-			//Debug.Break ();
 			StartCoroutine (TakeStep (foot, controller.fixedFoot.onStep ? 2 : 1));
 		}
 		else {
@@ -215,49 +216,63 @@ public class FBPuppetWalker : MonoBehaviour {
 	}
 
 	IEnumerator TakeStep (FBPuppetController.FootState foot, int steps) {
-		controller.state = steps == 0 ? FBPuppetController.MovementState.Walking : FBPuppetController.MovementState.ClimbingStep;
+		isMovingFoot = true;
 
 		Vector3 startPos = foot.transform.position;
 		Vector3 deltaPos = foot.target - foot.transform.position;
 		float stepHeight = deltaPos.y;
+
+		Vector3 controllerStartPos = controller.transform.position;
+		Vector3 controllerTargetPos = controllerStartPos;
+		if (horizontalCorrection)
+			controllerTargetPos += Vector3.Project (deltaPos / 2.0f, controller.transform.forward);
+		else
+			controllerTargetPos += deltaPos / 2.0f;
+		horizontalCorrection = false;
+
 		deltaPos.y = 0.0f;
-		float distance = deltaPos.magnitude;
+		float totalDistance = deltaPos.magnitude;
+		float distance;
 
 		float a, b;
 		switch (steps) {
 			case 1:
-				a = -4.0f * stepHeight / (distance * distance);
-				b = 3.0f * stepHeight / distance - distance * a * 0.5f;
+				a = -4.0f * stepHeight / (totalDistance * totalDistance);
+				b = 3.0f * stepHeight / totalDistance - totalDistance * a * 0.5f;
 				break;
 			case 2:
-				a = -3.0f * stepHeight / (distance * distance);
-				b = 2.5f * stepHeight / distance - distance * a * 0.5f;
+				a = -3.0f * stepHeight / (totalDistance * totalDistance);
+				b = 2.5f * stepHeight / totalDistance - totalDistance * a * 0.5f;
 				break;
 			default:
-				a = -4.0f * horizontalStepHeight / (distance * distance);
-				b = 2.0f * horizontalStepHeight / distance - distance * a * 0.5f;
+				a = -4.0f * horizontalStepHeight / (totalDistance * totalDistance);
+				b = 2.0f * horizontalStepHeight / totalDistance - totalDistance * a * 0.5f;
 				break;
 		}
 
+		float factor = 1.0f;
+
+		//Debug.Log ((controller.leftFootOnFloor ? "left" : "right") + " foot : " + totalDistance);
 		do {
 			distance = new Vector2 (foot.transform.position.x - foot.target.x, foot.transform.position.z - foot.target.z).magnitude;
+			factor = (speed * 2.0f * Time.deltaTime) / distance;
 			Vector3 newPos = Vector3.Lerp (foot.transform.position, foot.target,
-				(speed * 2.0f * Time.deltaTime) /
-				distance);
+				factor);
 			distance = Horizontal (startPos, newPos).magnitude;
 			newPos.y = startPos.y + a * distance * distance + b * distance;
 			foot.transform.position = newPos;
 
-			if (Mathf.Approximately (Horizontal (foot.transform.position, foot.target).magnitude, 0.0f)) {
+			//controller.transform.position = Vector3.Lerp (controllerStartPos, controllerTargetPos, distance / totalDistance);
+
+			if (factor >= 1.0f) {
 				foot.transform.position = foot.target;
 				break;
 			}
-			Debug.Log ((foot.transform.position - foot.target).y.ToString ("F5"));
 			yield return null;
 		} while (true);
 		Debug.Log ("Finished step");
 		controller.leftFootOnFloor = !controller.leftFootOnFloor;
-		controller.state = FBPuppetController.MovementState.Idle;
+		isMovingFoot = false;
 	}//*/
 
 	private Vector3 Horizontal (Vector3 v1, Vector3 v2) {
