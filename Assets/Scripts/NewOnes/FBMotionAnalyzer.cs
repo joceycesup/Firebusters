@@ -52,7 +52,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				break;
 			case State.Walk:
 				UpdateWalkValues ();
-				break;
+				goto case State.Strike;
 			case State.Strike:
 				break;
 		}

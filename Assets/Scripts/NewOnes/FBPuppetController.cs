@@ -94,7 +94,7 @@ public class FBPuppetController : MonoBehaviour {
 			if (angle > maxAngleSpan) {
 				Vector3 correctedDirection = Quaternion.Euler (0.0f, (Vector3.Cross (targetDirection, currentDirection).y < 0.0f ? -1.0f : 1.0f) * maxAngleSpan, 0.0f) * targetDirection;
 				rotation = Quaternion.LookRotation (currentDirection);
-				transform.rotation = Quaternion.Slerp (rotation, Quaternion.LookRotation (correctedDirection), steeringTurnRate * Time.deltaTime);
+				transform.rotation = Quaternion.Slerp (rotation, Quaternion.LookRotation (correctedDirection), (steeringTurnRate * Time.deltaTime) / (angle - maxAngleSpan));
 			}
 			else {
 				transform.rotation = rotation;
