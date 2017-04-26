@@ -25,7 +25,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		//Debug.Log (av);
 		if (split.Length >= 5) {
 			if (split[0].CompareTo ("3") == 0) {
-				sensorAxis.x = -float.Parse (split[4]);
+				sensorAxis.x = float.Parse (split[4]);
 				sensorAxis.y = float.Parse (split[2]);
 				sensorAxis.z = float.Parse (split[3]);
 				if (!calibrated) {
