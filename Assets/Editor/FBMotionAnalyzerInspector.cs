@@ -11,6 +11,7 @@ public class FBMotionAnalyzerInspector : Editor {
 	}
 
 	public override void OnInspectorGUI () {
+		motion.isAxePuppet = EditorGUILayout.Toggle ("Is axe puppet", motion.isAxePuppet);
 		motion.abilities = (FBMotionAnalyzer.Action) EditorGUILayout.EnumMaskField ("Abilities", motion.abilities);
 		motion.usePhoneDataHandler = EditorGUILayout.Toggle ("Use phone data handler", motion.usePhoneDataHandler);
 
