@@ -3,14 +3,17 @@
 [RequireComponent (typeof (FBPhoneDataHandler))]
 public class FBMotionAnalyzer : MonoBehaviour {
 
-	public enum State {
-		Inactive,
-		Walk,
-		Aim,
-		Strike
+	public enum Action {
+		Walk	= 0x01,
+		Aim		= 0x02,
+		Strike	= 0x04,
+		Draw	= 0x08,
+		Sheathe	= 0x10,
+		Pickup	= 0x20,
+		Throw	= 0x40
 	}
 
-	public State state = State.Walk;
+	public Action abilities = Action.Walk;
 
 	private FBPhoneDataHandler sensor;
 	public bool usePhoneDataHandler = true;
@@ -45,16 +48,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	}
 
 	void Update () {
-		switch (state) {
-			case State.Inactive:
-				break;
-			case State.Aim:
-				break;
-			case State.Walk:
-				UpdateWalkValues ();
-				goto case State.Strike;
-			case State.Strike:
-				break;
+		if ((abilities & Action.Walk) != 0) {
+			UpdateWalkValues ();
 		}
 	}
 

@@ -89,9 +89,9 @@ public class FBPuppetWalker : MonoBehaviour {
 		tmpTarget += forward * (stepDistance + centerOffset);
 		//Debug.DrawLine (footStart, tmpTarget, Color.cyan, 10.0f);
 		//Debug.DrawRay (footStart, forward, Color.red, 10.0f);
-		Debug.Log ("-------------------------------------------");
-		Debug.Log ("	State : " + controller.state);
-		Debug.Log ("	Other foot : " + controller.fixedFoot.onStep);
+		//Debug.Log ("-------------------------------------------");
+		//Debug.Log ("	State : " + controller.state);
+		//Debug.Log ("	Other foot : " + controller.fixedFoot.onStep);
 		Vector3 oldTarget = tmpTarget;
 
 		if (controller.state != FBPuppetController.MovementState.ClimbingStep) {
@@ -99,7 +99,7 @@ public class FBPuppetWalker : MonoBehaviour {
 			ray = new Ray (footStart, forward); // first raycast needs to start from moving foot
 			int i = 2; // two iterations at least to handle corners
 			while (Physics.Raycast (ray, out hit, stepDistance + distanceToWall, 1 << 9) && i > 0) { // hits wall
-				Debug.Log ("Hits Wall! : " + hit.transform.name);
+				//Debug.Log ("Hits Wall! : " + hit.transform.name);
 				//Debug.Break ();
 				tmpTarget = Vector3.ProjectOnPlane (tmpTarget - footStart, hit.normal); // vector to desired target from start along wall
 				tmpTarget += Vector3.Project (hit.point - footStart, hit.normal); // vector to wall from start
@@ -294,7 +294,7 @@ public class FBPuppetWalker : MonoBehaviour {
 				yield return null;
 			} while (true);
 		}
-		Debug.Log ("Finished step");
+		//Debug.Log ("Finished step");
 		controller.leftFootOnFloor = !controller.leftFootOnFloor;
 		isMovingFoot = false;
 	}//*/
