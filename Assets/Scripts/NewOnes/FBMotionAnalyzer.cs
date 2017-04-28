@@ -13,6 +13,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public event ActionEvent OnPickup;
 	public event ActionEvent OnThrow;
 
+	[Serializable]
 	public enum Action {
 		Walk = 0x01,
 		Aim = 0x02,
@@ -24,10 +25,11 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	}
 
 #pragma warning disable 0414
+	[SerializeField]
 	private Action _abilities = Action.Walk;
 	public Action abilities {
-		get;
-		set;
+		get { return _abilities; }
+		set { _abilities = value; }
 	}
 	public bool SetAbility (Action a) {
 		if (TestMask (a))
