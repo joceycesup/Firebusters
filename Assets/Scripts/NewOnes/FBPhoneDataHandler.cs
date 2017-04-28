@@ -36,7 +36,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 			if (split[0].CompareTo ("3") == 0) {
 				_orientation.x = float.Parse (split[4]);
 				_orientation.y = float.Parse (split[2]);
-				_orientation.z = float.Parse (split[3]);
+				_orientation.z = -float.Parse (split[3]);
 				if (!calibrated) {
 					calibratedRotationE = _orientation;
 					if (calibratedRotationE.y > 180.0f)
@@ -50,9 +50,9 @@ public class FBPhoneDataHandler : MonoBehaviour {
 						_orientation.y -= 360.0f;
 				}// end of steering
 			}else if (split[0].CompareTo ("1") == 0) {
-				_acceleration.x = float.Parse (split[2]);
+				_acceleration.x = -float.Parse (split[3]);
 				_acceleration.y = float.Parse (split[4]);
-				_acceleration.z = -float.Parse (split[3]);
+				_acceleration.z = float.Parse (split[2]);
 			}
 		}
 	}

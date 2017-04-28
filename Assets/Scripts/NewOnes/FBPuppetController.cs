@@ -150,6 +150,7 @@ public class FBPuppetController : MonoBehaviour {
 			transform.rotation = rotation;
 			targetDirection = transform.forward;
 		}
+		feet[0].transform.rotation = feet[1].transform.rotation = rotation;
 
 		if (feet[0].changed || feet[1].changed) {
 			controllerTarget = controllerTarget;// calls private set and sets correct y according to feet vertical position

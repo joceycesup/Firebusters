@@ -107,6 +107,9 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public Vector3 rotation {
 		get { return sensor.orientation; }
 	}
+	public Vector3 acceleration {
+		get { return sensor.acceleration; }
+	}
 
 	void Awake () {
 		sensor = gameObject.GetComponent<FBPhoneDataHandler> ();
@@ -125,7 +128,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	private void UpdateWalkValues () {
 		if (usePhoneDataHandler) {
 			Debug.DrawRay (transform.position, sensor.acceleration, Color.red);
-			steering = Mathf.Sign (sensor.orientation.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.orientation.z) / maxPitch);
+			steering = Mathf.Sign (-sensor.orientation.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.orientation.z) / maxPitch);
 
 			walking = rollFactor.Evaluate (sensor.orientation.x / maxRoll);
 		}
