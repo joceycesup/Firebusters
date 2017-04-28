@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -72,9 +73,53 @@ public class FBPuppetController : MonoBehaviour {
 	public Transform cameraTarget;
 	public Transform cameraPosition;
 
+	private void OnEnable () {
+		motion.OnDraw += Draw;
+		motion.OnPickup += Pickup;
+		motion.OnSheathe += Sheathe;
+		motion.OnStrike += Strike;
+		motion.OnThrow += Throw;
+	}
+
+	private void OnDisable () {
+		motion.OnDraw -= Draw;
+		motion.OnPickup -= Pickup;
+		motion.OnSheathe -= Sheathe;
+		motion.OnStrike -= Strike;
+		motion.OnThrow -= Throw;
+	}
+
+	private void Draw () {
+		Debug.Log ("draw");
+		Debug.Break ();
+	}
+
+	private void Pickup () {
+		Debug.Log ("pickup");
+		Debug.Break ();
+	}
+
+	private void Sheathe () {
+		Debug.Log ("sheathe");
+		Debug.Break ();
+	}
+
+	private void Strike () {
+		Debug.Log ("strike");
+		Debug.Break ();
+	}
+
+	private void Throw () {
+		Debug.Log ("throw");
+		Debug.Break ();
+	}
+
+	private void Awake () {
+		motion = GetComponent<FBMotionAnalyzer> ();
+	}
+
 	void Start () {
 		targetDirection = transform.forward;
-		motion = GetComponent<FBMotionAnalyzer> ();
 		if (feet[0] == null || feet[1] == null) {
 			Debug.LogError ("Feet are not set!");
 			Debug.Break ();

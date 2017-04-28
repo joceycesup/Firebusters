@@ -68,9 +68,9 @@ public class TMPMotionAnalyzer : MonoBehaviour {
 
 	private void UpdateWalkValues () {
 		if (usePhoneDataHandler) {
-			steering = Mathf.Sign (sensor.sensorAxis.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.sensorAxis.z) / maxPitch);
+			steering = Mathf.Sign (sensor.orientation.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.orientation.z) / maxPitch);
 
-			walking = rollFactor.Evaluate (sensor.sensorAxis.x / maxRoll);
+			walking = rollFactor.Evaluate (sensor.orientation.x / maxRoll);
 			//Debug.Log (walking);
 		}
 		else {
@@ -81,7 +81,7 @@ public class TMPMotionAnalyzer : MonoBehaviour {
 		}
 
 		yRotation += steeringTurnRate * steering * Time.fixedDeltaTime;
-		controller.rotation = Quaternion.Euler (sensor.sensorAxis.x, yRotation, sensor.sensorAxis.z);
+		controller.rotation = Quaternion.Euler (sensor.orientation.x, yRotation, sensor.orientation.z);
 
 		dollWalker.walking = walking;
 	}

@@ -64,7 +64,7 @@ public class Backup190417FBMotionAnalyzer : MonoBehaviour {
 	void AnalyzeOscillation () {
 		float value = 0.0f;
 		if (sensor) {
-			value = sensor.sensorAxis.z;
+			value = sensor.orientation.z;
 			if (value > 180.0f)
 				value -= 360.0f;
 		}

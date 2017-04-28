@@ -6,10 +6,19 @@ using System.Threading;
 
 public class FBPhoneDataHandler : MonoBehaviour {
 	public int comNum = 4;
-	
-	public Vector3 calibratedRotationE;
+
+	private Vector3 calibratedRotationE;
 	private bool calibrated = false;
-	public Vector3 sensorAxis;
+	private Vector3 _orientation;
+	public Vector3 orientation {
+		get { return _orientation; }
+		private set { _orientation = value; }
+	}
+	private Vector3 _acceleration;
+	public Vector3 acceleration {
+		get { return _acceleration; }
+		private set { _acceleration = value; }
+	}
 
 	private SerialPort sp;
 	private Thread serialThread;
@@ -25,21 +34,25 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		//Debug.Log (av);
 		if (split.Length >= 5) {
 			if (split[0].CompareTo ("3") == 0) {
-				sensorAxis.x = float.Parse (split[4]);
-				sensorAxis.y = float.Parse (split[2]);
-				sensorAxis.z = float.Parse (split[3]);
+				_orientation.x = float.Parse (split[4]);
+				_orientation.y = float.Parse (split[2]);
+				_orientation.z = float.Parse (split[3]);
 				if (!calibrated) {
-					calibratedRotationE = sensorAxis;
+					calibratedRotationE = _orientation;
 					if (calibratedRotationE.y > 180.0f)
 						calibratedRotationE.y -= 360.0f;
 					calibrated = true;
 				}
 
 				{// steering
-					sensorAxis.y -= calibratedRotationE.y;
-					if (sensorAxis.y > 180.0f)
-						sensorAxis.y -= 360.0f;
+					_orientation.y -= calibratedRotationE.y;
+					if (_orientation.y > 180.0f)
+						_orientation.y -= 360.0f;
 				}// end of steering
+			}else if (split[0].CompareTo ("1") == 0) {
+				_acceleration.x = float.Parse (split[2]);
+				_acceleration.y = float.Parse (split[4]);
+				_acceleration.z = -float.Parse (split[3]);
 			}
 		}
 	}

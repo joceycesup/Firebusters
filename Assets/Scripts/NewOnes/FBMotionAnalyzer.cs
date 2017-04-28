@@ -6,6 +6,13 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public bool isAxePuppet = true;
 	public bool isCarryingItem = false;
 
+	public delegate void ActionEvent ();
+	public event ActionEvent OnStrike;
+	public event ActionEvent OnDraw;
+	public event ActionEvent OnSheathe;
+	public event ActionEvent OnPickup;
+	public event ActionEvent OnThrow;
+
 	public enum Action {
 		Walk = 0x01,
 		Aim = 0x02,
@@ -16,6 +23,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 		Throw = 0x40
 	}
 
+#pragma warning disable 0414
 	private Action _abilities = Action.Walk;
 	public Action abilities {
 		get;
@@ -95,7 +103,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public AnimationCurve pitchFactor = AnimationCurve.EaseInOut (0.2f, 0.0f, 1.0f, 1.0f);
 
 	public Vector3 rotation {
-		get { return sensor.sensorAxis; }
+		get { return sensor.orientation; }
 	}
 
 	void Awake () {
@@ -107,17 +115,17 @@ public class FBMotionAnalyzer : MonoBehaviour {
 		if (TestMask (Action.Walk)) {
 			UpdateWalkValues ();
 		}
-		if (TestMask (Action.Pickup|Action.Throw)) {
+		if (TestMask (Action.Pickup | Action.Throw)) {
 			UpdateWalkValues ();
 		}
 	}
 
 	private void UpdateWalkValues () {
 		if (usePhoneDataHandler) {
-			steering = Mathf.Sign (sensor.sensorAxis.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.sensorAxis.z) / maxPitch);
+			Debug.DrawRay (transform.position, sensor.acceleration, Color.red);
+			steering = Mathf.Sign (sensor.orientation.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.orientation.z) / maxPitch);
 
-			walking = rollFactor.Evaluate (sensor.sensorAxis.x / maxRoll);
-			//Debug.Log (walking);
+			walking = rollFactor.Evaluate (sensor.orientation.x / maxRoll);
 		}
 		else {
 			float horizontal = Input.GetAxis ("HorizontalL");
