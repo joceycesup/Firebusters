@@ -1,0 +1,185 @@
+fileFormatVersion: 2
+guid: 81e517f293682344ab3685ebeb4c4d68
+timeCreated: 1493548024
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: annulaire_d1
+    100002: annulaire_d2
+    100004: annulaire_d3
+    100006: annulaire_g1
+    100008: annulaire_g2
+    100010: annulaire_g3
+    100012: avant_bras_d
+    100014: avant_bras_g
+    100016: bassin
+    100018: bras_d
+    100020: bras_g
+    100022: casque
+    100024: corps
+    100026: cou
+    100028: Cylindre
+    100030: epaules
+    100032: genou_d
+    100034: genou_g
+    100036: hanche_d
+    100038: hanche_g
+    100040: index_d1
+    100042: index_d2
+    100044: index_g1
+    100046: index_g2
+    100048: index_g3
+    100050: index_gd3
+    100052: main_d
+    100054: main_g
+    100056: majeur_d1
+    100058: majeur_d2
+    100060: majeur_d3
+    100062: majeur_g1
+    100064: majeur_g2
+    100066: majeur_g3
+    100068: //RootNode
+    100070: "mod\xE9_perso"
+    100072: petit_doigt_d1
+    100074: petit_doigt_d2
+    100076: petit_doigt_d3
+    100078: petit_doigt_g1
+    100080: petit_doigt_g2
+    100082: petit_doigt_g3
+    100084: pied_d
+    100086: pied_g
+    100088: pouce_d1
+    100090: pouce_d2
+    100092: pouce_d3
+    100094: pouce_g1
+    100096: pouce_g2
+    100098: pouce_g3
+    100100: Racine
+    100102: tete
+    400000: annulaire_d1
+    400002: annulaire_d2
+    400004: annulaire_d3
+    400006: annulaire_g1
+    400008: annulaire_g2
+    400010: annulaire_g3
+    400012: avant_bras_d
+    400014: avant_bras_g
+    400016: bassin
+    400018: bras_d
+    400020: bras_g
+    400022: casque
+    400024: corps
+    400026: cou
+    400028: Cylindre
+    400030: epaules
+    400032: genou_d
+    400034: genou_g
+    400036: hanche_d
+    400038: hanche_g
+    400040: index_d1
+    400042: index_d2
+    400044: index_g1
+    400046: index_g2
+    400048: index_g3
+    400050: index_gd3
+    400052: main_d
+    400054: main_g
+    400056: majeur_d1
+    400058: majeur_d2
+    400060: majeur_d3
+    400062: majeur_g1
+    400064: majeur_g2
+    400066: majeur_g3
+    400068: //RootNode
+    400070: "mod\xE9_perso"
+    400072: petit_doigt_d1
+    400074: petit_doigt_d2
+    400076: petit_doigt_d3
+    400078: petit_doigt_g1
+    400080: petit_doigt_g2
+    400082: petit_doigt_g3
+    400084: pied_d
+    400086: pied_g
+    400088: pouce_d1
+    400090: pouce_d2
+    400092: pouce_d3
+    400094: pouce_g1
+    400096: pouce_g2
+    400098: pouce_g3
+    400100: Racine
+    400102: tete
+    2300000: Cylindre
+    3300000: Cylindre
+    4300000: Cylindre
+    4300002: "mod\xE9_perso"
+    9500000: //RootNode
+    13700000: "mod\xE9_perso"
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
