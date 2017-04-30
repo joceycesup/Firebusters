@@ -3,6 +3,27 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class FBFootState {
+	[SerializeField]
+	private Transform _transform;
+	private Vector3 _target;
+
+	public Vector3 target {
+		get { return _target; }
+		set { _target = value; _changed = true; }
+	}
+	//if not onStep, is onFloor
+	public bool onStep = false;
+
+	public Transform transform { get { return _transform; } protected set { _transform = value; target = _transform.position; } }
+	//public Vector3 target { get { return _target; } private set { _target = value; } }
+
+	protected bool _changed;
+
+	protected FBFootState () { }
+}
+
 //[ExecuteInEditMode]
 [RequireComponent (typeof (FBMotionAnalyzer))]
 public class FBPuppetController : MonoBehaviour {
@@ -16,23 +37,30 @@ public class FBPuppetController : MonoBehaviour {
 	public MovementState state = MovementState.Idle;
 	public bool insMoving { get { return ((int) state & 2) != 0; } }
 
+	//-------------------- Actions --------------------
+	private FBAction _actions = FBAction.None;
+	public FBAction actions {
+		get { return _actions; }
+		private set { _actions = value; }
+	}
+
 	//-------------------- Feet --------------------
 	[SerializeField]
 	private FootStateInternal[] feet = new FootStateInternal[2];
-	public FootState leftFoot {
+	public FBFootState leftFoot {
 		get { return feet[0]; }
 		private set { }
 	}
-	public FootState rightFoot {
+	public FBFootState rightFoot {
 		get { return feet[1]; }
 		private set { }
 	}
 	public bool leftFootOnFloor = true;
-	public FootState movingFoot {
+	public FBFootState movingFoot {
 		get { return feet[leftFootOnFloor ? 1 : 0]; }
 		private set { }
 	}
-	public FootState fixedFoot {
+	public FBFootState fixedFoot {
 		get { return feet[leftFootOnFloor ? 0 : 1]; }
 		private set { }
 	}
@@ -73,6 +101,12 @@ public class FBPuppetController : MonoBehaviour {
 	public Transform cameraTarget;
 	public Transform cameraPosition;
 
+	//-------------------- pickable and items --------------------
+
+	private GameObject carriedItem = null;
+
+	//-------------------- actions --------------------
+
 	private void OnEnable () {
 		motion.OnDraw += Draw;
 		motion.OnPickup += Pickup;
@@ -89,30 +123,71 @@ public class FBPuppetController : MonoBehaviour {
 		motion.OnThrow -= Throw;
 	}
 
-	private void Draw () {
-		Debug.Log ("draw");
-		Debug.Break ();
+	private GameObject CheckForPickable () {
+		return null;
 	}
 
-	private void Pickup () {
-		Debug.Log ("pickup");
-		Debug.Break ();
+	private void Draw () {
+		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Sheathe) && !FBMotionAnalyzer.TestMask (actions, FBAction.Draw)) {
+			Debug.Log ("Started action " + FBAction.Draw);
+			motion.SetAbility (FBAction.Sheathe);
+			actions |= FBAction.Draw;
+			StartCoroutine (StopAction (FBAction.Draw, 0.5f));
+		}
 	}
 
 	private void Sheathe () {
-		Debug.Log ("sheathe");
-		Debug.Break ();
+		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Sheathe) && !FBMotionAnalyzer.TestMask (actions, FBAction.Draw)) {
+			Debug.Log ("Started action " + FBAction.Sheathe);
+			motion.SetAbility (FBAction.Draw);
+			actions |= FBAction.Sheathe;
+			StartCoroutine (StopAction (FBAction.Sheathe, 0.5f));
+		}
 	}
 
 	private void Strike () {
-		Debug.Log ("strike");
-		Debug.Break ();
+		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Strike)) {
+			Debug.Log ("Started action " + FBAction.Strike);
+			actions |= FBAction.Strike;
+			StartCoroutine (StopAction (FBAction.Strike, 0.5f));
+		}
+	}
+
+	private void Pickup () {
+		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Pickup)) {
+			if ((carriedItem = CheckForPickable ()) != null) {
+				motion.isCarryingItem = true;
+				Debug.Log ("Picking " + carriedItem);
+				Debug.Log ("Started action " + FBAction.Pickup);
+				actions |= FBAction.Pickup;
+			}
+		}
 	}
 
 	private void Throw () {
-		Debug.Log ("throw");
-		Debug.Break ();
+		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Throw)) {
+			if (carriedItem != null) {
+				motion.isCarryingItem = false;
+				Debug.Log ("Thowing " + carriedItem);
+				Debug.Log ("Started action " + FBAction.Throw);
+				actions |= FBAction.Throw;
+				StartCoroutine (StopAction (FBAction.Throw, 0.5f));
+			}
+		}
 	}
+
+	private IEnumerator StopAction (FBAction a, float delay = 0.0f) {
+		if (a != FBAction.None) {
+			float endTime = Time.time + delay;
+			while (Time.time < endTime) {
+				yield return null;
+			}
+			actions &= ~a;
+			Debug.Log ("Ended action " + a);
+		}
+	}
+
+	//-------------------- game loops --------------------
 
 	private void Awake () {
 		motion = GetComponent<FBMotionAnalyzer> ();
@@ -159,29 +234,10 @@ public class FBPuppetController : MonoBehaviour {
 		camera.transform.LookAt (cameraTarget);
 	}
 
-	[System.Serializable]
-	public class FootState {
-		[SerializeField]
-		private Transform _transform;
-		private Vector3 _target;
-
-		public Vector3 target {
-			get { return _target; }
-			set { _target = value; _changed = true; }
-		}
-		//if not onStep, is onFloor
-		public bool onStep = false;
-
-		public Transform transform { get { return _transform; } protected set { _transform = value; target = _transform.position; } }
-		//public Vector3 target { get { return _target; } private set { _target = value; } }
-
-		protected bool _changed;
-
-		protected FootState () { }
-	}
+	//-------------------- footstate --------------------
 
 	[System.Serializable]
-	private class FootStateInternal : FootState {
+	private class FootStateInternal : FBFootState {
 		public bool changed {
 			get {
 				if (_changed) {

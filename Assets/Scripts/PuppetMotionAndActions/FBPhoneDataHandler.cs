@@ -7,8 +7,6 @@ using System.Threading;
 public class FBPhoneDataHandler : MonoBehaviour {
 	public int comNum = 4;
 
-	private Vector3 calibratedRotationE;
-	private bool calibrated = false;
 	private Vector3 _orientation;
 	public Vector3 orientation {
 		get { return _orientation; }
@@ -18,6 +16,29 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	public Vector3 acceleration {
 		get { return _acceleration; }
 		private set { _acceleration = value; }
+	}
+	private Vector3 _cleanAcceleration;
+	public Vector3 cleanAcceleration {
+		get { return _cleanAcceleration; }
+		private set { _cleanAcceleration = value; }
+	}
+	private Quaternion accRotation;
+	private Vector3 accForward;
+	private Vector3 accUp;
+	private Vector3 accRight;
+
+	private void UpdateAcceleration () {
+		float theoreticalYLength = 9.81f * Mathf.Cos (Vector3.Angle (Vector3.up, accUp) * Mathf.Deg2Rad);
+		float theoreticalXLength = 9.81f * Mathf.Cos (Vector3.Angle (accRight.y >= 0.0f ? Vector3.up : Vector3.down, accRight) * Mathf.Deg2Rad);
+		float theoreticalZLength = 9.81f * Mathf.Cos (Vector3.Angle (accForward.y >= 0.0f ? Vector3.up : Vector3.down, accForward) * Mathf.Deg2Rad);
+		cleanAcceleration = acceleration - new Vector3 (theoreticalXLength, theoreticalYLength, theoreticalZLength);
+		//Debug.Log (cleanAcceleration);
+	}
+	private void UpdateRotation () {
+		accRotation = Quaternion.Euler (_orientation);
+		accUp = accRotation * Vector3.up;
+		accForward = accRotation * Vector3.forward;
+		accRight = accRotation * Vector3.right;
 	}
 
 	private SerialPort sp;
@@ -37,30 +58,26 @@ public class FBPhoneDataHandler : MonoBehaviour {
 				_orientation.x = float.Parse (split[4]);
 				_orientation.y = float.Parse (split[2]);
 				_orientation.z = -float.Parse (split[3]);
-				if (!calibrated) {
-					calibratedRotationE = _orientation;
-					if (calibratedRotationE.y > 180.0f)
-						calibratedRotationE.y -= 360.0f;
-					calibrated = true;
-				}
-
-				{// steering
-					_orientation.y -= calibratedRotationE.y;
-					if (_orientation.y > 180.0f)
-						_orientation.y -= 360.0f;
-				}// end of steering
-			}else if (split[0].CompareTo ("1") == 0) {
+				if (_orientation.y > 180.0f)
+					_orientation.y -= 360.0f;
+				UpdateRotation ();
+				UpdateAcceleration ();
+			}
+			else if (split[0].CompareTo ("1") == 0) {
 				_acceleration.x = -float.Parse (split[3]);
 				_acceleration.y = float.Parse (split[4]);
 				_acceleration.z = float.Parse (split[2]);
+				UpdateAcceleration ();
 			}
 		}
 	}
 
+	// this method is executed in a new Thread
 	private void ReadData () {
 		while (connected) {
 			recData ();
 		}
+		Debug.Log ("ReadData Thread completed");
 	}
 
 	void recData () {
