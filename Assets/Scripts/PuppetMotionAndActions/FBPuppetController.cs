@@ -151,9 +151,10 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private void Draw () {
-		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Sheathe) && !FBMotionAnalyzer.TestMask (actions, FBAction.Draw)) {
+		if (!actions.TestMask (FBAction.Sheathe) && !actions.TestMask (FBAction.Draw)) {
 			Debug.Log ("Started action " + FBAction.Draw);
-			motion.SetAbility (FBAction.Sheathe);
+			//motion.SetAbility (FBAction.Sheathe);
+			motion.ToggleAbilities (FBAction.Draw | FBAction.Sheathe | FBAction.Walk | FBAction.Aim);
 			actions |= FBAction.Draw;
 			StartCoroutine (DoItLater (() => {
 				actions &= ~FBAction.Draw;
@@ -165,9 +166,10 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private void Sheathe () {
-		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Sheathe) && !FBMotionAnalyzer.TestMask (actions, FBAction.Draw)) {
+		if (!actions.TestMask (FBAction.Sheathe) && !actions.TestMask (FBAction.Draw)) {
 			Debug.Log ("Started action " + FBAction.Sheathe);
-			motion.SetAbility (FBAction.Draw);
+			//motion.SetAbility (FBAction.Draw);
+			motion.ToggleAbilities (FBAction.Draw | FBAction.Sheathe | FBAction.Walk | FBAction.Aim);
 			actions &= ~FBAction.Aim;
 			actions |= FBAction.Sheathe;
 			StartCoroutine (DoItLater (() => {
@@ -178,7 +180,7 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private void Strike () {
-		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Strike)) {
+		if (!actions.TestMask (FBAction.Strike)) {
 			Debug.Log ("Started action " + FBAction.Strike);
 			actions |= FBAction.Strike;
 			tool.velocity = Vector3.zero;
@@ -209,7 +211,7 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private void Pickup () {
-		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Pickup)) {
+		if (!actions.TestMask (FBAction.Pickup)) {
 			if ((carriedItem = CheckForPickable ()) != null) {
 				motion.isCarryingItem = true;
 				Debug.Log ("Picking " + carriedItem);
@@ -220,7 +222,7 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private void Throw () {
-		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Throw)) {
+		if (!actions.TestMask (FBAction.Throw)) {
 			if (carriedItem != null) {
 				motion.isCarryingItem = false;
 				Debug.Log ("Thowing " + carriedItem);
@@ -317,7 +319,7 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private void FixedUpdate () {
-		if (FBMotionAnalyzer.TestMask (actions, FBAction.Aim)) {
+		if (actions.TestMask (FBAction.Aim)) {
 			Debug.Log ("aiming");
 			tool.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y, tool.rotation.eulerAngles.z);
 		}

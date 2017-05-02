@@ -65,21 +65,10 @@ public class FBMotionAnalyzerInspector : Editor {
 		if (showToolParameters) {
 			EditorGUI.indentLevel = 1;
 			if (motion.isAxePuppet) {
-				motion.sheatheDrawMaxDuration = EditorGUILayout.FloatField ("Sheathe/Draw max duration", motion.sheatheDrawMaxDuration);
-				controller.strikeCooldown = EditorGUILayout.FloatField ("Cooldown", controller.strikeCooldown);
-
-				controller.bladeForce = EditorGUILayout.FloatField ("Blade force", controller.bladeForce);
-				controller.bottomForce = EditorGUILayout.FloatField ("Bottom force", controller.bottomForce);
-
-				controller.anticipationBladeDirection = EditorGUILayout.Vector3Field ("Anticipation blade direction", controller.anticipationBladeDirection);
-				controller.anticipationBottomDirection = EditorGUILayout.Vector3Field ("Anticipation bottom direction", controller.anticipationBottomDirection);
-				controller.strikeBladeDirection = EditorGUILayout.Vector3Field ("Strike blade direction", controller.strikeBladeDirection);
-				controller.strikeBottomDirection = EditorGUILayout.Vector3Field ("Strike bottom direction", controller.strikeBottomDirection);
-
-				controller.anticipationDotProduct = EditorGUILayout.FloatField ("Anticipation dot product", controller.anticipationDotProduct);
 			}
 			else {
-				controller.maxRollAim = EditorGUILayout.FloatField ("Max roll Aim", controller.maxRollAim);
+				motion.sheatheDrawMaxDuration = EditorGUILayout.FloatField ("Sheathe/Draw max duration", motion.sheatheDrawMaxDuration);
+				motion.sheatheDrawAccThreshold = EditorGUILayout.FloatField ("Sheathe/Draw acceleration threshold", motion.sheatheDrawAccThreshold);
 			}
 			EditorGUI.indentLevel = 0;
 		}
