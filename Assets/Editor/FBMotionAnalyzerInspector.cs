@@ -5,6 +5,7 @@ using UnityEditor;
 [CustomEditor (typeof (FBMotionAnalyzer))]
 public class FBMotionAnalyzerInspector : Editor {
 	private FBMotionAnalyzer motion;
+	private bool showToolParameters;
 
 	private void OnEnable () {
 		motion = (FBMotionAnalyzer) target;
@@ -58,6 +59,30 @@ public class FBMotionAnalyzerInspector : Editor {
 		EditorGUILayout.Space ();
 
 		motion.isAxePuppet = EditorGUILayout.Toggle ("Is axe puppet", motion.isAxePuppet);
+
+		EditorGUILayout.Space ();
+		showToolParameters = EditorGUILayout.Foldout (showToolParameters, motion.isAxePuppet ? "Strike parameters :" : "Aim parameters :");
+		if (showToolParameters) {
+			EditorGUI.indentLevel = 1;
+			if (motion.isAxePuppet) {
+				motion.sheatheDrawMaxDuration = EditorGUILayout.FloatField ("Sheathe/Draw max duration", motion.sheatheDrawMaxDuration);
+				controller.strikeCooldown = EditorGUILayout.FloatField ("Cooldown", controller.strikeCooldown);
+
+				controller.bladeForce = EditorGUILayout.FloatField ("Blade force", controller.bladeForce);
+				controller.bottomForce = EditorGUILayout.FloatField ("Bottom force", controller.bottomForce);
+
+				controller.anticipationBladeDirection = EditorGUILayout.Vector3Field ("Anticipation blade direction", controller.anticipationBladeDirection);
+				controller.anticipationBottomDirection = EditorGUILayout.Vector3Field ("Anticipation bottom direction", controller.anticipationBottomDirection);
+				controller.strikeBladeDirection = EditorGUILayout.Vector3Field ("Strike blade direction", controller.strikeBladeDirection);
+				controller.strikeBottomDirection = EditorGUILayout.Vector3Field ("Strike bottom direction", controller.strikeBottomDirection);
+
+				controller.anticipationDotProduct = EditorGUILayout.FloatField ("Anticipation dot product", controller.anticipationDotProduct);
+			}
+			else {
+				controller.maxRollAim = EditorGUILayout.FloatField ("Max roll Aim", controller.maxRollAim);
+			}
+			EditorGUI.indentLevel = 0;
+		}
 
 		EditorGUILayout.Space ();
 

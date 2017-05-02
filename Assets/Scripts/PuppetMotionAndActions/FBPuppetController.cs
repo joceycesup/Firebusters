@@ -37,13 +37,6 @@ public class FBPuppetController : MonoBehaviour {
 	public MovementState state = MovementState.Idle;
 	public bool insMoving { get { return ((int) state & 2) != 0; } }
 
-	//-------------------- Actions --------------------
-	private FBAction _actions = FBAction.None;
-	public FBAction actions {
-		get { return _actions; }
-		private set { _actions = value; }
-	}
-
 	//-------------------- Feet --------------------
 	[SerializeField]
 	private FootStateInternal[] feet = new FootStateInternal[2];
@@ -65,6 +58,9 @@ public class FBPuppetController : MonoBehaviour {
 		private set { }
 	}
 
+	private Vector3 feetForward;
+	private Vector3 feetRight;
+
 	//-------------------- general rotation and position --------------------
 	private float controllerHeight;
 
@@ -78,7 +74,8 @@ public class FBPuppetController : MonoBehaviour {
 			}
 		}
 	}
-	private FBMotionAnalyzer motion;
+	[SerializeField]
+	public FBMotionAnalyzer motion;
 
 	public float steeringTurnRate = 90.0f;
 	private float yRotation = 0.0f;
@@ -103,7 +100,32 @@ public class FBPuppetController : MonoBehaviour {
 
 	//-------------------- pickable and items --------------------
 
+	public Rigidbody tool;
+	private Rigidbody toolBottom;
+	private Transform toolTip;
+	public Vector3 anticipationBottomDirection;
+	public Vector3 strikeBottomDirection;
+	public Vector3 anticipationBladeDirection;
+	public Vector3 strikeBladeDirection;
+
+	public float anticipationDotProduct = -0.7071067812f;
+
+	public float strikeDuration = 0.5f;
+	public float strikeCooldown = 2.5f;
+
+	public float maxRollAim;
+	public float bladeForce;
+	public float bottomForce;
+
 	private GameObject carriedItem = null;
+
+	//-------------------- Actions --------------------
+	private FBAction _actions = FBAction.None;
+
+	public FBAction actions {
+		get { return _actions; }
+		private set { _actions = value; }
+	}
 
 	//-------------------- actions --------------------
 
@@ -124,6 +146,7 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private GameObject CheckForPickable () {
+		throw new NotImplementedException ();
 		return null;
 	}
 
@@ -132,7 +155,12 @@ public class FBPuppetController : MonoBehaviour {
 			Debug.Log ("Started action " + FBAction.Draw);
 			motion.SetAbility (FBAction.Sheathe);
 			actions |= FBAction.Draw;
-			StartCoroutine (StopAction (FBAction.Draw, 0.5f));
+			StartCoroutine (DoItLater (() => {
+				actions &= ~FBAction.Draw;
+				actions |= FBAction.Aim;
+				Debug.Log ("Ended action " + FBAction.Draw + " and started " + FBAction.Aim);
+			}, 0.5f));
+			AkSoundEngine.PostEvent ("Start_Extincteur", toolTip.gameObject);
 		}
 	}
 
@@ -140,8 +168,12 @@ public class FBPuppetController : MonoBehaviour {
 		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Sheathe) && !FBMotionAnalyzer.TestMask (actions, FBAction.Draw)) {
 			Debug.Log ("Started action " + FBAction.Sheathe);
 			motion.SetAbility (FBAction.Draw);
+			actions &= ~FBAction.Aim;
 			actions |= FBAction.Sheathe;
-			StartCoroutine (StopAction (FBAction.Sheathe, 0.5f));
+			StartCoroutine (DoItLater (() => {
+				actions &= ~FBAction.Sheathe;
+				Debug.Log ("Ended action " + FBAction.Sheathe);
+			}, 0.5f));
 		}
 	}
 
@@ -149,7 +181,30 @@ public class FBPuppetController : MonoBehaviour {
 		if (!FBMotionAnalyzer.TestMask (actions, FBAction.Strike)) {
 			Debug.Log ("Started action " + FBAction.Strike);
 			actions |= FBAction.Strike;
-			StartCoroutine (StopAction (FBAction.Strike, 0.5f));
+			tool.velocity = Vector3.zero;
+			Vector3 forwardAnticipate = Vector3.Normalize (feetForward + transform.forward);
+			StartCoroutine (DoWhileThen (() => {
+				return Vector3.Dot (forwardAnticipate, Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up))) > anticipationDotProduct;
+			}, (dt) => {
+				Vector3 right = Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up));
+				tool.AddForce ((transform.forward * anticipationBladeDirection.z + right * anticipationBladeDirection.x) * dt * bladeForce, ForceMode.Impulse);
+				toolBottom.AddForce ((anticipationBottomDirection.x * right + anticipationBottomDirection.z * transform.forward + anticipationBottomDirection.y * Vector3.up) * dt * bottomForce, ForceMode.Impulse);
+			}, () => {
+				tool.velocity = Vector3.zero;
+				toolTip.tag = "Axe";
+				StartCoroutine (DoItAfter ((dt) => {
+					Vector3 right = Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up));
+					tool.AddForce ((transform.forward * strikeBladeDirection.z + right * strikeBladeDirection.x) * dt * bladeForce, ForceMode.Impulse);
+					toolBottom.AddForce ((strikeBottomDirection.x * right + strikeBottomDirection.z * transform.forward) * dt * bottomForce, ForceMode.Impulse);
+				}, () => {
+					toolTip.tag = "Untagged";
+					Debug.Log ("Ended action " + FBAction.Strike);
+				}, strikeDuration));
+				StartCoroutine (DoItLater (() => {
+					actions &= ~FBAction.Strike;
+					Debug.Log (FBAction.Strike + " available");
+				}, strikeCooldown));
+			}));
 		}
 	}
 
@@ -171,26 +226,43 @@ public class FBPuppetController : MonoBehaviour {
 				Debug.Log ("Thowing " + carriedItem);
 				Debug.Log ("Started action " + FBAction.Throw);
 				actions |= FBAction.Throw;
-				StartCoroutine (StopAction (FBAction.Throw, 0.5f));
+				StartCoroutine (DoItLater (() => {
+					actions &= ~FBAction.Throw;
+					Debug.Log ("Ended action " + FBAction.Throw);
+				}, 0.5f));
 			}
 		}
 	}
 
-	private IEnumerator StopAction (FBAction a, float delay = 0.0f) {
-		if (a != FBAction.None) {
-			float endTime = Time.time + delay;
-			while (Time.time < endTime) {
-				yield return null;
-			}
-			actions &= ~a;
-			Debug.Log ("Ended action " + a);
+	private IEnumerator DoItLater (Action callback, float delay = 0.0f) {
+		yield return new WaitForSeconds (delay);
+		callback ();
+	}
+
+	private IEnumerator DoItAfter (Action<float> a, Action callback, float delay = 0.0f) {
+		float endTime = Time.time + delay;
+		StartCoroutine (DoWhileThen (
+			() => { return Time.time < endTime; },
+			a,
+			callback
+			));
+		yield return null;
+	}
+
+	private IEnumerator DoWhileThen (Func<bool> predicate, Action<float> a, Action callback) {
+		while (predicate ()) {
+			a (Time.deltaTime);
+			yield return null;
 		}
+		callback ();
 	}
 
 	//-------------------- game loops --------------------
 
 	private void Awake () {
-		motion = GetComponent<FBMotionAnalyzer> ();
+		//motion = GetComponent<FBMotionAnalyzer> ();
+		toolTip = tool.transform.GetChild (0);
+		toolBottom = tool.transform.GetChild (1).gameObject.GetComponent<Rigidbody> ();
 	}
 
 	void Start () {
@@ -229,9 +301,26 @@ public class FBPuppetController : MonoBehaviour {
 
 		if (feet[0].changed || feet[1].changed) {
 			controllerTarget = controllerTarget;// calls private set and sets correct y according to feet vertical position
+			feetForward = Vector3.Normalize (Vector3.Cross (feet[1].target - feet[0].target, Vector3.up));
+			feetRight = Vector3.Cross (Vector3.up, feetForward);
 		}
 
+		Vector3 debugRayStart = (feet[1].target + feet[0].target) / 2.0f;
+		Vector3 forwardAnticipate = Vector3.Normalize (feetForward + transform.forward);
+		Quaternion anticipateStrikeRot = Quaternion.Euler (0.0f, 135.0f, 0.0f);
+		Debug.DrawRay (debugRayStart, feetForward, Color.blue);
+		Debug.DrawRay (debugRayStart, forwardAnticipate, Color.magenta);
+		Debug.DrawRay (debugRayStart, transform.forward, Color.red);
+		Debug.DrawRay (debugRayStart, anticipateStrikeRot * forwardAnticipate, Color.green);
+
 		camera.transform.LookAt (cameraTarget);
+	}
+
+	private void FixedUpdate () {
+		if (FBMotionAnalyzer.TestMask (actions, FBAction.Aim)) {
+			Debug.Log ("aiming");
+			tool.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y, tool.rotation.eulerAngles.z);
+		}
 	}
 
 	//-------------------- footstate --------------------

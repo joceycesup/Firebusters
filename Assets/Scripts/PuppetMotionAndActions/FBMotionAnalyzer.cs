@@ -13,6 +13,7 @@ public enum FBAction {
 	Throw = 0x40
 }
 
+[Serializable]
 [RequireComponent (typeof (FBPhoneDataHandler))]
 public class FBMotionAnalyzer : MonoBehaviour {
 	public delegate void ActionEvent ();
@@ -21,7 +22,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public event ActionEvent OnSheathe;
 	public event ActionEvent OnPickup;
 	public event ActionEvent OnThrow;
-	
+
 #pragma warning disable 0414
 	[SerializeField]
 	private FBAction _abilities = FBAction.None;
@@ -30,6 +31,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 		set { _abilities = value; }
 	}
 	public bool SetAbility (FBAction a) {
+		Debug.Log ("Setting ability " + a + " (" + Convert.ToString ((int) a, 16) + ")");
 		if (TestMask (a))
 			return false;
 		switch (a) {
@@ -54,6 +56,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				if (isAxePuppet || isCarryingItem)
 					break;
 				_abilities = FBAction.Sheathe | FBAction.Aim;
+				Debug.Log (Convert.ToString ((int) _abilities, 16));
 				break;
 			case FBAction.Pickup:
 			case FBAction.Throw:
@@ -114,11 +117,12 @@ public class FBMotionAnalyzer : MonoBehaviour {
 		get { return sensor.cleanAcceleration; }
 	}
 
+	//---------- tool values ----------
+	public float sheatheDrawMaxDuration = 0.2f;
+
 	void Awake () {
 		sensor = gameObject.GetComponent<FBPhoneDataHandler> ();
 		walking = -1.0f;
-		Debug.Log (System.Convert.ToString ((int) FBAction.Strike, 2));
-		Debug.Log (System.Convert.ToString ((int) abilities, 2));
 	}
 
 	void Update () {
@@ -126,19 +130,28 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			UpdateWalkValues ();
 		}
 		if (TestMask (FBAction.Strike)) {
-			if (acceleration.x > 2.0f) {
-				OnStrike ();
+			if (usePhoneDataHandler) {
+				if (acceleration.x > 2.0f)
+					OnStrike ();
 			}
+			else if (Input.GetKeyDown ("v"))
+				OnStrike ();
 		}
 		if (TestMask (FBAction.Draw)) {
-			if (acceleration.y > 2.0f) {
-				OnDraw ();
+			if (usePhoneDataHandler) {
+				if (acceleration.y > 2.0f)
+					OnDraw ();
 			}
+			else if (Input.GetKeyDown ("c"))
+				OnDraw ();
 		}
 		else if (TestMask (FBAction.Sheathe)) {
-			if (acceleration.y > 2.0f) {
-				OnSheathe ();
+			if (usePhoneDataHandler) {
+				if (acceleration.y > 2.0f)
+					OnSheathe ();
 			}
+			else if (Input.GetKeyDown ("c"))
+				OnSheathe ();
 		}
 	}
 
