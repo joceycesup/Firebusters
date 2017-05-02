@@ -177,6 +177,7 @@ public class FBPuppetController : MonoBehaviour {
 				Debug.Log ("Ended action " + FBAction.Sheathe);
 			}, 0.5f));
 		}
+		AkSoundEngine.PostEvent ("Start_Extincteur", toolTip.gameObject);
 	}
 
 	private void Strike () {
@@ -306,7 +307,7 @@ public class FBPuppetController : MonoBehaviour {
 			feetForward = Vector3.Normalize (Vector3.Cross (feet[1].target - feet[0].target, Vector3.up));
 			feetRight = Vector3.Cross (Vector3.up, feetForward);
 		}
-
+#if UNITY_EDITOR
 		Vector3 debugRayStart = (feet[1].target + feet[0].target) / 2.0f;
 		Vector3 forwardAnticipate = Vector3.Normalize (feetForward + transform.forward);
 		Quaternion anticipateStrikeRot = Quaternion.Euler (0.0f, 135.0f, 0.0f);
@@ -314,14 +315,15 @@ public class FBPuppetController : MonoBehaviour {
 		Debug.DrawRay (debugRayStart, forwardAnticipate, Color.magenta);
 		Debug.DrawRay (debugRayStart, transform.forward, Color.red);
 		Debug.DrawRay (debugRayStart, anticipateStrikeRot * forwardAnticipate, Color.green);
-
+#endif
 		camera.transform.LookAt (cameraTarget);
 	}
 
 	private void FixedUpdate () {
 		if (actions.TestMask (FBAction.Aim)) {
 			Debug.Log ("aiming");
-			tool.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y, tool.rotation.eulerAngles.z);
+			tool.transform.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y, tool.rotation.eulerAngles.z);
+			Debug.DrawRay (toolTip.position, tool.transform.forward);
 		}
 	}
 

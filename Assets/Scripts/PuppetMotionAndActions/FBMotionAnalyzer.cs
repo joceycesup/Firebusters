@@ -70,7 +70,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public event ActionEvent OnPickup;
 	public event ActionEvent OnThrow;
 
-#pragma warning disable 0414
+	//#pragma warning disable 0414
 	[SerializeField]
 	private FBAction _abilities = FBAction.None;
 	public FBAction abilities {
@@ -114,6 +114,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public float maxPitch = 30.0f;
 	public AnimationCurve pitchFactor = AnimationCurve.EaseInOut (0.2f, 0.0f, 1.0f, 1.0f);
 
+
+
 	public Vector3 rotation {
 #if UNITY_EDITOR
 		get { return usePhoneDataHandler ? sensor.orientation : kbRotation; }
@@ -142,6 +144,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 #if UNITY_EDITOR
 		if (usePhoneDataHandler) {
 #endif
+			steering = Mathf.Sign (-sensor.orientation.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.orientation.z) / maxPitch);
 			if (TestMask (FBAction.Walk)) {
 				UpdateWalkValues ();
 			}
@@ -160,9 +163,13 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				if (acceleration.y > 2.0f)
 					OnSheathe ();
 			}
+			kbRotation = sensor.orientation;
 #if UNITY_EDITOR
 		}
 		else {
+			float horizontal = Input.GetAxis ("HorizontalL");
+			steering = Mathf.Sign (horizontal) * pitchFactor.Evaluate (Mathf.Abs (horizontal));
+
 			if (TestMask (FBAction.Walk)) {
 				UpdateWalkValues ();
 			}
@@ -181,7 +188,11 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				if (Input.GetKeyDown ("c"))
 					OnSheathe ();
 			}
+			kbRotation.x -= Input.GetAxis ("VerticalR");
+			kbRotation.y += Input.GetAxis ("HorizontalR");
 		}
+		Vector3 debugFwd = Quaternion.Euler (rotation) * Vector3.forward;
+		Debug.DrawRay (Vector3.zero, debugFwd, Color.cyan);
 #endif
 	}
 
@@ -190,7 +201,6 @@ public class FBMotionAnalyzer : MonoBehaviour {
 		if (usePhoneDataHandler) {
 #endif
 			Debug.DrawRay (transform.position, sensor.acceleration, Color.red);
-			steering = Mathf.Sign (-sensor.orientation.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.orientation.z) / maxPitch);
 
 			walking = rollFactor.Evaluate (sensor.orientation.x / maxRoll);
 
@@ -198,12 +208,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			kbRotation = sensor.orientation;
 		}
 		else {
-			float horizontal = Input.GetAxis ("HorizontalL");
-			steering = Mathf.Sign (horizontal) * pitchFactor.Evaluate (Mathf.Abs (horizontal));
-
 			walking = rollFactor.Evaluate (Input.GetAxis ("VerticalL"));
-
-			kbRotation = Vector3.zero;
 		}
 #endif
 	}
