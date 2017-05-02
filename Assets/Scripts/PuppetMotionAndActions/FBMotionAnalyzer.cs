@@ -1,5 +1,6 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
+using System.Collections;
+using UnityEngine;
 
 [Serializable]
 public enum FBAction {
@@ -70,7 +71,6 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public event ActionEvent OnPickup;
 	public event ActionEvent OnThrow;
 
-	//#pragma warning disable 0414
 	[SerializeField]
 	private FBAction _abilities = FBAction.None;
 	public FBAction abilities {
@@ -80,7 +80,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 
 	public void ToggleAbilities (FBAction a) {
 		abilities = abilities ^ a;
-		Debug.Log (abilities.ToMaskString ());
+		//Debug.Log (abilities.ToMaskString ());
 	}
 
 	public bool TestMask (FBAction a) {
@@ -89,6 +89,9 @@ public class FBMotionAnalyzer : MonoBehaviour {
 
 	private FBPhoneDataHandler sensor;
 	public bool usePhoneDataHandler = true;
+
+	//########## analyze ##########
+	private bool[] analyzing = { false, false, false };
 
 	//########## actions ##########
 	public bool isAxePuppet = true;
@@ -114,8 +117,6 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public float maxPitch = 30.0f;
 	public AnimationCurve pitchFactor = AnimationCurve.EaseInOut (0.2f, 0.0f, 1.0f, 1.0f);
 
-
-
 	public Vector3 rotation {
 #if UNITY_EDITOR
 		get { return usePhoneDataHandler ? sensor.orientation : kbRotation; }
@@ -132,8 +133,15 @@ public class FBMotionAnalyzer : MonoBehaviour {
 #endif
 
 	//########## tool values ##########
-	public float sheatheDrawMaxDuration = 0.2f;
-	public float sheatheDrawAccThreshold = 3.0f;
+	public float sheatheDrawMaxDuration = 0.4f;
+	public float sheatheDrawInitialAcc = 2.0f;
+	public float sheatheDrawFinalAcc = -2.0f;
+	public float sheatheDrawAngle = -10.0f;
+
+	public float strikeMaxDuration = 0.4f;
+	public float strikeInitialAcc = 2.0f;
+	public float strikeFinalAcc = -2.0f;
+	public float strikeAngle = -20.0f;
 
 	void Awake () {
 		sensor = gameObject.GetComponent<FBPhoneDataHandler> ();
@@ -152,16 +160,22 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				walking = -1.0f;
 			}
 			if (TestMask (FBAction.Strike)) {
-				if (acceleration.x > 2.0f)
-					OnStrike ();
+				if (acceleration.x > strikeInitialAcc)
+					StartCoroutine (AnalyzeAccelerometerAxis (0, strikeFinalAcc, false, () => {
+						OnStrike ();
+					}, strikeMaxDuration, 0, strikeAngle));
 			}
 			if (TestMask (FBAction.Draw)) {
-				if (acceleration.y > 2.0f)
-					OnDraw ();
+				if (acceleration.y > sheatheDrawInitialAcc)
+					StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => {
+						OnDraw ();
+					}, sheatheDrawMaxDuration, 0, sheatheDrawAngle));
 			}
 			else if (TestMask (FBAction.Sheathe)) {
-				if (acceleration.y > 2.0f)
-					OnSheathe ();
+				if (acceleration.y > sheatheDrawInitialAcc)
+					StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => {
+						OnSheathe ();
+					}, sheatheDrawMaxDuration, 0, sheatheDrawAngle));
 			}
 			kbRotation = sensor.orientation;
 #if UNITY_EDITOR
@@ -211,5 +225,45 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			walking = rollFactor.Evaluate (Input.GetAxis ("VerticalL"));
 		}
 #endif
+	}
+
+	// ge = greater or equal
+	private IEnumerator AnalyzeAccelerometerAxis (int axis, float stopValue, bool ge, Action callback, float maxDelay, int rotationAxis = -1, float rotationValue = 0.0f) {
+		if (!analyzing[axis]) {
+			float initialAcc = acceleration[axis];
+			float finalAcc = 0.0f;
+			float finalRot = 0.0f;
+
+			analyzing[axis] = true;
+			float endTime = Time.time + maxDelay;
+			bool success = false;
+			bool rotationSuccess = true;
+			float initialRotation = 0.0f;
+			if (rotationAxis >= 0) {
+				initialRotation = rotation[rotationAxis];
+			}
+			float inequalityFactor = ge ? 1.0f : -1.0f;
+			while (!success && Time.time < endTime) {
+				if (rotationAxis >= 0) {
+					finalRot = rotation[rotationAxis] - initialRotation;
+					rotationSuccess = (rotationValue >= 0.0f) ? (finalRot >= rotationValue) : (finalRot < rotationValue);
+				}
+				finalAcc = acceleration[axis];
+				if (rotationSuccess && (finalAcc * inequalityFactor >= stopValue * inequalityFactor)) {
+					success = true;
+				}
+				else {
+					yield return null;
+				}
+			}
+			float time = Time.time + maxDelay - endTime;
+			Debug.Log ("Returned " + success + " on axis " + axis + " in " + time + " seconds" + (rotationAxis >= 0 ? (" with a rotation of " + finalRot) : ""));
+			Debug.Log (" Initial acc : " + initialAcc);
+			Debug.Log (" Final acc   : " + finalAcc);
+			if (success) {
+				callback ();
+			}
+			analyzing[axis] = false;
+		}
 	}
 }

@@ -11,9 +11,8 @@ public class FBMailBox : FBHittable {
 	}
 
 	protected override void OnHitByAxe (Collision collision) {
-		//base.OnHitByAxe (collision);
-		Debug.Log (collision.relativeVelocity.magnitude);
-		AkSoundEngine.PostEvent ("Play_axe_mailbox_hit", gameObject);
+		base.OnHitByAxe (collision);
+		//Debug.Log (collision.relativeVelocity.magnitude);
 		if (transform.childCount > 0) {
 			Transform drawer = transform.GetChild (Random.Range (0, transform.childCount));
 			drawer.parent = null;

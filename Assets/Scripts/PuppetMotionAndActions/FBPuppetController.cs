@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
@@ -176,8 +175,8 @@ public class FBPuppetController : MonoBehaviour {
 				actions &= ~FBAction.Sheathe;
 				Debug.Log ("Ended action " + FBAction.Sheathe);
 			}, 0.5f));
+			AkSoundEngine.PostEvent ("Stop_Extincteur", toolTip.gameObject);
 		}
-		AkSoundEngine.PostEvent ("Start_Extincteur", toolTip.gameObject);
 	}
 
 	private void Strike () {
