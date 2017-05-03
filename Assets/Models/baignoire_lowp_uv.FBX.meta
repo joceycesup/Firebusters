@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: f0a2761b64602e34ba290cb38796b038
-timeCreated: 1493736159
+guid: 5512127a35b5a1f439b7fa15f0e13540
+timeCreated: 1493803871
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
@@ -10,8 +10,6 @@ ModelImporter:
     2300000: //RootNode
     3300000: //RootNode
     4300000: rideau_lowp
-    7400000: Take 001
-    9500000: //RootNode
   materials:
     importMaterials: 1
     materialName: 0
@@ -74,7 +72,7 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 2
+  animationType: 0
   humanoidOversampling: 1
   additionalBone: 0
   userData: 
