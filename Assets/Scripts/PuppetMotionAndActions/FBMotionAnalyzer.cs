@@ -1,6 +1,47 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using UnityEditor;
+
+[Serializable]
+public enum FBRotationAxis {
+	None = -1,
+	Roll = 0,
+	Yaw = 1,
+	Pitch = 2
+}
+[Serializable]
+public enum FBAccAxis {
+	X = 0,
+	Y = 1,
+	Z = 2
+}
+
+[Serializable]
+public struct FBAccelerationMotion {
+	public string name;
+	public FBAccAxis accAxis;
+	public float maxDuration;
+	public float initialAcc;
+	public float finalAcc;
+	public FBRotationAxis rotAxis;
+	public float angle;
+}
+
+public static class FBAccelerationMotionExtensions {
+	public static FBAccelerationMotion GUIField (this FBAccelerationMotion motion) {
+		EditorGUI.indentLevel++;
+		motion.accAxis = (FBAccAxis) EditorGUILayout.EnumPopup (motion.name + " acceleration axis", motion.accAxis);
+		motion.maxDuration = EditorGUILayout.FloatField (motion.name + " max duration", motion.maxDuration);
+		motion.initialAcc = EditorGUILayout.FloatField (motion.name + " initial acceleration", motion.initialAcc);
+		motion.finalAcc = EditorGUILayout.FloatField (motion.name + " final acceleration", motion.finalAcc);
+		motion.rotAxis = (FBRotationAxis) EditorGUILayout.EnumPopup (motion.name + " rotaiton axis", motion.rotAxis);
+		if (motion.rotAxis != FBRotationAxis.None)
+			motion.angle = EditorGUILayout.FloatField (motion.name + " angle", motion.angle);
+		EditorGUI.indentLevel--;
+		return motion;
+	}
+}
 
 [Serializable]
 public enum FBAction {
@@ -133,6 +174,9 @@ public class FBMotionAnalyzer : MonoBehaviour {
 #endif
 
 	//########## tool values ##########
+	[SerializeField]
+	public FBAccelerationMotion toolMotion;
+
 	public float sheatheDrawMaxDuration = 0.4f;
 	public float sheatheDrawInitialAcc = 2.0f;
 	public float sheatheDrawFinalAcc = -2.0f;
@@ -142,6 +186,12 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public float strikeInitialAcc = 2.0f;
 	public float strikeFinalAcc = -2.0f;
 	public float strikeAngle = -20.0f;
+
+#if UNITY_EDITOR
+	//########## debug #########
+	public bool showSuccessDebug = true;
+	public bool showFailureDebug = true;
+#endif
 
 	void Awake () {
 		sensor = gameObject.GetComponent<FBPhoneDataHandler> ();
@@ -160,22 +210,22 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				walking = -1.0f;
 			}
 			if (TestMask (FBAction.Strike)) {
-				if (acceleration.x > strikeInitialAcc)
-					StartCoroutine (AnalyzeAccelerometerAxis (0, strikeFinalAcc, false, () => {
-						OnStrike ();
-					}, strikeMaxDuration, 0, strikeAngle));
+				if (acceleration.x > toolMotion.initialAcc) {
+					//StartCoroutine (AnalyzeAccelerometerAxis (0, strikeFinalAcc, false, () => OnStrike (), strikeMaxDuration, 0, strikeAngle));
+					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnStrike ()));
+				}
 			}
 			if (TestMask (FBAction.Draw)) {
-				if (acceleration.y > sheatheDrawInitialAcc)
-					StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => {
-						OnDraw ();
-					}, sheatheDrawMaxDuration, 0, sheatheDrawAngle));
+				if (acceleration.y > toolMotion.initialAcc) {
+					//StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => OnDraw (), sheatheDrawMaxDuration, 0, sheatheDrawAngle));
+					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnDraw ()));
+				}
 			}
 			else if (TestMask (FBAction.Sheathe)) {
-				if (acceleration.y > sheatheDrawInitialAcc)
-					StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => {
-						OnSheathe ();
-					}, sheatheDrawMaxDuration, 0, sheatheDrawAngle));
+				if (acceleration.y > toolMotion.initialAcc) {
+					//StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => OnSheathe (), sheatheDrawMaxDuration, 0, sheatheDrawAngle));
+					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnSheathe ()));
+				}
 			}
 			kbRotation = sensor.orientation;
 #if UNITY_EDITOR
@@ -257,11 +307,55 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				}
 			}
 			if (success) {
+				callback ();
+			}
+			if ((showSuccessDebug && success) || (showFailureDebug && !success)) {
 				float time = Time.time + maxDelay - endTime;
 				Debug.Log ("Returned " + success + " on axis " + axis + " in " + time + " seconds" + (rotationAxis >= 0 ? (" with a rotation of " + finalRot) : ""));
 				Debug.Log (" Initial acc : " + initialAcc);
 				Debug.Log (" Final acc   : " + finalAcc);
+			}
+			analyzing[axis] = false;
+		}
+	}
+	private IEnumerator AnalyzeAccelerationMotion (FBAccelerationMotion motion, Action callback) {
+		int axis = (int) motion.accAxis;
+		int rAxis = (int) motion.rotAxis;
+		if (!analyzing[axis]) {
+			float initialAcc = acceleration[axis];
+			float finalAcc = 0.0f;
+			float finalRot = 0.0f;
+
+			analyzing[axis] = true;
+			float endTime = Time.time + motion.maxDuration;
+			bool success = false;
+			bool rotationSuccess = true;
+			float initialRotation = 0.0f;
+			if (motion.rotAxis != FBRotationAxis.None) {
+				initialRotation = rotation[rAxis];
+			}
+			float inequalityFactor = motion.finalAcc < 0.0f ? 1.0f : -1.0f;
+			while (!success && Time.time < endTime) {
+				if (motion.rotAxis != FBRotationAxis.None) {
+					finalRot = rotation[rAxis] - initialRotation;
+					rotationSuccess = (motion.angle >= 0.0f) ? (finalRot >= motion.angle) : (finalRot < motion.angle);
+				}
+				finalAcc = acceleration[axis];
+				if (rotationSuccess && (finalAcc * inequalityFactor >= motion.finalAcc * inequalityFactor)) {
+					success = true;
+				}
+				else {
+					yield return null;
+				}
+			}
+			if (success) {
 				callback ();
+			}
+			if ((showSuccessDebug && success) || (showFailureDebug && !success)) {
+				float time = endTime - motion.maxDuration - Time.time;
+				Debug.Log ("Returned " + success + " on axis " + axis + " in " + time + " seconds" + (motion.rotAxis != FBRotationAxis.None ? (" with a rotation of " + finalRot) : ""));
+				Debug.Log (" Initial acc : " + initialAcc);
+				Debug.Log (" Final acc   : " + finalAcc);
 			}
 			analyzing[axis] = false;
 		}

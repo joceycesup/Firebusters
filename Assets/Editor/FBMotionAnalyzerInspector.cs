@@ -56,11 +56,15 @@ public class FBMotionAnalyzerInspector : Editor {
 		motion.usePhoneDataHandler = EditorGUILayout.Toggle ("Use phone data handler", motion.usePhoneDataHandler);
 
 		EditorGUILayout.Space ();
-
 		motion.isAxePuppet = EditorGUILayout.Toggle ("Is axe puppet", motion.isAxePuppet);
 
 		EditorGUILayout.Space ();
 		showToolParameters = EditorGUILayout.Foldout (showToolParameters, motion.isAxePuppet ? "Strike parameters :" : "Aim parameters :");
+		if (showToolParameters) {
+			motion.toolMotion.name = motion.isAxePuppet ? "Strike" : "Sheathe/Draw";
+			motion.toolMotion = motion.toolMotion.GUIField ();
+		}
+		EditorGUILayout.Space ();
 		if (showToolParameters) {
 			EditorGUI.indentLevel = 1;
 			if (motion.isAxePuppet) {
@@ -84,6 +88,10 @@ public class FBMotionAnalyzerInspector : Editor {
 		motion.rollFactor = EditorGUILayout.CurveField ("Roll factor", motion.rollFactor);
 		motion.maxPitch = EditorGUILayout.FloatField ("Max Pitch Steer", motion.maxPitch);
 		motion.pitchFactor = EditorGUILayout.CurveField ("Pitch factor", motion.pitchFactor);
+
+		EditorGUILayout.Space ();
+		motion.showSuccessDebug = EditorGUILayout.Toggle ("Show success debug", motion.showSuccessDebug);
+		motion.showFailureDebug = EditorGUILayout.Toggle ("Show failure debug", motion.showFailureDebug);
 
 		if (GUI.changed) {
 			EditorUtility.SetDirty (motion);

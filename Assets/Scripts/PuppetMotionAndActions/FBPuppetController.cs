@@ -107,6 +107,8 @@ public class FBPuppetController : MonoBehaviour {
 	public Vector3 anticipationBladeDirection;
 	public Vector3 strikeBladeDirection;
 
+	public float extinguisherYRotation;
+
 	public float anticipationDotProduct = -0.7071067812f;
 
 	public float strikeDuration = 0.5f;
@@ -160,6 +162,8 @@ public class FBPuppetController : MonoBehaviour {
 				actions |= FBAction.Aim;
 				Debug.Log ("Ended action " + FBAction.Draw + " and started " + FBAction.Aim);
 			}, 0.5f));
+			extinguisherYRotation = motion.rotation.y;
+			toolTip.gameObject.SetActive (true);
 			AkSoundEngine.PostEvent ("Start_Extincteur", toolTip.gameObject);
 		}
 	}
@@ -176,6 +180,7 @@ public class FBPuppetController : MonoBehaviour {
 				Debug.Log ("Ended action " + FBAction.Sheathe);
 			}, 0.5f));
 			AkSoundEngine.PostEvent ("Stop_Extincteur", toolTip.gameObject);
+			toolTip.gameObject.SetActive (false);
 		}
 	}
 
@@ -262,8 +267,11 @@ public class FBPuppetController : MonoBehaviour {
 	//-------------------- game loops --------------------
 
 	private void Awake () {
-		//motion = GetComponent<FBMotionAnalyzer> ();
+		if (motion == null)
+			motion = GetComponent<FBMotionAnalyzer> ();
 		toolTip = tool.transform.GetChild (0);
+		if (!motion.isAxePuppet)
+			toolTip.gameObject.SetActive (false);
 		toolBottom = tool.transform.GetChild (1).gameObject.GetComponent<Rigidbody> ();
 	}
 
@@ -321,7 +329,7 @@ public class FBPuppetController : MonoBehaviour {
 	private void FixedUpdate () {
 		if (actions.TestMask (FBAction.Aim)) {
 			Debug.Log ("aiming");
-			tool.transform.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y, tool.rotation.eulerAngles.z);
+			tool.transform.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z);
 			Debug.DrawRay (toolTip.position, tool.transform.forward);
 		}
 	}
