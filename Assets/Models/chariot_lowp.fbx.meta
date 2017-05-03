@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 571f8ba9dac3a9749a9236c2eb100408
-timeCreated: 1493805405
+guid: e5d9e247390ed364d80b88d432942207
+timeCreated: 1493809136
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
@@ -9,7 +9,7 @@ ModelImporter:
     400000: //RootNode
     2300000: //RootNode
     3300000: //RootNode
-    4300000: rideau_lowp
+    4300000: Cylindre_2
   materials:
     importMaterials: 1
     materialName: 0
