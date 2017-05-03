@@ -10,7 +10,7 @@ public class FBHittableInspector : Editor {
 	}
 
 	public override void OnInspectorGUI () {
-		hittable.destroyable = EditorGUILayout.Toggle ("Destroyable", hittable.destroyable);
+		hittable.destructible = EditorGUILayout.Toggle ("Destructible", hittable.destructible);
 
 		hittable.axeSound = (FBAxeSound) EditorGUILayout.EnumPopup ("Axe Sound", hittable.axeSound);
 		hittable.hitSound = (FBHitSound) EditorGUILayout.EnumPopup ("Hit Sound", hittable.hitSound);

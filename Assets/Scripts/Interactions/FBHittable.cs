@@ -17,7 +17,7 @@ public enum FBAxeSound {
 }//*/
 
 public class FBHittable : MonoBehaviour {
-	public bool destroyable = false;
+	public bool destructible = false;
 	public FBHitSound hitSound = FBHitSound.None;
 	public FBAxeSound axeSound = FBAxeSound.None;
 
@@ -38,7 +38,7 @@ public class FBHittable : MonoBehaviour {
 	protected virtual void OnHitByAxe (Collision collision) {
 		Debug.Log ("Ouille!");
 		PlayAxeSound ();
-		if (destroyable) {
+		if (destructible) {
 			Transform subItemsContainer = transform.GetChild (0);
 			subItemsContainer.gameObject.SetActive (true);
 			subItemsContainer.DetachChildren ();

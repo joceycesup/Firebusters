@@ -256,11 +256,11 @@ public class FBMotionAnalyzer : MonoBehaviour {
 					yield return null;
 				}
 			}
-			float time = Time.time + maxDelay - endTime;
-			Debug.Log ("Returned " + success + " on axis " + axis + " in " + time + " seconds" + (rotationAxis >= 0 ? (" with a rotation of " + finalRot) : ""));
-			Debug.Log (" Initial acc : " + initialAcc);
-			Debug.Log (" Final acc   : " + finalAcc);
 			if (success) {
+				float time = Time.time + maxDelay - endTime;
+				Debug.Log ("Returned " + success + " on axis " + axis + " in " + time + " seconds" + (rotationAxis >= 0 ? (" with a rotation of " + finalRot) : ""));
+				Debug.Log (" Initial acc : " + initialAcc);
+				Debug.Log (" Final acc   : " + finalAcc);
 				callback ();
 			}
 			analyzing[axis] = false;
