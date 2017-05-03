@@ -63,7 +63,7 @@ public class FBMotionAnalyzerInspector : Editor {
 		if (showToolParameters) {
 			motion.toolMotion.name = motion.isAxePuppet ? "Strike" : "Sheathe/Draw";
 			motion.toolMotion = motion.toolMotion.GUIField ();
-		}
+		}/*
 		EditorGUILayout.Space ();
 		if (showToolParameters) {
 			EditorGUI.indentLevel = 1;
@@ -80,7 +80,7 @@ public class FBMotionAnalyzerInspector : Editor {
 				motion.sheatheDrawAngle = EditorGUILayout.FloatField ("Sheathe/Draw angle", motion.sheatheDrawAngle);
 			}
 			EditorGUI.indentLevel = 0;
-		}
+		}//*/
 
 		EditorGUILayout.Space ();
 

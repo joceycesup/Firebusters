@@ -176,7 +176,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	//########## tool values ##########
 	[SerializeField]
 	public FBAccelerationMotion toolMotion;
-
+	/*
 	public float sheatheDrawMaxDuration = 0.4f;
 	public float sheatheDrawInitialAcc = 2.0f;
 	public float sheatheDrawFinalAcc = -2.0f;
@@ -185,7 +185,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public float strikeMaxDuration = 0.4f;
 	public float strikeInitialAcc = 2.0f;
 	public float strikeFinalAcc = -2.0f;
-	public float strikeAngle = -20.0f;
+	public float strikeAngle = -20.0f;//*/
 
 #if UNITY_EDITOR
 	//########## debug #########

@@ -330,7 +330,6 @@ public class FBPuppetController : MonoBehaviour {
 		if (actions.TestMask (FBAction.Aim)) {
 			Debug.Log ("aiming");
 			tool.transform.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z);
-			Debug.DrawRay (toolTip.position, tool.transform.forward);
 		}
 	}
 
