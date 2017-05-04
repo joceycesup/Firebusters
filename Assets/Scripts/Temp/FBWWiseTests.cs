@@ -11,7 +11,7 @@ public class FBWWiseTests : MonoBehaviour {
 	void OnCollisionEnter (Collision coll) {
 		//.225
 		//.600
-		if (coll.gameObject.CompareTag ("Player")) {
+		if (coll.gameObject.CompareTag ("Marionette")) {
 			float velocity = curve.Evaluate (coll.relativeVelocity.magnitude / maxVelocity);
 			//Debug.Log (this + " : " + velocity);
 

@@ -1,9 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+#if UNITY_EDITOR
 [RequireComponent (typeof (LineRenderer))]
+#endif
 public class PuppetString : MonoBehaviour {
+#if UNITY_EDITOR
 	private LineRenderer lr;
+#endif
 	public GameObject attachedObject;
 	private Rigidbody rb;
 	public float speed = 4;
@@ -29,7 +33,14 @@ public class PuppetString : MonoBehaviour {
 		if (!attachedObject)
 			return;
 		rb = attachedObject.GetComponent<Rigidbody> ();
+#if UNITY_EDITOR
 		lr = GetComponent<LineRenderer> ();
+#else
+		LineRenderer lr = GetComponent<LineRenderer> ();
+		if (lr!=null){
+		Destroy(lr);
+		}
+#endif
 		if (absoluteAnchor)
 			relaxedLength = 0.0f;
 		else if (relaxedLength <= 0.0f)
@@ -42,8 +53,12 @@ public class PuppetString : MonoBehaviour {
 	void FixedUpdate () {
 		if (!attachedObject)
 			return;
-		lr.SetPosition (0, transform.position);
-		lr.SetPosition (1, attachedObject.transform.position);
+#if UNITY_EDITOR
+		if (lr != null) {
+			lr.SetPosition (0, transform.position);
+			lr.SetPosition (1, attachedObject.transform.position);
+		}
+#endif
 		if (rb) {
 			if (absoluteAnchor) {
 				attachedObject.transform.position = transform.position;
@@ -61,10 +76,16 @@ public class PuppetString : MonoBehaviour {
 					if (viscousDampingCoefficient > 0f) {
 						rb.AddForce (-viscousDampingCoefficient * Vector3.Project (attachedObject.transform.position - lastPos, transform.position - attachedObject.transform.position) * Time.fixedDeltaTime, ForceMode.Force);
 					}
-					lr.startColor = lr.endColor = Color.red;
+#if UNITY_EDITOR
+					if (lr != null)
+						lr.startColor = lr.endColor = Color.red;
+#endif
 				}
 				else {
-					lr.startColor = lr.endColor = Color.green;
+#if UNITY_EDITOR
+					if (lr != null)
+						lr.startColor = lr.endColor = Color.green;
+#endif
 				}
 			}
 		}
