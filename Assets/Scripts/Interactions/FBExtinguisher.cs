@@ -37,6 +37,8 @@ public class FBExtinguisher : MonoBehaviour {
 		fires.Add (fire);
 		yield return new WaitForSeconds (delay);
 		fires.Remove (fire);
-		Destroy (fire);
+		if (fire != null) {
+			fire.GetComponent<FBFire> ().PutOut ();
+		}
 	}
 }

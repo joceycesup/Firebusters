@@ -214,6 +214,9 @@ public class FBMotionAnalyzer : MonoBehaviour {
 					//StartCoroutine (AnalyzeAccelerometerAxis (0, strikeFinalAcc, false, () => OnStrike (), strikeMaxDuration, 0, strikeAngle));
 					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnStrike ()));
 				}
+				else if (Input.GetKeyDown ("v")) {
+					OnStrike ();
+				}
 			}
 			if (TestMask (FBAction.Draw)) {
 				if (acceleration.y > toolMotion.initialAcc) {

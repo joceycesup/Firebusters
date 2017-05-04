@@ -285,6 +285,7 @@ public class FBPuppetController : MonoBehaviour {
 			controllerTarget = transform.position;
 			controllerHeight = controllerTarget.y - (feet[0].transform.position.y + feet[1].transform.position.y) / 2.0f;
 		}
+		yRotation = transform.rotation.eulerAngles.y;
 	}
 
 	void Update () {

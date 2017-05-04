@@ -17,6 +17,9 @@ public enum FBAxeSound {
 }//*/
 
 public class FBHittable : MonoBehaviour {
+	public delegate void DestroyedEvent();
+	public event DestroyedEvent OnDestroyed;
+	
 	public bool destructible = false;
 	public FBHitSound hitSound = FBHitSound.None;
 	public FBAxeSound axeSound = FBAxeSound.None;
@@ -42,6 +45,8 @@ public class FBHittable : MonoBehaviour {
 			Transform subItemsContainer = transform.GetChild (0);
 			subItemsContainer.gameObject.SetActive (true);
 			subItemsContainer.DetachChildren ();
+			if (OnDestroyed != null)
+				OnDestroyed ();
 			Destroy (gameObject);
 		}
 	}
