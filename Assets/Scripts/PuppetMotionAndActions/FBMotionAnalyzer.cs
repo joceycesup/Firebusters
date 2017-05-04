@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 [Serializable]
 public enum FBRotationAxis {
@@ -28,6 +30,7 @@ public struct FBAccelerationMotion {
 	public float angle;
 }
 
+#if UNITY_EDITOR
 public static class FBAccelerationMotionExtensions {
 	public static FBAccelerationMotion GUIField (this FBAccelerationMotion motion) {
 		EditorGUI.indentLevel++;
@@ -42,6 +45,7 @@ public static class FBAccelerationMotionExtensions {
 		return motion;
 	}
 }
+#endif
 
 [Serializable]
 public enum FBAction {
@@ -230,8 +234,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnSheathe ()));
 				}
 			}
-			kbRotation = sensor.orientation;
 #if UNITY_EDITOR
+			kbRotation = sensor.orientation;
 		}
 		else {
 			float horizontal = Input.GetAxis ("HorizontalL");
@@ -312,12 +316,14 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			if (success) {
 				callback ();
 			}
+#if UNITY_EDITOR
 			if ((showSuccessDebug && success) || (showFailureDebug && !success)) {
 				float time = Time.time + maxDelay - endTime;
 				Debug.Log ("Returned " + success + " on axis " + axis + " in " + time + " seconds" + (rotationAxis >= 0 ? (" with a rotation of " + finalRot) : ""));
 				Debug.Log (" Initial acc : " + initialAcc);
 				Debug.Log (" Final acc   : " + finalAcc);
 			}
+#endif
 			analyzing[axis] = false;
 		}
 	}
@@ -354,12 +360,14 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			if (success) {
 				callback ();
 			}
+#if UNITY_EDITOR
 			if ((showSuccessDebug && success) || (showFailureDebug && !success)) {
 				float time = endTime - motion.maxDuration - Time.time;
 				Debug.Log ("Returned " + success + " on axis " + axis + " in " + time + " seconds" + (motion.rotAxis != FBRotationAxis.None ? (" with a rotation of " + finalRot) : ""));
 				Debug.Log (" Initial acc : " + initialAcc);
 				Debug.Log (" Final acc   : " + finalAcc);
 			}
+#endif
 			analyzing[axis] = false;
 		}
 	}
