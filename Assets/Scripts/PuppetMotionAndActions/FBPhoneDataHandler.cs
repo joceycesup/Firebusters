@@ -114,9 +114,9 @@ public class FBPhoneDataHandler : MonoBehaviour {
 			connected = true;
 			serialThread = new Thread (ReadData);
 			serialThread.Start ();
-			Debug.Log ("Port Opened!");
+			Debug.Log ("Port " + comNum + " Opened!");
 		} catch (SystemException e) {
-			Debug.Log ("Error opening = " + e.Message);
+			Debug.Log ("Error opening " + comNum + " = " + e.Message);
 		}
 	}
 
