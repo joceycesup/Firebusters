@@ -115,6 +115,7 @@ public class FBPuppetController : MonoBehaviour {
 	public float strikeCooldown = 2.5f;
 
 	public float maxRollAim;
+	public float drawTurnRate = 90.0f;
 	public float bladeForce;
 	public float bottomForce;
 
@@ -156,29 +157,33 @@ public class FBPuppetController : MonoBehaviour {
 			Debug.Log ("Started action " + FBAction.Draw);
 			//motion.SetAbility (FBAction.Sheathe);
 			motion.ToggleAbilities (FBAction.Draw | FBAction.Sheathe | FBAction.Walk | FBAction.Aim);
+			extinguisherYRotation = motion.rotation.y;
 			actions |= FBAction.Draw;
+			tool.isKinematic = true;
+
+			/*
 			StartCoroutine (DoItLater (() => {
 				actions &= ~FBAction.Draw;
 				actions |= FBAction.Aim;
 				Debug.Log ("Ended action " + FBAction.Draw + " and started " + FBAction.Aim);
-			}, 0.5f));
-			extinguisherYRotation = motion.rotation.y;
-			toolTip.gameObject.SetActive (true);
+			}, 0.5f));/*/
+			//*/
 			AkSoundEngine.PostEvent ("Start_Extincteur", toolTip.gameObject);
 		}
 	}
 
 	private void Sheathe () {
-		if (!actions.TestMask (FBAction.Sheathe) && !actions.TestMask (FBAction.Draw)) {
+		if (!actions.TestMask (FBAction.Sheathe)) {
 			Debug.Log ("Started action " + FBAction.Sheathe);
 			//motion.SetAbility (FBAction.Draw);
 			motion.ToggleAbilities (FBAction.Draw | FBAction.Sheathe | FBAction.Walk | FBAction.Aim);
-			actions &= ~FBAction.Aim;
+			actions &= ~(FBAction.Draw | FBAction.Aim);
 			actions |= FBAction.Sheathe;
 			StartCoroutine (DoItLater (() => {
 				actions &= ~FBAction.Sheathe;
+				tool.isKinematic = false;
 				Debug.Log ("Ended action " + FBAction.Sheathe);
-			}, 0.5f));
+			}, -1.0f));
 			AkSoundEngine.PostEvent ("Stop_Extincteur", toolTip.gameObject);
 			toolTip.gameObject.SetActive (false);
 		}
@@ -186,11 +191,12 @@ public class FBPuppetController : MonoBehaviour {
 
 	private void Strike () {
 		if (!actions.TestMask (FBAction.Strike)) {
+			motion.ToggleAbilities (FBAction.Walk);
 			Debug.Log ("Started action " + FBAction.Strike);
 			actions |= FBAction.Strike;
 			tool.velocity = Vector3.zero;
 			Vector3 forwardAnticipate = Vector3.Normalize (feetForward + transform.forward);
-			StartCoroutine (DoWhileThen (() => {
+			StartCoroutine (DoWhileThen ((dt) => {
 				return Vector3.Dot (forwardAnticipate, Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up))) > anticipationDotProduct;
 			}, (dt) => {
 				Vector3 right = Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up));
@@ -205,6 +211,7 @@ public class FBPuppetController : MonoBehaviour {
 					toolBottom.AddForce ((strikeBottomDirection.x * right + strikeBottomDirection.z * transform.forward) * dt * bottomForce, ForceMode.Impulse);
 				}, () => {
 					toolTip.tag = "Untagged";
+					motion.ToggleAbilities (FBAction.Walk);
 					Debug.Log ("Ended action " + FBAction.Strike);
 				}, strikeDuration));
 				StartCoroutine (DoItLater (() => {
@@ -249,18 +256,18 @@ public class FBPuppetController : MonoBehaviour {
 	private IEnumerator DoItAfter (Action<float> a, Action callback, float delay = 0.0f) {
 		float endTime = Time.time + delay;
 		StartCoroutine (DoWhileThen (
-			() => { return Time.time < endTime; },
+			(dt) => { return Time.time < endTime; },
 			a,
 			callback
 			));
 		yield return null;
 	}
 
-	private IEnumerator DoWhileThen (Func<bool> predicate, Action<float> a, Action callback) {
-		while (predicate ()) {
+	private IEnumerator DoWhileThen (Func<float, bool> predicate, Action<float> a, Action callback) {
+		do {
 			a (Time.deltaTime);
 			yield return null;
-		}
+		} while (predicate (Time.deltaTime));
 		callback ();
 	}
 
@@ -329,8 +336,21 @@ public class FBPuppetController : MonoBehaviour {
 
 	private void FixedUpdate () {
 		if (actions.TestMask (FBAction.Aim)) {
-			Debug.Log ("aiming");
+			//Debug.Log ("aiming");
 			tool.transform.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z);
+		}
+		if (actions.TestMask (FBAction.Draw)) {
+			Quaternion aimRotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z);
+			tool.transform.rotation = Quaternion.RotateTowards (tool.transform.rotation, aimRotation, drawTurnRate * Time.fixedDeltaTime);
+			float angle = Quaternion.Angle (tool.transform.rotation, aimRotation);
+			Debug.Log (angle + " : " + (drawTurnRate * Time.fixedDeltaTime));
+			if (angle < drawTurnRate * Time.fixedDeltaTime) {
+				tool.isKinematic = false;
+				actions &= ~FBAction.Draw;
+				actions |= FBAction.Aim;
+				toolTip.gameObject.SetActive (true);
+				Debug.Log ("Ended action " + FBAction.Draw + " and started " + FBAction.Aim);
+			}
 		}
 	}
 

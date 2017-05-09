@@ -31,7 +31,7 @@ public class FBPuppetControllerInspector : Editor {
 		EditorGUILayout.Space ();
 		showToolParameters = EditorGUILayout.Foldout (showToolParameters, controller.motion.isAxePuppet ? "Strike parameters :" : "Aim parameters :");
 		if (showToolParameters) {
-			EditorGUI.indentLevel = 1;
+			EditorGUI.indentLevel++;
 			controller.tool = (Rigidbody) EditorGUILayout.ObjectField ("Tool", controller.tool, typeof (Rigidbody), true);
 			if (controller.motion.isAxePuppet) {
 				controller.strikeDuration = EditorGUILayout.FloatField ("Duration", controller.strikeDuration);
@@ -49,8 +49,9 @@ public class FBPuppetControllerInspector : Editor {
 			}
 			else {
 				controller.maxRollAim = EditorGUILayout.FloatField ("Max roll Aim", controller.maxRollAim);
+				controller.drawTurnRate = EditorGUILayout.FloatField ("Draw turn rate", controller.drawTurnRate);
 			}
-			EditorGUI.indentLevel = 0;
+			EditorGUI.indentLevel--;
 		}
 
 		EditorGUILayout.Space ();
