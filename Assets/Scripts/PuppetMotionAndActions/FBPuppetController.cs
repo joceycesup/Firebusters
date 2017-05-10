@@ -182,6 +182,7 @@ public class FBPuppetController : MonoBehaviour {
 			StartCoroutine (DoItLater (() => {
 				actions &= ~FBAction.Sheathe;
 				tool.isKinematic = false;
+				tool.constraints = RigidbodyConstraints.None;
 				Debug.Log ("Ended action " + FBAction.Sheathe);
 			}, -1.0f));
 			AkSoundEngine.PostEvent ("Stop_Extincteur", toolTip.gameObject);
@@ -339,13 +340,14 @@ public class FBPuppetController : MonoBehaviour {
 			//Debug.Log ("aiming");
 			tool.transform.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z);
 		}
-		if (actions.TestMask (FBAction.Draw)) {
+		else if (actions.TestMask (FBAction.Draw)) {
 			Quaternion aimRotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z);
 			tool.transform.rotation = Quaternion.RotateTowards (tool.transform.rotation, aimRotation, drawTurnRate * Time.fixedDeltaTime);
 			float angle = Quaternion.Angle (tool.transform.rotation, aimRotation);
 			Debug.Log (angle + " : " + (drawTurnRate * Time.fixedDeltaTime));
 			if (angle < drawTurnRate * Time.fixedDeltaTime) {
 				tool.isKinematic = false;
+				tool.constraints = RigidbodyConstraints.FreezeRotation;
 				actions &= ~FBAction.Draw;
 				actions |= FBAction.Aim;
 				toolTip.gameObject.SetActive (true);

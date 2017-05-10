@@ -54,7 +54,7 @@ public class FBPuppetWalker : MonoBehaviour {
 		//walking = Input.GetAxis ("Forward");
 		//walking = Input.GetAxis ("VerticalL");
 
-		if (motion.walking > 0.0f) {
+		if (!Mathf.Approximately (motion.walking, 0.0f)) {
 			if (!isMovingFoot) {
 				MoveFoot ();
 			}
