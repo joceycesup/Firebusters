@@ -68,6 +68,7 @@ public class FBPuppetWalker : MonoBehaviour {
 		// Initialization
 		//
 		// #########################################
+		bool validTarget = true; // the foot can be placed over target
 		FBFootState foot = controller.movingFoot;
 		Vector3 footStart = foot.target;
 		Vector3 forward = controller.transform.forward;
@@ -203,8 +204,11 @@ public class FBPuppetWalker : MonoBehaviour {
 				tmpTarget += footStart;
 				tmpTarget.y = footStart.y;
 				//Debug.DrawLine (footStart, tmpTarget, Color.cyan, 10.0f);
-				//Debug.Break ();
+				//Debug.Break ();*
+				validTarget = true;
 				ApplyCorrection (Horizontal (tmpTarget, oldTarget));
+			} else {
+				validTarget = false;
 			}
 
 			//#################################################################################
@@ -218,12 +222,14 @@ public class FBPuppetWalker : MonoBehaviour {
 			//#################################################################################
 		}
 
-		foot.target = tmpTarget;
-		if (hitsStep) {
-			StartCoroutine (TakeStep (foot, controller.fixedFoot.onStep ? 2 : 1));
-		}
-		else {
-			StartCoroutine (TakeStep (foot, 0));
+		if (validTarget) {
+			foot.target = tmpTarget;
+			if (hitsStep) {
+				StartCoroutine (TakeStep (foot, controller.fixedFoot.onStep ? 2 : 1));
+			}
+			else {
+				StartCoroutine (TakeStep (foot, 0));
+			}
 		}
 	}
 

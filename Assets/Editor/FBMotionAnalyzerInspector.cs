@@ -63,24 +63,7 @@ public class FBMotionAnalyzerInspector : Editor {
 		if (showToolParameters) {
 			motion.toolMotion.name = motion.isAxePuppet ? "Strike" : "Sheathe/Draw";
 			motion.toolMotion = motion.toolMotion.GUIField ();
-		}/*
-		EditorGUILayout.Space ();
-		if (showToolParameters) {
-			EditorGUI.indentLevel = 1;
-			if (motion.isAxePuppet) {
-				motion.strikeMaxDuration = EditorGUILayout.FloatField ("Strike max duration", motion.strikeMaxDuration);
-				motion.strikeInitialAcc = EditorGUILayout.FloatField ("Strike initial acceleration", motion.strikeInitialAcc);
-				motion.strikeFinalAcc = EditorGUILayout.FloatField ("Strike final acceleration", motion.strikeFinalAcc);
-				motion.strikeAngle = EditorGUILayout.FloatField ("Strike angle", motion.strikeAngle);
-			}
-			else {
-				motion.sheatheDrawMaxDuration = EditorGUILayout.FloatField ("Sheathe/Draw max duration", motion.sheatheDrawMaxDuration);
-				motion.sheatheDrawInitialAcc = EditorGUILayout.FloatField ("Sheathe/Draw initial acceleration", motion.sheatheDrawInitialAcc);
-				motion.sheatheDrawFinalAcc = EditorGUILayout.FloatField ("Sheathe/Draw final acceleration", motion.sheatheDrawFinalAcc);
-				motion.sheatheDrawAngle = EditorGUILayout.FloatField ("Sheathe/Draw angle", motion.sheatheDrawAngle);
-			}
-			EditorGUI.indentLevel = 0;
-		}//*/
+		}
 
 		EditorGUILayout.Space ();
 

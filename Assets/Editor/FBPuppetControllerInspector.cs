@@ -45,7 +45,10 @@ public class FBPuppetControllerInspector : Editor {
 				controller.strikeBladeDirection = EditorGUILayout.Vector3Field ("Strike blade direction", controller.strikeBladeDirection);
 				controller.strikeBottomDirection = EditorGUILayout.Vector3Field ("Strike bottom direction", controller.strikeBottomDirection);
 
-				controller.anticipationDotProduct = EditorGUILayout.FloatField ("Anticipation dot product", controller.anticipationDotProduct);
+				//controller.anticipationDotProduct = EditorGUILayout.FloatField ("Anticipation dot product", controller.anticipationDotProduct);
+
+				controller.anticipationAnchors = (GameObject) EditorGUILayout.ObjectField ("Anticipation anchors", controller.anticipationAnchors, typeof (GameObject), true);
+				controller.strikeAnchors = (GameObject) EditorGUILayout.ObjectField ("Strike anchors", controller.strikeAnchors, typeof (GameObject), true);
 			}
 			else {
 				controller.maxRollAim = EditorGUILayout.FloatField ("Max roll Aim", controller.maxRollAim);

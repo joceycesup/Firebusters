@@ -341,16 +341,17 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			bool rotationSuccess = true;
 			float initialRotation = 0.0f;
 			if (motion.rotAxis != FBRotationAxis.None) {
+				rotationSuccess = false;
 				initialRotation = rotation[rAxis];
 			}
-			float inequalityFactor = motion.finalAcc < 0.0f ? 1.0f : -1.0f;
 			while (!success && Time.time < endTime) {
 				if (motion.rotAxis != FBRotationAxis.None) {
 					finalRot = rotation[rAxis] - initialRotation;
 					rotationSuccess = (motion.angle >= 0.0f) ? (finalRot >= motion.angle) : (finalRot < motion.angle);
 				}
 				finalAcc = acceleration[axis];
-				if (rotationSuccess && (finalAcc * inequalityFactor >= motion.finalAcc * inequalityFactor)) {
+				//Debug.Log (" coucou acc   : " + finalAcc);
+				if (rotationSuccess && (motion.finalAcc < 0.0f ? finalAcc <= motion.finalAcc : finalAcc >= motion.finalAcc)) {
 					success = true;
 				}
 				else {
@@ -362,7 +363,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			}
 #if UNITY_EDITOR
 			if ((showSuccessDebug && success) || (showFailureDebug && !success)) {
-				float time = endTime - motion.maxDuration - Time.time;
+				float time = Time.time - (endTime - motion.maxDuration);
+				Debug.Log ("#####################################################################################");
 				Debug.Log ("Returned " + success + " on axis " + axis + " in " + time + " seconds" + (motion.rotAxis != FBRotationAxis.None ? (" with a rotation of " + finalRot) : ""));
 				Debug.Log (" Initial acc : " + initialAcc);
 				Debug.Log (" Final acc   : " + finalAcc);

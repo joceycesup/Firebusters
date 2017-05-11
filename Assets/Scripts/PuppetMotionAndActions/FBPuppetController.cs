@@ -106,10 +106,10 @@ public class FBPuppetController : MonoBehaviour {
 	public Vector3 strikeBottomDirection;
 	public Vector3 anticipationBladeDirection;
 	public Vector3 strikeBladeDirection;
+	public GameObject strikeAnchors;
+	public GameObject anticipationAnchors;
 
 	public float extinguisherYRotation;
-
-	public float anticipationDotProduct = -0.7071067812f;
 
 	public float strikeDuration = 0.5f;
 	public float strikeCooldown = 2.5f;
@@ -192,34 +192,33 @@ public class FBPuppetController : MonoBehaviour {
 
 	private void Strike () {
 		if (!actions.TestMask (FBAction.Strike)) {
-			motion.ToggleAbilities (FBAction.Walk);
+			motion.ToggleAbilities (FBAction.Walk | FBAction.Strike);
 			Debug.Log ("Started action " + FBAction.Strike);
 			actions |= FBAction.Strike;
+			if (anticipationAnchors) {
+				anticipationAnchors.SetActive (false);
+				strikeAnchors.SetActive (true);
+			}
 			tool.velocity = Vector3.zero;
-			Vector3 forwardAnticipate = Vector3.Normalize (feetForward + transform.forward);
-			StartCoroutine (DoWhileThen ((dt) => {
-				return Vector3.Dot (forwardAnticipate, Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up))) > anticipationDotProduct;
-			}, (dt) => {
+			toolTip.tag = "Axe";
+			StartCoroutine (DoItAfter ((dt) => {
 				Vector3 right = Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up));
-				tool.AddForce ((transform.forward * anticipationBladeDirection.z + right * anticipationBladeDirection.x) * dt * bladeForce, ForceMode.Impulse);
-				toolBottom.AddForce ((anticipationBottomDirection.x * right + anticipationBottomDirection.z * transform.forward + anticipationBottomDirection.y * Vector3.up) * dt * bottomForce, ForceMode.Impulse);
+				tool.AddForce ((transform.forward * strikeBladeDirection.z + right * strikeBladeDirection.x) * dt * bladeForce, ForceMode.Impulse);
+				toolBottom.AddForce ((strikeBottomDirection.x * right + strikeBottomDirection.z * transform.forward) * dt * bottomForce, ForceMode.Impulse);
 			}, () => {
-				tool.velocity = Vector3.zero;
-				toolTip.tag = "Axe";
-				StartCoroutine (DoItAfter ((dt) => {
-					Vector3 right = Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up));
-					tool.AddForce ((transform.forward * strikeBladeDirection.z + right * strikeBladeDirection.x) * dt * bladeForce, ForceMode.Impulse);
-					toolBottom.AddForce ((strikeBottomDirection.x * right + strikeBottomDirection.z * transform.forward) * dt * bottomForce, ForceMode.Impulse);
-				}, () => {
-					toolTip.tag = "Untagged";
-					motion.ToggleAbilities (FBAction.Walk);
-					Debug.Log ("Ended action " + FBAction.Strike);
-				}, strikeDuration));
-				StartCoroutine (DoItLater (() => {
-					actions &= ~FBAction.Strike;
-					Debug.Log (FBAction.Strike + " available");
-				}, strikeCooldown));
-			}));
+				toolTip.tag = "Untagged";
+				if (anticipationAnchors) {
+					strikeAnchors.SetActive (false);
+					anticipationAnchors.SetActive (true);
+				}
+				motion.ToggleAbilities (FBAction.Walk);
+				Debug.Log ("Ended action " + FBAction.Strike);
+			}, strikeDuration));
+			StartCoroutine (DoItLater (() => {
+				actions &= ~FBAction.Strike;
+				motion.ToggleAbilities (FBAction.Strike);
+				Debug.Log (FBAction.Strike + " available");
+			}, strikeCooldown));
 		}
 	}
 
@@ -344,7 +343,7 @@ public class FBPuppetController : MonoBehaviour {
 			Quaternion aimRotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z);
 			tool.transform.rotation = Quaternion.RotateTowards (tool.transform.rotation, aimRotation, drawTurnRate * Time.fixedDeltaTime);
 			float angle = Quaternion.Angle (tool.transform.rotation, aimRotation);
-			Debug.Log (angle + " : " + (drawTurnRate * Time.fixedDeltaTime));
+			//Debug.Log (angle + " : " + (drawTurnRate * Time.fixedDeltaTime));
 			if (angle < drawTurnRate * Time.fixedDeltaTime) {
 				tool.isKinematic = false;
 				tool.constraints = RigidbodyConstraints.FreezeRotation;

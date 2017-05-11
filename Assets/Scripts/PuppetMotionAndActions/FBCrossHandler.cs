@@ -14,6 +14,7 @@ public class FBCrossHandler : MonoBehaviour {
 
 	void Awake () {
 		localAccelerationTip = new GameObject ().transform;
+		localAccelerationTip.name = "LocalAccelerationTip_created_in_FBCrossHandler";
 		localAccelerationTip.parent = cross;
 		controller = GetComponent<FBPuppetController> ();
 		motion = GetComponent<FBMotionAnalyzer> ();
