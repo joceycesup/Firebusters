@@ -214,7 +214,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				walking = -1.0f;
 			}
 			if (TestMask (FBAction.Strike)) {
-				if (acceleration.x > toolMotion.initialAcc) {
+				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
 					//StartCoroutine (AnalyzeAccelerometerAxis (0, strikeFinalAcc, false, () => OnStrike (), strikeMaxDuration, 0, strikeAngle));
 					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnStrike ()));
 				}
@@ -223,13 +223,13 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				}
 			}
 			if (TestMask (FBAction.Draw)) {
-				if (acceleration.y > toolMotion.initialAcc) {
+				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
 					//StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => OnDraw (), sheatheDrawMaxDuration, 0, sheatheDrawAngle));
 					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnDraw ()));
 				}
 			}
 			else if (TestMask (FBAction.Sheathe)) {
-				if (acceleration.y > toolMotion.initialAcc) {
+				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
 					//StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => OnSheathe (), sheatheDrawMaxDuration, 0, sheatheDrawAngle));
 					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnSheathe ()));
 				}
