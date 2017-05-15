@@ -11,7 +11,7 @@
 		LOD 200
 
 		Pass {
-			ZWrite On
+			//ZWrite On
 			ColorMask 0
 
 			CGPROGRAM
@@ -76,8 +76,8 @@
 			camToFrag.y = 0;
 			camToObj = ClosestPointOnLine (camToObj, viewDir);
 			camToFrag = ClosestPointOnLine (camToFrag, viewDir);
-			//return (magnitude (camToObj) < magnitude (camToFrag));
-			return true;
+			return (magnitude (camToObj) < magnitude (camToFrag));
+			//return true;
 		}
 
 

@@ -133,6 +133,7 @@ public class FBPuppetController : MonoBehaviour {
 
 	private void OnEnable () {
 		motion.OnDraw += Draw;
+		motion.OnGrab += Grab;
 		motion.OnPickup += Pickup;
 		motion.OnSheathe += Sheathe;
 		motion.OnStrike += Strike;
@@ -141,6 +142,7 @@ public class FBPuppetController : MonoBehaviour {
 
 	private void OnDisable () {
 		motion.OnDraw -= Draw;
+		motion.OnGrab -= Grab;
 		motion.OnPickup -= Pickup;
 		motion.OnSheathe -= Sheathe;
 		motion.OnStrike -= Strike;
@@ -152,11 +154,25 @@ public class FBPuppetController : MonoBehaviour {
 		return null;
 	}
 
+	private void Grab () {
+		if (!actions.TestMask (FBAction.Grab)) {
+			Debug.Log ("Started action " + FBAction.Grab);
+			//motion.SetAbility (FBAction.Draw);
+			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
+			actions |= FBAction.Grab;
+			StartCoroutine (DoItLater (() => {
+				actions &= ~FBAction.Grab;
+				motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
+				Debug.Log ("Ended action " + FBAction.Grab);
+			}, -1.0f));
+		}
+	}
+
 	private void Draw () {
 		if (!actions.TestMask (FBAction.Sheathe) && !actions.TestMask (FBAction.Draw)) {
 			Debug.Log ("Started action " + FBAction.Draw);
 			//motion.SetAbility (FBAction.Sheathe);
-			motion.ToggleAbilities (FBAction.Draw | FBAction.Sheathe | FBAction.Walk | FBAction.Aim);
+			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Sheathe | FBAction.Walk | FBAction.Aim);
 			extinguisherYRotation = motion.rotation.y;
 			actions |= FBAction.Draw;
 			tool.isKinematic = true;
@@ -176,7 +192,7 @@ public class FBPuppetController : MonoBehaviour {
 		if (!actions.TestMask (FBAction.Sheathe)) {
 			Debug.Log ("Started action " + FBAction.Sheathe);
 			//motion.SetAbility (FBAction.Draw);
-			motion.ToggleAbilities (FBAction.Draw | FBAction.Sheathe | FBAction.Walk | FBAction.Aim);
+			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Sheathe | FBAction.Walk | FBAction.Aim);
 			actions &= ~(FBAction.Draw | FBAction.Aim);
 			actions |= FBAction.Sheathe;
 			StartCoroutine (DoItLater (() => {
@@ -192,7 +208,7 @@ public class FBPuppetController : MonoBehaviour {
 
 	private void Strike () {
 		if (!actions.TestMask (FBAction.Strike)) {
-			motion.ToggleAbilities (FBAction.Walk | FBAction.Strike);
+			motion.ToggleAbilities (FBAction.Grab | FBAction.Walk | FBAction.Strike);
 			Debug.Log ("Started action " + FBAction.Strike);
 			actions |= FBAction.Strike;
 			if (anticipationAnchors) {
@@ -211,7 +227,7 @@ public class FBPuppetController : MonoBehaviour {
 					strikeAnchors.SetActive (false);
 					anticipationAnchors.SetActive (true);
 				}
-				motion.ToggleAbilities (FBAction.Walk);
+				motion.ToggleAbilities (FBAction.Grab | FBAction.Walk);
 				Debug.Log ("Ended action " + FBAction.Strike);
 			}, strikeDuration));
 			StartCoroutine (DoItLater (() => {

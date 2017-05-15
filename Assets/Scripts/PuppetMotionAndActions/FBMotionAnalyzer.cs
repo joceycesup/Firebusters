@@ -55,8 +55,9 @@ public enum FBAction {
 	Strike = 0x04,
 	Draw = 0x08,
 	Sheathe = 0x10,
-	Pickup = 0x20,
-	Throw = 0x40
+	Grab = 0x20,
+	Pickup = 0x40,
+	Throw = 0x80
 }
 
 public static class FBActionExtensions {
@@ -76,6 +77,9 @@ public static class FBActionExtensions {
 							break;
 						case FBAction.Draw:
 							res += "Draw";
+							break;
+						case FBAction.Grab:
+							res += "Grab";
 							break;
 						case FBAction.Pickup:
 							res += "Pickup";
@@ -113,6 +117,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public event ActionEvent OnStrike;
 	public event ActionEvent OnDraw;
 	public event ActionEvent OnSheathe;
+	public event ActionEvent OnGrab;
 	public event ActionEvent OnPickup;
 	public event ActionEvent OnThrow;
 
@@ -199,7 +204,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 
 	void Awake () {
 		sensor = gameObject.GetComponent<FBPhoneDataHandler> ();
-		walking = -1.0f;
+		walking = 0.0f;
 	}
 
 	void Update () {
@@ -211,7 +216,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				UpdateWalkValues ();
 			}
 			else {
-				walking = -1.0f;
+				walking = 0.0f;
 			}
 			if (TestMask (FBAction.Strike)) {
 				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
@@ -245,7 +250,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				UpdateWalkValues ();
 			}
 			else {
-				walking = -1.0f;
+				walking = 0.0f;
 			}
 			if (TestMask (FBAction.Strike)) {
 				if (Input.GetKeyDown ("v"))
@@ -258,6 +263,10 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			else if (TestMask (FBAction.Sheathe)) {
 				if (Input.GetKeyDown ("c"))
 					OnSheathe ();
+			}
+			if (TestMask (FBAction.Grab)) {
+				if (Input.GetKeyDown ("e"))
+					OnGrab ();
 			}
 			kbRotation.x -= Input.GetAxis ("VerticalR");
 			kbRotation.y += Input.GetAxis ("HorizontalR");
@@ -279,7 +288,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			kbRotation = sensor.orientation;
 		}
 		else {
-			walking = rollFactor.Evaluate (Input.GetAxis ("VerticalL"));
+			walking = Mathf.Sign (Input.GetAxis ("VerticalL")) * rollFactor.Evaluate (Mathf.Abs (Input.GetAxis ("VerticalL")));
 		}
 #endif
 	}

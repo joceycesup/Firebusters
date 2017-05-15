@@ -17,10 +17,10 @@ public class FBPuppetControllerInspector : Editor {
 	public override void OnInspectorGUI () {
 		GameObject g;
 		g = (GameObject) EditorGUILayout.ObjectField ("Left foot", (controller.leftFoot != null) ? ((controller.leftFoot.transform != null) ? controller.leftFoot.transform.gameObject : null) : null, typeof (GameObject), true);
-		if (g)
+		if (g && !Application.isPlaying)
 			controller.CreateFoot (g.transform, true);
 		g = (GameObject) EditorGUILayout.ObjectField ("Right foot", (controller.rightFoot != null) ? ((controller.rightFoot.transform != null) ? controller.rightFoot.transform.gameObject : null) : null, typeof (GameObject), true);
-		if (g)
+		if (g && !Application.isPlaying)
 			controller.CreateFoot (g.transform, false);
 
 		EditorGUILayout.Space ();
