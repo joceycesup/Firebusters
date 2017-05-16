@@ -7,10 +7,10 @@ public class FBFire : MonoBehaviour {
 	public event FireEvent OnPutOut;
 
 	private float putOutTime = 0.5f;
-	private Light light;
+	private Light fireLight;
 
 	private void Start () {
-		light = GetComponent<Light> ();
+		fireLight = GetComponent<Light> ();
 		AkSoundEngine.PostEvent ("Play_Fire", gameObject);
 	}
 
@@ -28,7 +28,7 @@ public class FBFire : MonoBehaviour {
 		do {
 			factor = (endTime - Time.time) / putOutTime;
 			transform.localScale = Vector3.Lerp (initialScale, Vector3.zero, 1.0f - factor);
-			light.intensity *= factor;
+			fireLight.intensity *= factor;
 			yield return null;
 		} while (factor > 0.0f);
 		Destroy (gameObject);

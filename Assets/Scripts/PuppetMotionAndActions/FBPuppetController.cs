@@ -109,6 +109,10 @@ public class FBPuppetController : MonoBehaviour {
 	public GameObject strikeAnchors;
 	public GameObject anticipationAnchors;
 
+	public CharacterJoint leftHand;
+	private FBCharacterJointDisabler leftHandDisabler = new FBCharacterJointDisabler ();
+	public float resetGrabDelay = 0.8f;
+
 	public float extinguisherYRotation;
 
 	public float strikeDuration = 0.5f;
@@ -157,14 +161,45 @@ public class FBPuppetController : MonoBehaviour {
 	private void Grab () {
 		if (!actions.TestMask (FBAction.Grab)) {
 			Debug.Log ("Started action " + FBAction.Grab);
-			//motion.SetAbility (FBAction.Draw);
+
+			Quaternion relativeRotation = Quaternion.FromToRotation (leftHand.transform.forward, toolBottom.transform.forward);
+			relativeRotation = Quaternion.Inverse (toolBottom.transform.rotation) * leftHand.transform.rotation;
+			leftHandDisabler.CopyJointValues (leftHand);
+			Destroy (leftHand);
+
 			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
 			actions |= FBAction.Grab;
+
 			StartCoroutine (DoItLater (() => {
+				Quaternion initialToolRotation = toolBottom.transform.rotation;
+				Quaternion initialHandRotation = leftHandDisabler.gameObject.transform.rotation;
+
+				{
+					Quaternion tmpRot = leftHandDisabler.gameObject.transform.rotation;
+					leftHandDisabler.gameObject.transform.rotation = toolBottom.transform.rotation * relativeRotation;
+					leftHand = leftHandDisabler.CreateJoint ();
+					leftHandDisabler.gameObject.transform.rotation = tmpRot;
+				}
 				actions &= ~FBAction.Grab;
-				motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
-				Debug.Log ("Ended action " + FBAction.Grab);
-			}, -1.0f));
+				float resetAnchorSpeed = Vector3.Distance (leftHand.connectedAnchor, leftHandDisabler.connectedAnchor) / resetGrabDelay;
+				//float resetAngleSpeed = Quaternion.Angle (relativeRotation, Quaternion.Inverse (leftHand.transform.rotation) * toolBottom.transform.rotation) / resetGrabDelay;
+
+				StartCoroutine (DoItAfter ((dt) => {
+					float factor = (resetAnchorSpeed * dt) / Vector3.Distance (leftHand.connectedAnchor, leftHandDisabler.connectedAnchor);
+					leftHand.connectedAnchor = Vector3.Lerp (leftHand.connectedAnchor, leftHandDisabler.connectedAnchor, factor);
+					FBCharacterJointDisabler.Limits.Lerp (new FBCharacterJointDisabler.Limits (leftHand), leftHandDisabler.limits, factor).Apply (leftHand);
+
+					//leftHand.transform.rotation = initialHandRotation * (Quaternion.Inverse (initialToolRotation) * toolBottom.transform.rotation);
+					//* Quaternion.RotateTowards (Quaternion.Inverse (leftHand.transform.rotation) * toolBottom.transform.rotation, relativeRotation, 0.0f);
+					//leftHand.transform.rotation *= Quaternion.Euler (0.01f, 0.0f, 0.0f);
+				}, () => {
+					leftHand.connectedAnchor = leftHandDisabler.connectedAnchor;
+					leftHandDisabler.limits.Apply (leftHand);
+
+					motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
+					Debug.Log (FBAction.Grab + " available");
+				}, resetGrabDelay));
+			}, 1.0f));
 		}
 	}
 
@@ -312,6 +347,9 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	void Update () {
+		if (leftHand) {
+			Debug.Log (Quaternion.Angle (leftHand.transform.rotation, toolBottom.transform.rotation));
+		}
 		yRotation += steeringTurnRate * motion.steering * Time.deltaTime;
 		Quaternion rotation = Quaternion.Euler (0.0f, yRotation, 0.0f);
 		if (useMaxAngleSpan) {
