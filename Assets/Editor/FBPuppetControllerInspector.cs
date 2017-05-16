@@ -26,6 +26,11 @@ public class FBPuppetControllerInspector : Editor {
 			controller.leftHand = ((GameObject) EditorGUILayout.ObjectField ("Left hand", controller.leftHand.gameObject, typeof (GameObject), true)).GetComponents<CharacterJoint> ()[1];
 		//Debug.Log (controller.leftHand.connectedBody);
 		controller.resetGrabDelay = EditorGUILayout.FloatField ("Reset grab delay", controller.resetGrabDelay);
+		if (!Application.isPlaying) {
+			g = (GameObject) EditorGUILayout.ObjectField ("Door knob reference", ((controller.doorKnobReference != null) ? controller.doorKnobReference.gameObject : null), typeof (GameObject), true);
+			if (g)
+				controller.doorKnobReference = g.GetComponent<CharacterJoint> ();
+		}
 
 		EditorGUILayout.Space ();
 		controller.steeringTurnRate = EditorGUILayout.FloatField ("Steering turn rate", controller.steeringTurnRate);

@@ -97,7 +97,7 @@ public class FBPuppetController : MonoBehaviour {
 	public Transform cameraTarget;
 	public Transform cameraPosition;
 
-	//-------------------- pickable and items --------------------
+	//-------------------- tools --------------------
 
 	public Rigidbody tool;
 	private Rigidbody toolBottom;
@@ -108,10 +108,6 @@ public class FBPuppetController : MonoBehaviour {
 	public Vector3 strikeBladeDirection;
 	public GameObject strikeAnchors;
 	public GameObject anticipationAnchors;
-
-	public CharacterJoint leftHand;
-	private FBCharacterJointDisabler leftHandDisabler = new FBCharacterJointDisabler ();
-	public float resetGrabDelay = 0.8f;
 
 	public float extinguisherYRotation;
 
@@ -124,6 +120,14 @@ public class FBPuppetController : MonoBehaviour {
 	public float bottomForce;
 
 	private GameObject carriedItem = null;
+
+	//-------------------- Grabbable --------------------
+
+	public CharacterJoint leftHand;
+	private FBCharacterJointDisabler leftHandDisabler = new FBCharacterJointDisabler ();
+	public float resetGrabDelay = 0.8f;
+	private Bounds detectionBox;
+	public CharacterJoint doorKnobReference;
 
 	//-------------------- Actions --------------------
 	private FBAction _actions = FBAction.None;
@@ -160,6 +164,19 @@ public class FBPuppetController : MonoBehaviour {
 
 	private void Grab () {
 		if (!actions.TestMask (FBAction.Grab)) {
+
+			Debug.Log ("Checking for grabbables");
+			Rigidbody doorKnob = null;
+			Collider[] colliders = Physics.OverlapBox (transform.position + transform.rotation * detectionBox.center, detectionBox.extents, transform.rotation, 1);
+			foreach (Collider c in colliders) {
+				Debug.Log (c);
+				if (c.CompareTag ("DoorKnob") && Vector3.Dot (c.transform.forward, transform.forward) > 0.0f && doorKnob == null) {
+					doorKnob = c.GetComponent<Rigidbody> ();
+				}
+			}
+			if (!doorKnob)
+				return;
+
 			Debug.Log ("Started action " + FBAction.Grab);
 
 			Quaternion relativeRotation = Quaternion.FromToRotation (leftHand.transform.forward, toolBottom.transform.forward);
@@ -328,6 +345,7 @@ public class FBPuppetController : MonoBehaviour {
 		if (motion == null)
 			motion = GetComponent<FBMotionAnalyzer> ();
 		toolTip = tool.transform.GetChild (0);
+		detectionBox = GetComponents<BoxCollider> ()[1].bounds;
 		if (!motion.isAxePuppet)
 			toolTip.gameObject.SetActive (false);
 		toolBottom = tool.transform.GetChild (1).gameObject.GetComponent<Rigidbody> ();
@@ -346,10 +364,10 @@ public class FBPuppetController : MonoBehaviour {
 		yRotation = transform.rotation.eulerAngles.y;
 	}
 
-	void Update () {
+	void Update () {/*
 		if (leftHand) {
 			Debug.Log (Quaternion.Angle (leftHand.transform.rotation, toolBottom.transform.rotation));
-		}
+		}//*/
 		yRotation += steeringTurnRate * motion.steering * Time.deltaTime;
 		Quaternion rotation = Quaternion.Euler (0.0f, yRotation, 0.0f);
 		if (useMaxAngleSpan) {
