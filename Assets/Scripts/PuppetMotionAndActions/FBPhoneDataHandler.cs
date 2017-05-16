@@ -50,23 +50,24 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		sp = new SerialPort ("COM" + comNum, 9600);
 	}
 
-	void parseValues (string av) {
+	void parseValues (string h, string av) {
 		string[] split = av.Split (',');
 		//Debug.Log (av);
-		if (split.Length >= 5) {
-			if (split[0].CompareTo ("3") == 0) {
-				_orientation.x = float.Parse (split[4]);
-				_orientation.y = float.Parse (split[2]);
-				_orientation.z = -float.Parse (split[3]);
+		if (split.Length >= 3) {
+			Debug.Log(av);
+			if (h.Equals("OR")) {
+				_orientation.x = float.Parse (split[2]);
+				_orientation.y = float.Parse (split[0]);
+				_orientation.z = -float.Parse (split[1]);
 				if (_orientation.y > 180.0f)
 					_orientation.y -= 360.0f;
 				UpdateRotation ();
 				UpdateAcceleration ();
 			}
-			else if (split[0].CompareTo ("1") == 0) {
-				_acceleration.x = -float.Parse (split[3]);
-				_acceleration.y = float.Parse (split[4]);
-				_acceleration.z = float.Parse (split[2]);
+			else if (h.Equals("AC")) {
+				_acceleration.x = -float.Parse (split[2]);
+				_acceleration.y = float.Parse (split[0]);
+				_acceleration.z = float.Parse (split[1]);
 				UpdateAcceleration ();
 			}
 		}
@@ -86,18 +87,24 @@ public class FBPhoneDataHandler : MonoBehaviour {
 				byte tmp;
 				string data = "";
 				string avalues = "";
-				tmp = (byte) sp.ReadByte ();
+				string head = "";
 				do {
 					tmp = (byte) sp.ReadByte ();
-					if ((tmp == 10)) {
+					if ((tmp == 62)) {
+						head = data;
+						data = "";
+					}
+					else if (tmp == 10) {
 						avalues = data;
 						data = "";
 					}
-					data += ((char) tmp);
+					else {
+						data += ((char) tmp);
+					}
 				} while (tmp != 10 && tmp != 255);
-				parseValues (avalues);
+				parseValues (head, avalues);
 			} catch (TimeoutException) {
-				//Debug.Log ("FBPhoneDataHandler : reached timeout");
+				Debug.Log ("FBPhoneDataHandler : reached timeout");
 			}
 		}
 	}
