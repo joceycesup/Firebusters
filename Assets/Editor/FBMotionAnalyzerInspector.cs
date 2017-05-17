@@ -59,6 +59,9 @@ public class FBMotionAnalyzerInspector : Editor {
 		motion.isAxePuppet = EditorGUILayout.Toggle ("Is axe puppet", motion.isAxePuppet);
 
 		EditorGUILayout.Space ();
+		motion.useKbRight = EditorGUILayout.Toggle ("Use keybawrd right", motion.useKbRight);
+
+		EditorGUILayout.Space ();
 		showToolParameters = EditorGUILayout.Foldout (showToolParameters, motion.isAxePuppet ? "Strike parameters :" : "Aim parameters :");
 		if (showToolParameters) {
 			motion.toolMotion.name = motion.isAxePuppet ? "Strike" : "Sheathe/Draw";

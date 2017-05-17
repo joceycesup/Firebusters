@@ -23,6 +23,7 @@ public class FBHittable : MonoBehaviour {
 	public bool destructible = false;
 	public FBHitSound hitSound = FBHitSound.None;
 	public FBAxeSound axeSound = FBAxeSound.None;
+	public float maxVelocity;
 
 	private void Awake () {
 		tag = "Hittable";
@@ -52,6 +53,8 @@ public class FBHittable : MonoBehaviour {
 	}
 	protected virtual void OnHit (Collision collision) {
 		Debug.Log ("Clonk!");
+		float velocity = Mathf.Clamp01 (collision.relativeVelocity.magnitude / maxVelocity);
+		AkSoundEngine.SetRTPCValue ("velocite", velocity, gameObject);
 		PlayHitSound ();
 	}
 

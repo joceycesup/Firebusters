@@ -22,15 +22,19 @@ public class FBPuppetControllerInspector : Editor {
 		g = (GameObject) EditorGUILayout.ObjectField ("Right foot", (controller.rightFoot != null) ? ((controller.rightFoot.transform != null) ? controller.rightFoot.transform.gameObject : null) : null, typeof (GameObject), true);
 		if (g && !Application.isPlaying)
 			controller.CreateFoot (g.transform, false);
-		if (!Application.isPlaying)
-			controller.leftHand = ((GameObject) EditorGUILayout.ObjectField ("Left hand", controller.leftHand.gameObject, typeof (GameObject), true)).GetComponents<CharacterJoint> ()[1];
-		//Debug.Log (controller.leftHand.connectedBody);
-		controller.resetGrabDelay = EditorGUILayout.FloatField ("Reset grab delay", controller.resetGrabDelay);
 		if (!Application.isPlaying) {
-			g = (GameObject) EditorGUILayout.ObjectField ("Door knob reference", ((controller.doorKnobReference != null) ? controller.doorKnobReference.gameObject : null), typeof (GameObject), true);
+			g = (GameObject) EditorGUILayout.ObjectField ("Left hand", ((controller.leftHand != null) ? controller.leftHand.gameObject : null), typeof (GameObject), true);
 			if (g)
-				controller.doorKnobReference = g.GetComponent<CharacterJoint> ();
+				controller.leftHand = g.GetComponent<Rigidbody> ();
 		}
+		//Debug.Log (controller.leftHand.connectedBody);
+		FBPuppetController.grabDelay = EditorGUILayout.FloatField ("Grab delay", FBPuppetController.grabDelay);
+		if (!Application.isPlaying) {
+			g = (GameObject) EditorGUILayout.ObjectField ("Door knob reference", ((FBPuppetController.doorKnobReference.characterJoint != null) ? FBPuppetController.doorKnobReference.characterJoint.gameObject : null), typeof (GameObject), true);
+			if (g)
+				FBPuppetController.doorKnobReference = new CharacterJointValues( g.GetComponent<CharacterJoint> ());
+		}
+		FBPuppetController.letGoDoorDelay = EditorGUILayout.FloatField ("Let go door after", FBPuppetController.letGoDoorDelay);
 
 		EditorGUILayout.Space ();
 		controller.steeringTurnRate = EditorGUILayout.FloatField ("Steering turn rate", controller.steeringTurnRate);

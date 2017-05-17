@@ -12,10 +12,10 @@ public class FBWWiseTests : MonoBehaviour {
 		//.225
 		//.600
 		if (coll.gameObject.CompareTag ("Marionette")) {
-			float velocity = curve.Evaluate (coll.relativeVelocity.magnitude / maxVelocity);
+			float velocity = Mathf.Clamp01 (coll.relativeVelocity.magnitude / maxVelocity);
 			//Debug.Log (this + " : " + velocity);
 
-			AkSoundEngine.SetRTPCValue ("velocite", velocity);
+			AkSoundEngine.SetRTPCValue ("velocite", velocity, gameObject);
 			AkSoundEngine.PostEvent ("Play_Marionnette_Autohit", gameObject);
 		}
 	}

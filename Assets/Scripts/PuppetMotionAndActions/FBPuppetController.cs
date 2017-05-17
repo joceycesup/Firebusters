@@ -123,11 +123,15 @@ public class FBPuppetController : MonoBehaviour {
 
 	//-------------------- Grabbable --------------------
 
-	public CharacterJoint leftHand;
-	private FBCharacterJointDisabler leftHandDisabler = new FBCharacterJointDisabler ();
-	public float resetGrabDelay = 0.8f;
-	private Bounds detectionBox;
-	public CharacterJoint doorKnobReference;
+	public Rigidbody leftHand;
+	private CharacterJoint leftHandCJ;
+	public static float grabDelay = 0.8f;
+	private BoxCollider detectionBox;
+	[SerializeField]
+	public static CharacterJointValues doorKnobReference;
+	[SerializeField]
+	private static CharacterJointValues toolReference;
+	public static float letGoDoorDelay = 0.5f;
 
 	//-------------------- Actions --------------------
 	private FBAction _actions = FBAction.None;
@@ -165,13 +169,16 @@ public class FBPuppetController : MonoBehaviour {
 	private void Grab () {
 		if (!actions.TestMask (FBAction.Grab)) {
 
-			Debug.Log ("Checking for grabbables");
+			Debug.Log ("#########################");
+			Debug.Log (" Checking for grabbables ");
 			Rigidbody doorKnob = null;
-			Collider[] colliders = Physics.OverlapBox (transform.position + transform.rotation * detectionBox.center, detectionBox.extents, transform.rotation, 1);
+			Collider[] colliders = detectionBox.OverlapBox (1);
 			foreach (Collider c in colliders) {
-				Debug.Log (c);
-				if (c.CompareTag ("DoorKnob") && Vector3.Dot (c.transform.forward, transform.forward) > 0.0f && doorKnob == null) {
-					doorKnob = c.GetComponent<Rigidbody> ();
+				if (c.CompareTag ("DoorKnob")) {
+					Debug.Log (c);
+					if (Vector3.Dot (c.transform.forward, transform.forward) > 0.0f && doorKnob == null) {
+						doorKnob = c.GetComponent<Rigidbody> ();
+					}
 				}
 			}
 			if (!doorKnob)
@@ -179,44 +186,28 @@ public class FBPuppetController : MonoBehaviour {
 
 			Debug.Log ("Started action " + FBAction.Grab);
 
-			Quaternion relativeRotation = Quaternion.FromToRotation (leftHand.transform.forward, toolBottom.transform.forward);
-			relativeRotation = Quaternion.Inverse (toolBottom.transform.rotation) * leftHand.transform.rotation;
-			leftHandDisabler.CopyJointValues (leftHand);
-			Destroy (leftHand);
-
 			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
 			actions |= FBAction.Grab;
 
-			StartCoroutine (DoItLater (() => {
-				Quaternion initialToolRotation = toolBottom.transform.rotation;
-				Quaternion initialHandRotation = leftHandDisabler.gameObject.transform.rotation;
-
-				{
-					Quaternion tmpRot = leftHandDisabler.gameObject.transform.rotation;
-					leftHandDisabler.gameObject.transform.rotation = toolBottom.transform.rotation * relativeRotation;
-					leftHand = leftHandDisabler.CreateJoint ();
-					leftHandDisabler.gameObject.transform.rotation = tmpRot;
-				}
+			GrabItem (doorKnobReference, doorKnob, () => {
 				actions &= ~FBAction.Grab;
-				float resetAnchorSpeed = Vector3.Distance (leftHand.connectedAnchor, leftHandDisabler.connectedAnchor) / resetGrabDelay;
-				//float resetAngleSpeed = Quaternion.Angle (relativeRotation, Quaternion.Inverse (leftHand.transform.rotation) * toolBottom.transform.rotation) / resetGrabDelay;
-
-				StartCoroutine (DoItAfter ((dt) => {
-					float factor = (resetAnchorSpeed * dt) / Vector3.Distance (leftHand.connectedAnchor, leftHandDisabler.connectedAnchor);
-					leftHand.connectedAnchor = Vector3.Lerp (leftHand.connectedAnchor, leftHandDisabler.connectedAnchor, factor);
-					FBCharacterJointDisabler.Limits.Lerp (new FBCharacterJointDisabler.Limits (leftHand), leftHandDisabler.limits, factor).Apply (leftHand);
-
-					//leftHand.transform.rotation = initialHandRotation * (Quaternion.Inverse (initialToolRotation) * toolBottom.transform.rotation);
-					//* Quaternion.RotateTowards (Quaternion.Inverse (leftHand.transform.rotation) * toolBottom.transform.rotation, relativeRotation, 0.0f);
-					//leftHand.transform.rotation *= Quaternion.Euler (0.01f, 0.0f, 0.0f);
-				}, () => {
-					leftHand.connectedAnchor = leftHandDisabler.connectedAnchor;
-					leftHandDisabler.limits.Apply (leftHand);
-
+				motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
+				Debug.Log (FBAction.Grab + " available");
+			});
+			/*
+			StartCoroutine (DoItLater (() => {
+				GrabItem (toolReference, toolBottom, () => {
+					actions &= ~FBAction.Grab;
 					motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
 					Debug.Log (FBAction.Grab + " available");
-				}, resetGrabDelay));
-			}, 1.0f));
+				});
+			}, 1.0f));//*/
+
+
+
+
+
+
 		}
 	}
 
@@ -339,16 +330,58 @@ public class FBPuppetController : MonoBehaviour {
 		callback ();
 	}
 
+	private IEnumerator LetGoDoor () {
+		float endTime = Time.time + letGoDoorDelay;
+		while (Time.time < endTime) {
+			if (false) { // porte tournee de tant de degres ou distance puppet a la poignee > a
+				break;
+			}
+			else {
+				if (!Mathf.Approximately (motion.walking, 0.0f)) {
+					endTime = Time.time + letGoDoorDelay;
+				}
+			}
+			yield return null;
+		}
+	}
+
+	private void GrabItem (CharacterJointValues reference, Rigidbody target, Action callback) {
+		Debug.Log ("GrabItem : " + target);
+		if (!leftHandCJ)
+			return;
+		
+		Transform leftHandTransform = leftHand.transform;
+		Destroy (leftHandCJ);
+		{
+			Quaternion tmpRot = leftHandTransform.rotation;
+			leftHandTransform.rotation = target.transform.rotation * reference.relativeRotation;
+			leftHandCJ = reference.CreateJoint (leftHandTransform.gameObject, leftHand);
+			leftHandTransform.transform.rotation = tmpRot;
+		}
+
+		float grabSpeed = Vector3.Distance (leftHandCJ.connectedAnchor, reference.connectedAnchor) / grabDelay;
+		StartCoroutine (DoItAfter ((dt) => {
+			float factor = (grabSpeed * dt) / Vector3.Distance (leftHandCJ.connectedAnchor, reference.connectedAnchor);
+			reference.Lerp (leftHandCJ, factor);
+		}, () => {
+			reference.Apply (leftHandCJ);
+
+			callback ();
+		}, grabDelay));
+	}
+
 	//-------------------- game loops --------------------
 
 	private void Awake () {
 		if (motion == null)
 			motion = GetComponent<FBMotionAnalyzer> ();
 		toolTip = tool.transform.GetChild (0);
-		detectionBox = GetComponents<BoxCollider> ()[1].bounds;
+		detectionBox = GetComponents<BoxCollider> ()[1];
 		if (!motion.isAxePuppet)
 			toolTip.gameObject.SetActive (false);
 		toolBottom = tool.transform.GetChild (1).gameObject.GetComponent<Rigidbody> ();
+		leftHandCJ = leftHand.GetComponents<CharacterJoint> ()[1];
+		toolReference = new CharacterJointValues (leftHandCJ);
 	}
 
 	void Start () {

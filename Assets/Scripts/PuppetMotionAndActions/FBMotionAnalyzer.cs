@@ -139,6 +139,9 @@ public class FBMotionAnalyzer : MonoBehaviour {
 
 	private FBPhoneDataHandler sensor;
 	public bool usePhoneDataHandler = true;
+#if UNITY_EDITOR
+	public bool useKbRight = true;
+#endif
 
 	//########## analyze ##########
 	private bool[] analyzing = { false, false, false };
@@ -208,6 +211,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	}
 
 	void Update () {
+		if (Input.GetKeyDown ("p"))
+			usePhoneDataHandler = !usePhoneDataHandler;
 #if UNITY_EDITOR
 		if (usePhoneDataHandler) {
 #endif
@@ -243,7 +248,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			kbRotation = sensor.orientation;
 		}
 		else {
-			float horizontal = Input.GetAxis ("HorizontalL");
+			float horizontal = Input.GetAxis ("Horizontal" + (useKbRight ? "R" : "L"));
 			steering = Mathf.Sign (horizontal) * pitchFactor.Evaluate (Mathf.Abs (horizontal));
 
 			if (TestMask (FBAction.Walk)) {
@@ -288,7 +293,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			kbRotation = sensor.orientation;
 		}
 		else {
-			walking = Mathf.Sign (Input.GetAxis ("VerticalL")) * rollFactor.Evaluate (Mathf.Abs (Input.GetAxis ("VerticalL")));
+			walking = Input.GetAxis ("Vertical" + (useKbRight ? "R" : "L"));
+			walking = Mathf.Sign (walking) * rollFactor.Evaluate (Mathf.Abs (walking));
 		}
 #endif
 	}
