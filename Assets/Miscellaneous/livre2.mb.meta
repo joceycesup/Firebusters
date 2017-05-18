@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: b1391b03c367a7f4197c1ae99fb3186b
-timeCreated: 1495040487
+guid: 250945e212ab6ee4cb0c31dc3a6eae23
+timeCreated: 1495099344
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
@@ -24,16 +24,20 @@ ModelImporter:
     100032: joint20
     100034: joint21
     100036: joint22
-    100038: joint3
-    100040: joint4
-    100042: joint5
-    100044: joint6
-    100046: joint7
-    100048: joint8
-    100050: joint9
-    100052: //RootNode
-    100054: PagesL
-    100056: PagesR
+    100038: joint23
+    100040: joint24
+    100042: joint25
+    100044: joint26
+    100046: joint3
+    100048: joint4
+    100050: joint5
+    100052: joint6
+    100054: joint7
+    100056: joint8
+    100058: joint9
+    100060: //RootNode
+    100062: PagesL
+    100064: PagesR
     400000: Back
     400002: CoverL
     400004: CoverLTip
@@ -53,19 +57,23 @@ ModelImporter:
     400032: joint20
     400034: joint21
     400036: joint22
-    400038: joint3
-    400040: joint4
-    400042: joint5
-    400044: joint6
-    400046: joint7
-    400048: joint8
-    400050: joint9
-    400052: //RootNode
-    400054: PagesL
-    400056: PagesR
+    400038: joint23
+    400040: joint24
+    400042: joint25
+    400044: joint26
+    400046: joint3
+    400048: joint4
+    400050: joint5
+    400052: joint6
+    400054: joint7
+    400056: joint8
+    400058: joint9
+    400060: //RootNode
+    400062: PagesL
+    400064: PagesR
     4300000: Cube
+    7400000: Take 001
     9500000: //RootNode
-    11100000: //RootNode
     13700000: Cube
   materials:
     importMaterials: 1
@@ -126,10 +134,10 @@ ModelImporter:
     rootMotionBoneName: 
     rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
-    hasExtraRoot: 1
+    hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 1
+  animationType: 2
   humanoidOversampling: 1
   additionalBone: 0
   userData: 
