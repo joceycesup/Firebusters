@@ -16,10 +16,10 @@ public class PuppetString : MonoBehaviour {
 		private set;
 	}
 	[SerializeField]
-	[Range (0f, 1000000f)]
+	[Range (0f, 50000f)]
 	float springConstant = 10000f;
 	[SerializeField]
-	[Range (0f, 1000000f)]
+	[Range (0f, 50000f)]
 	float viscousDampingCoefficient = 10000f;
 
 	public float relaxedLength = -1.0f;
@@ -45,9 +45,6 @@ public class PuppetString : MonoBehaviour {
 			relaxedLength = 0.0f;
 		else if (relaxedLength <= 0.0f)
 			relaxedLength = Vector3.Magnitude (transform.position - attachedObject.transform.position);
-	}
-
-	void Update () {
 	}
 
 	void FixedUpdate () {

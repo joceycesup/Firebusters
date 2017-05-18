@@ -30,9 +30,9 @@ public class FBPuppetControllerInspector : Editor {
 		//Debug.Log (controller.leftHand.connectedBody);
 		FBPuppetController.grabDelay = EditorGUILayout.FloatField ("Grab delay", FBPuppetController.grabDelay);
 		if (!Application.isPlaying) {
-			g = (GameObject) EditorGUILayout.ObjectField ("Door knob reference", ((FBPuppetController.doorKnobReference.characterJoint != null) ? FBPuppetController.doorKnobReference.characterJoint.gameObject : null), typeof (GameObject), true);
+			g = (GameObject) EditorGUILayout.ObjectField ("Door knob reference", ((controller.doorKnobReference.characterJoint != null) ? controller.doorKnobReference.characterJoint.gameObject : null), typeof (GameObject), true);
 			if (g)
-				FBPuppetController.doorKnobReference = new CharacterJointValues( g.GetComponent<CharacterJoint> ());
+				controller.doorKnobReference = new CharacterJointValues( g.GetComponent<CharacterJoint> ());
 		}
 		FBPuppetController.letGoDoorDelay = EditorGUILayout.FloatField ("Let go door after", FBPuppetController.letGoDoorDelay);
 

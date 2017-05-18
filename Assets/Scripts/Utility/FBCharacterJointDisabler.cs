@@ -58,7 +58,7 @@ public struct Limits {
 
 [Serializable]
 public struct CharacterJointValues {
-	//public GameObject gameObject; // GameObject sur lequel est applique le CharacterJoint
+	public GameObject gameObject; // GameObject sur lequel est applique le CharacterJoint
 	public Rigidbody ConnectedBody;
 	public Vector3 Anchor;
 	public Vector3 Axis;
@@ -73,8 +73,10 @@ public struct CharacterJointValues {
 	public Quaternion relativeRotation;
 
 	public CharacterJointValues (CharacterJoint cj) {
+		//Debug.Log ("Creating CJV on " + cj.gameObject);
+
 		characterJoint = cj;
-		//gameObject = characterJoint.gameObject;
+		gameObject = characterJoint.gameObject;
 		ConnectedBody = characterJoint.connectedBody;
 		Anchor = characterJoint.anchor;
 		Axis = characterJoint.axis;
@@ -86,7 +88,8 @@ public struct CharacterJointValues {
 		BreakTorque = characterJoint.breakTorque;
 		EnableCollision = characterJoint.enableCollision;
 
-		relativeRotation = Quaternion.FromToRotation (characterJoint.transform.forward, ConnectedBody.transform.forward);
+		//relativeRotation = Quaternion.FromToRotation (characterJoint.transform.forward, ConnectedBody.transform.forward);
+		relativeRotation = Quaternion.Inverse (ConnectedBody.transform.rotation) * characterJoint.transform.rotation;
 	}
 
 	public CharacterJoint Apply (CharacterJoint cj) {

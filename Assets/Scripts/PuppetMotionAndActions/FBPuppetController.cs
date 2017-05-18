@@ -128,9 +128,8 @@ public class FBPuppetController : MonoBehaviour {
 	public static float grabDelay = 0.8f;
 	private BoxCollider detectionBox;
 	[SerializeField]
-	public static CharacterJointValues doorKnobReference;
-	[SerializeField]
-	private static CharacterJointValues toolReference;
+	public CharacterJointValues doorKnobReference;
+	private CharacterJointValues toolReference;
 	public static float letGoDoorDelay = 0.5f;
 
 	//-------------------- Actions --------------------
@@ -190,9 +189,13 @@ public class FBPuppetController : MonoBehaviour {
 			actions |= FBAction.Grab;
 
 			GrabItem (doorKnobReference, doorKnob, () => {
-				actions &= ~FBAction.Grab;
-				motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
-				Debug.Log (FBAction.Grab + " available");
+				StartCoroutine (DoItLater (() => {
+					GrabItem (toolReference, toolBottom, () => {
+						actions &= ~FBAction.Grab;
+						motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
+						Debug.Log (FBAction.Grab + " available");
+					});
+				}, 1.0f));
 			});
 			/*
 			StartCoroutine (DoItLater (() => {
@@ -349,15 +352,13 @@ public class FBPuppetController : MonoBehaviour {
 		Debug.Log ("GrabItem : " + target);
 		if (!leftHandCJ)
 			return;
-		
+
 		Transform leftHandTransform = leftHand.transform;
 		Destroy (leftHandCJ);
-		{
-			Quaternion tmpRot = leftHandTransform.rotation;
-			leftHandTransform.rotation = target.transform.rotation * reference.relativeRotation;
-			leftHandCJ = reference.CreateJoint (leftHandTransform.gameObject, leftHand);
-			leftHandTransform.transform.rotation = tmpRot;
-		}
+		Quaternion tmpRot = leftHandTransform.rotation;
+		leftHandTransform.rotation = target.transform.rotation * reference.relativeRotation;
+		leftHandCJ = reference.CreateJoint (leftHandTransform.gameObject, target);
+		leftHandTransform.rotation = tmpRot;
 
 		float grabSpeed = Vector3.Distance (leftHandCJ.connectedAnchor, reference.connectedAnchor) / grabDelay;
 		StartCoroutine (DoItAfter ((dt) => {
