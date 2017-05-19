@@ -19,6 +19,7 @@ public class FBTutoHandler : MonoBehaviour {
 	}
 
 	private void EnableStairs () {
-		stairs.SetActive (true);
+		if (stairs)
+			stairs.SetActive (true);
 	}
 }
