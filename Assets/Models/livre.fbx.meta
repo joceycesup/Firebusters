@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 4fb12e0f7a6dd8444944429e02ec68dc
-timeCreated: 1495025126
+guid: bc6f684253ba57d4d9d2752d761f5c4b
+timeCreated: 1495097955
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
@@ -64,7 +64,6 @@ ModelImporter:
     400054: PagesL
     400056: PagesR
     4300000: Cube
-    7400000: Take 001
     9500000: //RootNode
     13700000: Cube
   materials:
@@ -110,7 +109,7 @@ ModelImporter:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
-  importAnimation: 1
+  importAnimation: 0
   copyAvatar: 0
   humanDescription:
     serializedVersion: 2

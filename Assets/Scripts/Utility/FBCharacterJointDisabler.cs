@@ -93,6 +93,10 @@ public struct CharacterJointValues {
 	}
 
 	public CharacterJoint Apply (CharacterJoint cj) {
+
+		//Debug.Log ("Apply Joint");
+		//Debug.Break ();
+
 		cj.connectedBody = ConnectedBody;
 		cj.anchor = Anchor;
 		cj.axis = Axis;
@@ -108,12 +112,15 @@ public struct CharacterJointValues {
 	}
 
 	public void Lerp (CharacterJoint cj, float factor) {
-		cj.connectedAnchor = Vector3.Lerp (cj.connectedAnchor, connectedAnchor, factor);
+		cj.connectedAnchor = Vector3.Slerp (cj.connectedAnchor, connectedAnchor, factor);
 		Limits.Lerp (cj, limits, factor).Apply (cj);
 	}
 
 	public CharacterJoint CreateJoint (GameObject target, Rigidbody body) {
 		CharacterJoint characterJoint = target.AddComponent<CharacterJoint> ();
+
+		//Debug.Log ("Create Joint");
+		//Debug.Break ();
 
 		characterJoint.connectedBody = body;
 		characterJoint.anchor = Anchor;

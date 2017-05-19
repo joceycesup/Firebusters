@@ -126,7 +126,7 @@ public class FBPuppetController : MonoBehaviour {
 	public Rigidbody leftHand;
 	private CharacterJoint leftHandCJ;
 	public static float grabDelay = 0.8f;
-	private BoxCollider detectionBox;
+	private SphereCollider detectionSphere;
 	[SerializeField]
 	public CharacterJointValues doorKnobReference;
 	private CharacterJointValues toolReference;
@@ -171,10 +171,10 @@ public class FBPuppetController : MonoBehaviour {
 			Debug.Log ("#########################");
 			Debug.Log (" Checking for grabbables ");
 			Rigidbody doorKnob = null;
-			Collider[] colliders = detectionBox.OverlapBox (1);
+			Collider[] colliders = detectionSphere.OverlapSphere (1);
 			foreach (Collider c in colliders) {
 				if (c.CompareTag ("DoorKnob")) {
-					Debug.Log (c);
+					Debug.Log (c + " : " + Vector3.Dot (c.transform.forward, transform.forward));
 					if (Vector3.Dot (c.transform.forward, transform.forward) > 0.0f && doorKnob == null) {
 						doorKnob = c.GetComponent<Rigidbody> ();
 					}
@@ -187,9 +187,25 @@ public class FBPuppetController : MonoBehaviour {
 
 			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
 			actions |= FBAction.Grab;
+			doorKnob.tag = "Untagged";
 
+			//*
 			GrabItem (doorKnobReference, doorKnob, () => {
 				StartCoroutine (DoItLater (() => {
+					doorKnob.tag = "DoorKnob";
+					GrabItem (toolReference, toolBottom, () => {
+						actions &= ~FBAction.Grab;
+						motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
+						Debug.Log (FBAction.Grab + " available");
+					});
+				}, 1.0f));
+			});/*/
+			CharacterJoint doorKnobCJ = null;
+			Destroy (leftHandCJ);
+			doorKnobCJ = AttachItem (doorKnob.gameObject, doorKnobReference, leftHand, () => {
+				StartCoroutine (DoItLater (() => {
+					doorKnob.tag = "DoorKnob";
+					Destroy (doorKnobCJ);
 					GrabItem (toolReference, toolBottom, () => {
 						actions &= ~FBAction.Grab;
 						motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
@@ -197,6 +213,7 @@ public class FBPuppetController : MonoBehaviour {
 					});
 				}, 1.0f));
 			});
+			//*/
 			/*
 			StartCoroutine (DoItLater (() => {
 				GrabItem (toolReference, toolBottom, () => {
@@ -349,9 +366,9 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private void GrabItem (CharacterJointValues reference, Rigidbody target, Action callback) {
-		Debug.Log ("GrabItem : " + target);
+		Debug.Log ("GrabItem : " + target);/*
 		if (!leftHandCJ)
-			return;
+			return;//*/
 
 		Transform leftHandTransform = leftHand.transform;
 		Destroy (leftHandCJ);
@@ -365,10 +382,33 @@ public class FBPuppetController : MonoBehaviour {
 			float factor = (grabSpeed * dt) / Vector3.Distance (leftHandCJ.connectedAnchor, reference.connectedAnchor);
 			reference.Lerp (leftHandCJ, factor);
 		}, () => {
-			reference.Apply (leftHandCJ);
+			//reference.Apply (leftHandCJ);
 
 			callback ();
 		}, grabDelay));
+	}
+
+	private CharacterJoint AttachItem (GameObject source, CharacterJointValues reference, Rigidbody target, Action callback) {
+		Debug.Log ("AttachItem : " + target + " to "+source);
+
+		CharacterJoint cj = null;
+		Transform originalTransform = source.transform;
+		Quaternion tmpRot = originalTransform.rotation;
+		originalTransform.rotation = target.transform.rotation * reference.relativeRotation;
+		cj = reference.CreateJoint (source, target);
+		originalTransform.rotation = tmpRot;
+
+		float grabSpeed = Vector3.Distance (cj.connectedAnchor, reference.connectedAnchor) / grabDelay;
+		StartCoroutine (DoItAfter ((dt) => {
+			float factor = (grabSpeed * dt) / Vector3.Distance (cj.connectedAnchor, reference.connectedAnchor);
+			reference.Lerp (cj, factor);
+		}, () => {
+			//reference.Apply (cj);
+
+			callback ();
+		}, grabDelay));
+
+		return cj;
 	}
 
 	//-------------------- game loops --------------------
@@ -377,9 +417,7 @@ public class FBPuppetController : MonoBehaviour {
 		if (motion == null)
 			motion = GetComponent<FBMotionAnalyzer> ();
 		toolTip = tool.transform.GetChild (0);
-		detectionBox = GetComponents<BoxCollider> ()[1];
-		if (!motion.isAxePuppet)
-			toolTip.gameObject.SetActive (false);
+		detectionSphere = GetComponent<SphereCollider> ();
 		toolBottom = tool.transform.GetChild (1).gameObject.GetComponent<Rigidbody> ();
 		leftHandCJ = leftHand.GetComponents<CharacterJoint> ()[1];
 		toolReference = new CharacterJointValues (leftHandCJ);

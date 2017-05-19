@@ -6,10 +6,13 @@ public class FBExtinguisher : MonoBehaviour {
 	private ParticleSystem ps;
 	private List<GameObject> fires;
 	public float raycastDistance = 5.0f;
+	public float force = 50.0f;
+	public ForceMode forceMode = ForceMode.Impulse;
 
 	void Awake () {
 		ps = gameObject.GetComponent<ParticleSystem> ();
 		fires = new List<GameObject> ();
+		gameObject.SetActive (false);
 	}
 
 	void OnDisable () {
@@ -17,18 +20,25 @@ public class FBExtinguisher : MonoBehaviour {
 		fires.Clear ();
 	}
 
-	void Update () {
+	void FixedUpdate () {//*
 		Debug.DrawRay (transform.position, transform.forward * raycastDistance, Color.red);
 		Ray ray = new Ray (transform.position, transform.forward);
 		RaycastHit hit;
-		if (Physics.Raycast (ray, out hit, raycastDistance, 1 << 9)) {
+		if (Physics.Raycast (ray, out hit, raycastDistance, 1 << 9 | 1)) {
 			float delay = hit.distance / ps.main.startSpeedMultiplier;
-			if (hit.collider.CompareTag ("Fire") && delay < ps.main.startLifetimeMultiplier) {
-				if (!fires.Contains (hit.collider.gameObject)) {
-					StartCoroutine (PutOutFire (hit.collider.gameObject, delay));
+			if (delay < ps.main.startLifetimeMultiplier) {
+				if (hit.collider.CompareTag ("Fire")) {
+					if (!fires.Contains (hit.collider.gameObject)) {
+						StartCoroutine (PutOutFire (hit.collider.gameObject, delay));
+					}
+				}
+				else {
+					if (hit.rigidbody) {
+						hit.rigidbody.AddForce (transform.forward * force * forceDecrease (hit.distance), forceMode);
+					}
 				}
 			}
-		}
+		}//*/
 
 		//ps.startLifetime
 	}
@@ -40,5 +50,10 @@ public class FBExtinguisher : MonoBehaviour {
 		if (fire != null) {
 			fire.GetComponent<FBFire> ().PutOut ();
 		}
+	}
+
+	private float forceDecrease (float distance) {
+		float res = distance / raycastDistance;
+		return 1.0f - res * res * res;
 	}
 }
