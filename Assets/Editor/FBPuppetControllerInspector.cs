@@ -71,15 +71,16 @@ public class FBPuppetControllerInspector : Editor {
 		}
 
 		EditorGUILayout.Space ();
-		controller.camera = (Camera) EditorGUILayout.ObjectField ("Camera", controller.camera, typeof (Camera), true);
+		//controller.camera = (Camera) EditorGUILayout.ObjectField ("Camera", controller.camera, typeof (Camera), true);
 
 		controller.cameraTarget = (Transform) EditorGUILayout.ObjectField ("Camera target", controller.cameraTarget, typeof (Transform), true);
 		controller.cameraPosition = (Transform) EditorGUILayout.ObjectField ("Camera position", controller.cameraPosition, typeof (Transform), true);
 		if (controller.cameraPosition) {
-			controller.camera.transform.parent = controller.cameraPosition;
+			controller.camera = controller.cameraPosition.GetChild(0).GetComponent<Camera> ();
+			//controller.camera.transform.parent = controller.cameraPosition;
 			controller.camera.transform.localPosition = Vector3.zero;
 		}
-		if (controller.cameraTarget) {
+		if (controller.cameraTarget && controller.camera) {
 			controller.camera.transform.LookAt (controller.cameraTarget);
 		}
 

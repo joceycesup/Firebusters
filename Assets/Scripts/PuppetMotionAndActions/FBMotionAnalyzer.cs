@@ -139,9 +139,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 
 	private FBPhoneDataHandler sensor;
 	public bool usePhoneDataHandler = true;
-#if UNITY_EDITOR
 	public bool useKbRight = true;
-#endif
 
 	//########## analyze ##########
 	private bool[] analyzing = { false, false, false };
@@ -171,7 +169,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public AnimationCurve pitchFactor = AnimationCurve.EaseInOut (0.2f, 0.0f, 1.0f, 1.0f);
 
 	public Vector3 rotation {
-#if UNITY_EDITOR
+#if USEKB
 		get { return usePhoneDataHandler ? sensor.orientation : kbRotation; }
 #else
 		get { return sensor.orientation; }
@@ -180,10 +178,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public Vector3 acceleration {
 		get { return sensor.cleanAcceleration; }
 	}
-#if UNITY_EDITOR
 	//----- keyboard rotation -----
 	private Vector3 kbRotation;
-#endif
 
 	//########## tool values ##########
 	[SerializeField]
@@ -213,9 +209,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	void Update () {
 		if (Input.GetKeyDown ("p"))
 			usePhoneDataHandler = !usePhoneDataHandler;
-#if UNITY_EDITOR
+
 		if (usePhoneDataHandler) {
-#endif
 			steering = Mathf.Sign (-sensor.orientation.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.orientation.z) / maxPitch);
 			if (TestMask (FBAction.Walk)) {
 				UpdateWalkValues ();
@@ -225,7 +220,6 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			}
 			if (TestMask (FBAction.Strike)) {
 				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
-					//StartCoroutine (AnalyzeAccelerometerAxis (0, strikeFinalAcc, false, () => OnStrike (), strikeMaxDuration, 0, strikeAngle));
 					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnStrike ()));
 				}
 				else if (Input.GetKeyDown ("v")) {
@@ -234,18 +228,17 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			}
 			if (TestMask (FBAction.Draw)) {
 				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
-					//StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => OnDraw (), sheatheDrawMaxDuration, 0, sheatheDrawAngle));
 					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnDraw ()));
 				}
 			}
 			else if (TestMask (FBAction.Sheathe)) {
 				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
-					//StartCoroutine (AnalyzeAccelerometerAxis (1, sheatheDrawFinalAcc, false, () => OnSheathe (), sheatheDrawMaxDuration, 0, sheatheDrawAngle));
 					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnSheathe ()));
 				}
 			}
-#if UNITY_EDITOR
+#if USEKB
 			kbRotation = sensor.orientation;
+#endif
 		}
 		else {
 			float horizontal = Input.GetAxis ("Horizontal" + (useKbRight ? "R" : "L"));
@@ -258,90 +251,46 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				walking = 0.0f;
 			}
 			if (TestMask (FBAction.Strike)) {
-				if (Input.GetKeyDown ("v"))
+				if (Input.GetButtonDown ("Strike"))
 					OnStrike ();
 			}
 			if (TestMask (FBAction.Draw)) {
-				if (Input.GetKeyDown ("c"))
+				if (Input.GetButtonDown ("DrawSheathe"))
 					OnDraw ();
 			}
 			else if (TestMask (FBAction.Sheathe)) {
-				if (Input.GetKeyDown ("c"))
+				if (Input.GetButtonDown ("DrawSheathe"))
 					OnSheathe ();
 			}
 			if (TestMask (FBAction.Grab)) {
-				if (Input.GetKeyDown ("e"))
+				if (Input.GetButtonDown ("Grab"))
 					OnGrab ();
 			}
 			kbRotation.x -= Input.GetAxis ("VerticalE");
 			kbRotation.y += Input.GetAxis ("HorizontalE");
 		}
+#if UNITY_EDITOR
 		Vector3 debugFwd = Quaternion.Euler (rotation) * Vector3.forward;
 		Debug.DrawRay (Vector3.zero, debugFwd, Color.cyan);
 #endif
 	}
 
 	private void UpdateWalkValues () {
-#if UNITY_EDITOR
 		if (usePhoneDataHandler) {
-#endif
 			Debug.DrawRay (transform.position, sensor.acceleration, Color.red);
 
 			walking = rollFactor.Evaluate (sensor.orientation.x / maxRoll);
 
-#if UNITY_EDITOR
+#if USEKB
 			kbRotation = sensor.orientation;
+#endif
 		}
 		else {
 			walking = Input.GetAxis ("Vertical" + (useKbRight ? "R" : "L"));
 			walking = Mathf.Sign (walking) * rollFactor.Evaluate (Mathf.Abs (walking));
 		}
-#endif
 	}
-
-	// ge = greater or equal
-	private IEnumerator AnalyzeAccelerometerAxis (int axis, float stopValue, bool ge, Action callback, float maxDelay, int rotationAxis = -1, float rotationValue = 0.0f) {
-		if (!analyzing[axis]) {
-			float initialAcc = acceleration[axis];
-			float finalAcc = 0.0f;
-			float finalRot = 0.0f;
-
-			analyzing[axis] = true;
-			float endTime = Time.time + maxDelay;
-			bool success = false;
-			bool rotationSuccess = true;
-			float initialRotation = 0.0f;
-			if (rotationAxis >= 0) {
-				initialRotation = rotation[rotationAxis];
-			}
-			float inequalityFactor = ge ? 1.0f : -1.0f;
-			while (!success && Time.time < endTime) {
-				if (rotationAxis >= 0) {
-					finalRot = rotation[rotationAxis] - initialRotation;
-					rotationSuccess = (rotationValue >= 0.0f) ? (finalRot >= rotationValue) : (finalRot < rotationValue);
-				}
-				finalAcc = acceleration[axis];
-				if (rotationSuccess && (finalAcc * inequalityFactor >= stopValue * inequalityFactor)) {
-					success = true;
-				}
-				else {
-					yield return null;
-				}
-			}
-			if (success) {
-				callback ();
-			}
-#if UNITY_EDITOR
-			if ((showSuccessDebug && success) || (showFailureDebug && !success)) {
-				float time = Time.time + maxDelay - endTime;
-				Debug.Log ("Returned " + success + " on axis " + axis + " in " + time + " seconds" + (rotationAxis >= 0 ? (" with a rotation of " + finalRot) : ""));
-				Debug.Log (" Initial acc : " + initialAcc);
-				Debug.Log (" Final acc   : " + finalAcc);
-			}
-#endif
-			analyzing[axis] = false;
-		}
-	}
+	
 	private IEnumerator AnalyzeAccelerationMotion (FBAccelerationMotion motion, Action callback) {
 		int axis = (int) motion.accAxis;
 		int rAxis = (int) motion.rotAxis;

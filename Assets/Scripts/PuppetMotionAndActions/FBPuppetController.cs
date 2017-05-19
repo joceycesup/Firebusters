@@ -214,14 +214,14 @@ public class FBPuppetController : MonoBehaviour {
 				}, 1.0f));
 			});
 			//*/
-			/*
-			StartCoroutine (DoItLater (() => {
-				GrabItem (toolReference, toolBottom, () => {
-					actions &= ~FBAction.Grab;
-					motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
-					Debug.Log (FBAction.Grab + " available");
-				});
-			}, 1.0f));//*/
+			   /*
+			   StartCoroutine (DoItLater (() => {
+				   GrabItem (toolReference, toolBottom, () => {
+					   actions &= ~FBAction.Grab;
+					   motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
+					   Debug.Log (FBAction.Grab + " available");
+				   });
+			   }, 1.0f));//*/
 
 
 
@@ -389,7 +389,7 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private CharacterJoint AttachItem (GameObject source, CharacterJointValues reference, Rigidbody target, Action callback) {
-		Debug.Log ("AttachItem : " + target + " to "+source);
+		Debug.Log ("AttachItem : " + target + " to " + source);
 
 		CharacterJoint cj = null;
 		Transform originalTransform = source.transform;
@@ -414,6 +414,9 @@ public class FBPuppetController : MonoBehaviour {
 	//-------------------- game loops --------------------
 
 	private void Awake () {
+#if USEKB
+		Debug.Log ("Using keyboard");
+#endif
 		if (motion == null)
 			motion = GetComponent<FBMotionAnalyzer> ();
 		toolTip = tool.transform.GetChild (0);
@@ -421,6 +424,7 @@ public class FBPuppetController : MonoBehaviour {
 		toolBottom = tool.transform.GetChild (1).gameObject.GetComponent<Rigidbody> ();
 		leftHandCJ = leftHand.GetComponents<CharacterJoint> ()[1];
 		toolReference = new CharacterJointValues (leftHandCJ);
+		cameraPosition = camera.transform.parent;
 	}
 
 	void Start () {
