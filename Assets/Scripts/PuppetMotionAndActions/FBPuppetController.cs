@@ -126,7 +126,6 @@ public class FBPuppetController : MonoBehaviour {
 	public Rigidbody leftHand;
 	private CharacterJoint leftHandCJ;
 	public static float grabDelay = 0.8f;
-	private BoxCollider detectionBox;
 	private SphereCollider detectionSphere;
 	[SerializeField]
 	public CharacterJointValues doorKnobReference;
@@ -171,9 +170,8 @@ public class FBPuppetController : MonoBehaviour {
 
 			Debug.Log ("#########################");
 			Debug.Log (" Checking for grabbables ");
-			Rigidbody doorKnob = null;/*
-			Collider[] colliders = detectionBox.OverlapBox (1);/*/
-			Collider[] colliders = detectionSphere.OverlapSphere (1);//*/
+			Rigidbody doorKnob = null;
+			Collider[] colliders = detectionSphere.OverlapSphere (1);
 			foreach (Collider c in colliders) {
 				if (c.CompareTag ("DoorKnob")) {
 					Debug.Log (c + " : " + Vector3.Dot (c.transform.forward, transform.forward));
@@ -191,7 +189,7 @@ public class FBPuppetController : MonoBehaviour {
 			actions |= FBAction.Grab;
 			doorKnob.tag = "Untagged";
 
-			/*
+			//*
 			GrabItem (doorKnobReference, doorKnob, () => {
 				StartCoroutine (DoItLater (() => {
 					doorKnob.tag = "DoorKnob";
@@ -419,10 +417,7 @@ public class FBPuppetController : MonoBehaviour {
 		if (motion == null)
 			motion = GetComponent<FBMotionAnalyzer> ();
 		toolTip = tool.transform.GetChild (0);
-		detectionBox = GetComponents<BoxCollider> ()[1];
 		detectionSphere = GetComponent<SphereCollider> ();
-		if (!motion.isAxePuppet)
-			toolTip.gameObject.SetActive (false);
 		toolBottom = tool.transform.GetChild (1).gameObject.GetComponent<Rigidbody> ();
 		leftHandCJ = leftHand.GetComponents<CharacterJoint> ()[1];
 		toolReference = new CharacterJointValues (leftHandCJ);
