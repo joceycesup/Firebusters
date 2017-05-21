@@ -1,17 +1,20 @@
 fileFormatVersion: 2
-guid: 968c48be7c1b8a448a22bcd25edb96d9
-timeCreated: 1495101965
+guid: d82fe27b81342ee40b2b2c5aa65d7a1a
+timeCreated: 1495296598
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
   fileIDToRecycleName:
     100000: //RootNode
+    100002: Plan_2
     400000: //RootNode
+    400002: Plan_2
     2300000: //RootNode
+    2300002: Plan_2
     3300000: //RootNode
-    4300000: Tube_2
-    7400000: Take 001
-    9500000: //RootNode
+    3300002: Plan_2
+    4300000: Cube_2
+    4300002: Plan_2
   materials:
     importMaterials: 1
     materialName: 0
@@ -74,7 +77,7 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 2
+  animationType: 0
   humanoidOversampling: 1
   additionalBone: 0
   userData: 
