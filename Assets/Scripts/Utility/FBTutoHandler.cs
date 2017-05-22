@@ -14,11 +14,11 @@ public class FBTutoHandler : MonoBehaviour {
 		trolley.OnDestroyed += EnableStairs;
 	}
 
-	private void EnableTrolley () {
+	private void EnableTrolley (GameObject go) {
 		trolley.destructible = true;
 	}
 
-	private void EnableStairs () {
+	private void EnableStairs (GameObject go) {
 		if (stairs)
 			stairs.SetActive (true);
 	}

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class FBFire : MonoBehaviour {
-	public delegate void FireEvent ();
+	public delegate void FireEvent (GameObject go);
 	public event FireEvent OnPutOut;
 
 	private float putOutTime = 0.5f;
@@ -16,7 +16,7 @@ public class FBFire : MonoBehaviour {
 
 	public void PutOut () {
 		if (OnPutOut != null)
-			OnPutOut ();
+			OnPutOut (gameObject);
 		StartCoroutine (PutOutInternal ());
 	}
 

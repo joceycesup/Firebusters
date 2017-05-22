@@ -26,6 +26,14 @@ public class FBFootState {
 //[ExecuteInEditMode]
 [RequireComponent (typeof (FBMotionAnalyzer))]
 public class FBPuppetController : MonoBehaviour {
+	public delegate void ActionEvent (GameObject go);
+	public event ActionEvent OnStrike;
+	public event ActionEvent OnDraw;
+	public event ActionEvent OnSheathe;
+	public event ActionEvent OnGrab;
+	public event ActionEvent OnPickup;
+	public event ActionEvent OnThrow;
+
 	//-------------------- MovementState --------------------
 	public enum MovementState {
 		Idle = 0x01,//0001
@@ -95,7 +103,10 @@ public class FBPuppetController : MonoBehaviour {
 
 	public new Camera camera;
 	public Transform cameraTarget;
+	public Transform cameraCloseTarget;
 	public Transform cameraPosition;
+	private float cameraFactor = 1.1f;
+	public float cameraSpeed = 2.0f;
 
 	//-------------------- tools --------------------
 
@@ -131,6 +142,9 @@ public class FBPuppetController : MonoBehaviour {
 	public CharacterJointValues doorKnobReference;
 	private CharacterJointValues toolReference;
 	public static float letGoDoorDelay = 0.5f;
+
+	public Transform shoulder;
+	private float itemDistance;
 
 	//-------------------- Actions --------------------
 	private FBAction _actions = FBAction.None;
@@ -182,23 +196,19 @@ public class FBPuppetController : MonoBehaviour {
 			}
 			if (!doorKnob)
 				return;
+			if (OnGrab != null)
+				OnGrab (gameObject);
 
 			Debug.Log ("Started action " + FBAction.Grab);
 
 			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
 			actions |= FBAction.Grab;
 			doorKnob.tag = "Untagged";
+			doorKnob.transform.parent.GetComponent<Rigidbody> ().isKinematic = false;
 
 			//*
 			GrabItem (doorKnobReference, doorKnob, () => {
-				StartCoroutine (DoItLater (() => {
-					doorKnob.tag = "DoorKnob";
-					GrabItem (toolReference, toolBottom, () => {
-						actions &= ~FBAction.Grab;
-						motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
-						Debug.Log (FBAction.Grab + " available");
-					});
-				}, 1.0f));
+				StartCoroutine (LetGoDoor (doorKnob));
 			});/*/
 			CharacterJoint doorKnobCJ = null;
 			Destroy (leftHandCJ);
@@ -239,6 +249,8 @@ public class FBPuppetController : MonoBehaviour {
 			extinguisherYRotation = motion.rotation.y;
 			actions |= FBAction.Draw;
 			tool.isKinematic = true;
+			if (OnDraw != null)
+				OnDraw (gameObject);
 
 			/*
 			StartCoroutine (DoItLater (() => {
@@ -350,19 +362,23 @@ public class FBPuppetController : MonoBehaviour {
 		callback ();
 	}
 
-	private IEnumerator LetGoDoor () {
+	private IEnumerator LetGoDoor (Rigidbody doorKnob) {
 		float endTime = Time.time + letGoDoorDelay;
 		while (Time.time < endTime) {
-			if (false) { // porte tournee de tant de degres ou distance puppet a la poignee > a
-				break;
+			if (!Mathf.Approximately (motion.walking, 0.0f)) {
+				endTime = Time.time + letGoDoorDelay;
 			}
-			else {
-				if (!Mathf.Approximately (motion.walking, 0.0f)) {
-					endTime = Time.time + letGoDoorDelay;
-				}
+			if (Vector3.Distance(doorKnob.transform.position, shoulder.position) > itemDistance) {
+				endTime = 0.0f;
 			}
 			yield return null;
 		}
+		doorKnob.tag = "DoorKnob";
+		GrabItem (toolReference, toolBottom, () => {
+			actions &= ~FBAction.Grab;
+			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
+			Debug.Log (FBAction.Grab + " available");
+		});
 	}
 
 	private void GrabItem (CharacterJointValues reference, Rigidbody target, Action callback) {
@@ -425,6 +441,8 @@ public class FBPuppetController : MonoBehaviour {
 		leftHandCJ = leftHand.GetComponents<CharacterJoint> ()[1];
 		toolReference = new CharacterJointValues (leftHandCJ);
 		cameraPosition = camera.transform.parent;
+
+		itemDistance = Vector3.Distance (leftHand.transform.position, shoulder.position) * 1.3f;
 	}
 
 	void Start () {
@@ -479,7 +497,35 @@ public class FBPuppetController : MonoBehaviour {
 		Debug.DrawRay (debugRayStart, transform.forward, Color.red);
 		Debug.DrawRay (debugRayStart, anticipateStrikeRot * forwardAnticipate, Color.green);
 #endif
-		camera.transform.LookAt (cameraTarget);
+
+		RaycastHit hit;
+		Ray ray = new Ray (transform.position, cameraPosition.position - transform.position);
+		float cameraDistance = Vector3.Distance (cameraPosition.position, transform.position);
+		Debug.DrawRay (ray.origin, ray.direction * cameraDistance, Color.red);
+		if (Physics.Raycast (ray, out hit, Vector3.Distance (cameraPosition.position, transform.position), 1 << 9)) {
+			cameraFactor = Vector3.Distance (transform.position, hit.point) / cameraDistance;
+			//camera.transform.position = hit.point;
+			camera.transform.position = Vector3.Lerp (transform.position, cameraPosition.position, cameraFactor);
+			camera.transform.LookAt (Vector3.Lerp (cameraCloseTarget.position, cameraTarget.position, cameraFactor));
+		}
+		else {
+			if (cameraFactor < 1.0f) {
+				StartCoroutine (ResetCamera (cameraFactor));
+				cameraFactor = 1.1f;
+			}
+			//camera.transform.localPosition = Vector3.zero;
+			//camera.transform.LookAt (cameraTarget);
+		}
+	}
+
+	private IEnumerator ResetCamera (float factor) {
+		float cameraDistance = Vector3.Distance (cameraPosition.position, transform.position);
+		while (factor < 1.0f) {
+			factor += (cameraSpeed * Time.deltaTime) / cameraDistance;
+			camera.transform.position = Vector3.Lerp (transform.position, cameraPosition.position, factor);
+			camera.transform.LookAt (Vector3.Lerp (cameraCloseTarget.position, cameraTarget.position, factor));
+			yield return null;
+		}
 	}
 
 	private void FixedUpdate () {

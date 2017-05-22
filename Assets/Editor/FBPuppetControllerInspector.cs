@@ -27,12 +27,13 @@ public class FBPuppetControllerInspector : Editor {
 			if (g)
 				controller.leftHand = g.GetComponent<Rigidbody> ();
 		}
+		controller.shoulder = (Transform) EditorGUILayout.ObjectField ("Left shoulder", controller.shoulder, typeof (Transform), true);
 		//Debug.Log (controller.leftHand.connectedBody);
 		FBPuppetController.grabDelay = EditorGUILayout.FloatField ("Grab delay", FBPuppetController.grabDelay);
 		if (!Application.isPlaying) {
 			g = (GameObject) EditorGUILayout.ObjectField ("Door knob reference", ((controller.doorKnobReference.characterJoint != null) ? controller.doorKnobReference.characterJoint.gameObject : null), typeof (GameObject), true);
 			if (g)
-				controller.doorKnobReference = new CharacterJointValues( g.GetComponent<CharacterJoint> ());
+				controller.doorKnobReference = new CharacterJointValues (g.GetComponent<CharacterJoint> ());
 		}
 		FBPuppetController.letGoDoorDelay = EditorGUILayout.FloatField ("Let go door after", FBPuppetController.letGoDoorDelay);
 
@@ -74,9 +75,10 @@ public class FBPuppetControllerInspector : Editor {
 		//controller.camera = (Camera) EditorGUILayout.ObjectField ("Camera", controller.camera, typeof (Camera), true);
 
 		controller.cameraTarget = (Transform) EditorGUILayout.ObjectField ("Camera target", controller.cameraTarget, typeof (Transform), true);
+		controller.cameraCloseTarget = (Transform) EditorGUILayout.ObjectField ("Camera close target", controller.cameraCloseTarget, typeof (Transform), true);
 		controller.cameraPosition = (Transform) EditorGUILayout.ObjectField ("Camera position", controller.cameraPosition, typeof (Transform), true);
 		if (controller.cameraPosition) {
-			controller.camera = controller.cameraPosition.GetChild(0).GetComponent<Camera> ();
+			controller.camera = controller.cameraPosition.GetChild (0).GetComponent<Camera> ();
 			//controller.camera.transform.parent = controller.cameraPosition;
 			controller.camera.transform.localPosition = Vector3.zero;
 		}

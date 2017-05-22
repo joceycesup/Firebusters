@@ -17,9 +17,11 @@ public enum FBAxeSound {
 }//*/
 
 public class FBHittable : MonoBehaviour {
-	public delegate void DestroyedEvent();
-	public event DestroyedEvent OnDestroyed;
-	
+	public delegate void HitEvent(GameObject go);
+	public event HitEvent OnDestroyed;
+	public event HitEvent OnHit;
+	public event HitEvent OnHitByAxe;
+
 	public bool destructible = false;
 	public FBHitSound hitSound = FBHitSound.None;
 	public FBAxeSound axeSound = FBAxeSound.None;
@@ -32,27 +34,31 @@ public class FBHittable : MonoBehaviour {
 
 	private void OnCollisionEnter (Collision collision) {
 		if (collision.collider.tag == "Axe") {
-			OnHitByAxe (collision);
+			HitByAxe (collision);
 		}
 		else {
-			OnHit (collision);
+			Hit (collision);
 		}
 	}
 
-	protected virtual void OnHitByAxe (Collision collision) {
+	protected virtual void HitByAxe (Collision collision) {
 		Debug.Log ("Ouille!");
+		if (OnHitByAxe != null)
+			OnHitByAxe (gameObject);
 		PlayAxeSound ();
 		if (destructible) {
 			Transform subItemsContainer = transform.GetChild (0);
 			subItemsContainer.gameObject.SetActive (true);
 			subItemsContainer.DetachChildren ();
 			if (OnDestroyed != null)
-				OnDestroyed ();
+				OnDestroyed (gameObject);
 			Destroy (gameObject);
 		}
 	}
-	protected virtual void OnHit (Collision collision) {
+	protected virtual void Hit (Collision collision) {
 		Debug.Log ("Clonk!");
+		if (OnHit != null)
+			OnHit (gameObject);
 		float velocity = Mathf.Clamp01 (collision.relativeVelocity.magnitude / maxVelocity);
 		AkSoundEngine.SetRTPCValue ("velocite", velocity, gameObject);
 		PlayHitSound ();

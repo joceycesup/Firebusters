@@ -1,13 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class FBStuffList : MonoBehaviour {
-	public bool destroyOnStart = false;
 	public GameObject[] stuff;
-
-	void Start () {
-		if (destroyOnStart)
+#if !UNITY_EDITOR
+	void Awake () {
 			Destroy (this);
 	}
+#endif
 }

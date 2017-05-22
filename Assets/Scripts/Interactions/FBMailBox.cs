@@ -6,12 +6,12 @@ public class FBMailBox : FBHittable {
 	public float throwForce = 200.0f;
 	public float torqueForce = 200.0f;
 
-	protected override void OnHit (Collision collision) {
-		base.OnHit (collision);
+	protected override void Hit (Collision collision) {
+		base.Hit (collision);
 	}
 
-	protected override void OnHitByAxe (Collision collision) {
-		base.OnHitByAxe (collision);
+	protected override void HitByAxe (Collision collision) {
+		base.HitByAxe (collision);
 		//Debug.Log (collision.relativeVelocity.magnitude);
 		if (transform.childCount > 0) {
 			Transform drawer = transform.GetChild (Random.Range (0, transform.childCount));
