@@ -23,8 +23,8 @@ public class FBExtinguisher : MonoBehaviour {
 	void FixedUpdate () {//*
 		Debug.DrawRay (transform.position, transform.forward * raycastDistance, Color.red);
 		Ray ray = new Ray (transform.position, transform.forward);
-		RaycastHit hit;
-		if (Physics.Raycast (ray, out hit, raycastDistance, 1 << 9 | 1)) {
+		RaycastHit[] hits = Physics.RaycastAll (ray, raycastDistance, (1 << 9) | 1);
+		foreach (RaycastHit hit in hits) { // 9 : VerticalObstacle
 			float delay = hit.distance / ps.main.startSpeedMultiplier;
 			if (delay < ps.main.startLifetimeMultiplier) {
 				if (hit.collider.CompareTag ("Fire")) {
@@ -32,10 +32,8 @@ public class FBExtinguisher : MonoBehaviour {
 						StartCoroutine (PutOutFire (hit.collider.gameObject, delay));
 					}
 				}
-				else {
-					if (hit.rigidbody) {
-						hit.rigidbody.AddForce (transform.forward * force * forceDecrease (hit.distance), forceMode);
-					}
+				else if (hit.rigidbody && !hit.rigidbody.isKinematic) {
+					hit.rigidbody.AddForce (transform.forward * force * forceDecrease (hit.distance), forceMode);
 				}
 			}
 		}//*/

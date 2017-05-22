@@ -59,7 +59,7 @@ public class FBScriptedEventsInspector : Editor {
 		}
 
 		if (GUI.changed) {
-			Debug.Log ("Dirty");
+			//Debug.Log ("Dirty");
 			EditorUtility.SetDirty (script);
 		}
 	}
