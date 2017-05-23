@@ -102,7 +102,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		}
 	}
 
-	void connect () {
+	public void connect () {
 		Debug.Log ("Connection started");
 		if (sp.PortName.CompareTo ("COM" + comNum) != 0) {
 			sp = new SerialPort ("COM" + comNum, 9600);
@@ -120,7 +120,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		}
 	}
 
-	void close () {
+	public void close () {
 		Debug.Log ("Closing port...");
 		connected = false;
 		try {
@@ -131,14 +131,14 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		}
 	}
 
-	void Update () {
+	void Update () {/*
 		if (Input.GetKeyDown ("x")) {
 			Debug.Log ("Connection establishing...");
 			connect ();
 		}
 		if (Input.GetKeyDown ("w")) {
 			close ();
-		}
+		}//*/
 	}
 
 	private void OnDestroy () {

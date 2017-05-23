@@ -5,6 +5,9 @@ public class FBDisplayHandler : MonoBehaviour {
 	public Canvas rightCanvas;
 
 	private void Start () {
+#if !PLAYTEST
+		Cursor.visible = false;
+#endif
 		Camera fstCamera = null;
 		Camera sndCamera = null;
 		foreach (Camera cam in Camera.allCameras) {

@@ -140,7 +140,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 		return abilities.TestMask (a);
 	}
 
-	private FBPhoneDataHandler sensor;
+	public FBPhoneDataHandler sensor { get; private set; }
 	public bool usePhoneDataHandler = true;
 	public bool useKbRight = true;
 
