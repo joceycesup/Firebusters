@@ -28,6 +28,9 @@ public struct FBAccelerationMotion {
 	public float finalAcc;
 	public FBRotationAxis rotAxis;
 	public float angle;
+#if UNITY_EDITOR
+	public bool showInInspector;
+#endif
 }
 
 #if UNITY_EDITOR
@@ -184,6 +187,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	//########## tool values ##########
 	[SerializeField]
 	public FBAccelerationMotion toolMotion;
+	[SerializeField]
+	public FBAccelerationMotion grabMotion;
 	/*
 	public float sheatheDrawMaxDuration = 0.4f;
 	public float sheatheDrawInitialAcc = 2.0f;
@@ -215,26 +220,22 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			if (TestMask (FBAction.Walk)) {
 				UpdateWalkValues ();
 			}
+			if (!Mathf.Approximately (walking, 0.0f))
+				steering *= Mathf.Sign (walking);
 			else {
 				walking = 0.0f;
 			}
 			if (TestMask (FBAction.Strike)) {
-				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
-					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnStrike ()));
-				}
-				else if (Input.GetKeyDown ("v")) {
-					OnStrike ();
-				}
+				DetectMotionStart (toolMotion, () => OnStrike ());
 			}
 			if (TestMask (FBAction.Draw)) {
-				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
-					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnDraw ()));
-				}
+				DetectMotionStart (toolMotion, () => { walking = 0.0f; OnDraw (); });
 			}
 			else if (TestMask (FBAction.Sheathe)) {
-				if (acceleration[(int) toolMotion.accAxis] > toolMotion.initialAcc) {
-					StartCoroutine (AnalyzeAccelerationMotion (toolMotion, () => OnSheathe ()));
-				}
+				DetectMotionStart (toolMotion, () => OnSheathe ());
+			}
+			if (TestMask (FBAction.Grab)) {
+				DetectMotionStart (grabMotion, () => OnGrab ());
 			}
 #if USEKB
 			kbRotation = sensor.orientation;
@@ -270,16 +271,27 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			kbRotation.y += Input.GetAxis ("HorizontalE");
 		}
 #if UNITY_EDITOR
-		Vector3 debugFwd = Quaternion.Euler (rotation) * Vector3.forward;
-		Debug.DrawRay (Vector3.zero, debugFwd, Color.cyan);
+		//Vector3 debugFwd = Quaternion.Euler (rotation) * Vector3.forward;
+		//Debug.DrawRay (Vector3.zero, debugFwd, Color.cyan);
 #endif
+	}
+
+	private bool DetectMotionStart (FBAccelerationMotion am, Action callback) {
+		bool start = am.initialAcc > 0.0f ?
+			acceleration[(int) am.accAxis] > am.initialAcc :
+			acceleration[(int) am.accAxis] < am.initialAcc;
+		if (start) {
+			StartCoroutine (AnalyzeAccelerationMotion (am, callback));
+		}
+		return start;
 	}
 
 	private void UpdateWalkValues () {
 		if (usePhoneDataHandler) {
 			Debug.DrawRay (transform.position, sensor.acceleration, Color.red);
 
-			walking = rollFactor.Evaluate (sensor.orientation.x / maxRoll);
+			walking = Mathf.Sign (sensor.orientation.x) * rollFactor.Evaluate (sensor.orientation.x / maxRoll);
+			//walking = Mathf.Sign (sensor.orientation.x) * rollFactor.Evaluate (Mathf.Abs (sensor.orientation.x / maxRoll));
 
 #if USEKB
 			kbRotation = sensor.orientation;
@@ -290,7 +302,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			walking = Mathf.Sign (walking) * rollFactor.Evaluate (Mathf.Abs (walking));
 		}
 	}
-	
+
 	private IEnumerator AnalyzeAccelerationMotion (FBAccelerationMotion motion, Action callback) {
 		int axis = (int) motion.accAxis;
 		int rAxis = (int) motion.rotAxis;

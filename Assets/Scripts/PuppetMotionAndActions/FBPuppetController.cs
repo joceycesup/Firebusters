@@ -368,7 +368,7 @@ public class FBPuppetController : MonoBehaviour {
 			if (!Mathf.Approximately (motion.walking, 0.0f)) {
 				endTime = Time.time + letGoDoorDelay;
 			}
-			if (Vector3.Distance(doorKnob.transform.position, shoulder.position) > itemDistance) {
+			if (Vector3.Distance (doorKnob.transform.position, shoulder.position) > itemDistance) {
 				endTime = 0.0f;
 			}
 			yield return null;
@@ -503,6 +503,9 @@ public class FBPuppetController : MonoBehaviour {
 		float cameraDistance = Vector3.Distance (cameraPosition.position, transform.position);
 		Debug.DrawRay (ray.origin, ray.direction * cameraDistance, Color.red);
 		if (Physics.Raycast (ray, out hit, Vector3.Distance (cameraPosition.position, transform.position), 1 << 9)) {
+			if (cameraFactor > 1.0f) {
+				StopCoroutine ("ResetCamera");
+			}
 			cameraFactor = Vector3.Distance (transform.position, hit.point) / cameraDistance;
 			//camera.transform.position = hit.point;
 			camera.transform.position = Vector3.Lerp (transform.position, cameraPosition.position, cameraFactor);

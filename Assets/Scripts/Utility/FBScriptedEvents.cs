@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 using System;
 using System.Collections;
 #if UNITY_EDITOR
@@ -15,7 +14,8 @@ public enum FBTriggerEvent {
 	Enter,
 	Open,
 	PutOut,
-	Draw
+	Draw,
+	Grab
 }
 
 [Serializable]
@@ -42,6 +42,7 @@ public class ObjectAction {
 		Delay = delay;
 	}
 
+#if UNITY_EDITOR
 	public ObjectAction GUIField () {
 		Action = (FBScriptedAction) EditorGUILayout.EnumPopup ("Scripted action", Action);
 
@@ -71,6 +72,7 @@ public class ObjectAction {
 		Delay = EditorGUILayout.FloatField ("Delay", Delay);
 		return this;
 	}
+#endif
 }
 
 [Serializable]
@@ -149,6 +151,7 @@ public class FBEvent {
 					EditorGUILayout.HelpBox ("This object doesn't have a FBFire", MessageType.Warning);
 				break;
 			case FBTriggerEvent.Draw:
+			case FBTriggerEvent.Grab:
 				EditorGUI.BeginChangeCheck ();
 				tmpObject = (GameObject) EditorGUILayout.ObjectField ("Event source", Source, typeof (GameObject), true);
 				if (EditorGUI.EndChangeCheck ())
@@ -261,6 +264,9 @@ public class FBScriptedEvents : MonoBehaviour {
 					case FBTriggerEvent.Draw:
 						e.Source.GetComponent<FBPuppetController> ().OnDraw += CheckDraw;
 						break;
+					case FBTriggerEvent.Grab:
+						e.Source.GetComponent<FBPuppetController> ().OnGrab += CheckGrab;
+						break;
 				}
 			}
 		}
@@ -271,6 +277,7 @@ public class FBScriptedEvents : MonoBehaviour {
 	void CheckOpen (GameObject go) { CheckEvent (FBTriggerEvent.Open, go); }
 	void CheckPutOut (GameObject go) { CheckEvent (FBTriggerEvent.PutOut, go); }
 	void CheckDraw (GameObject go) { CheckEvent (FBTriggerEvent.Draw, go); }
+	void CheckGrab (GameObject go) { CheckEvent (FBTriggerEvent.Grab, go); }
 	void CheckEnter (GameObject source, GameObject trigger) { CheckEvent (FBTriggerEvent.Enter, source, trigger); }
 	void CheckExit (GameObject source, GameObject trigger) { CheckEvent (FBTriggerEvent.Exit, source, trigger); }
 
