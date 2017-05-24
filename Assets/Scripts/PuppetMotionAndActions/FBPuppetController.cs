@@ -431,7 +431,7 @@ public class FBPuppetController : MonoBehaviour {
 
 	private void Awake () {
 #if USEKB
-		Debug.Log ("Using keyboard");
+		Debug.Log ("Using keyboard on "+(motion.isAxePuppet?"axe":"extinguisher")+" puppet");
 #endif
 		if (motion == null)
 			motion = GetComponent<FBMotionAnalyzer> ();

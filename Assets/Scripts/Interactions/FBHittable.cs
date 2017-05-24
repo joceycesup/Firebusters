@@ -29,7 +29,7 @@ public class FBHittable : MonoBehaviour {
 
 	private void Awake () {
 		tag = "Hittable";
-		Debug.Log (name);
+		//Debug.Log (name);
 	}
 
 	private void OnCollisionEnter (Collision collision) {

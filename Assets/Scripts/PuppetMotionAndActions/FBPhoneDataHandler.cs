@@ -41,13 +41,23 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		accRight = accRotation * Vector3.right;
 	}
 
-	private SerialPort sp;
+	public SerialPort serialPort {
+		get;
+		set;
+	}
 	private Thread serialThread;
 
-	private bool connected = false;
+	public bool connected {
+		get;
+		private set;
+	}
+
+	private void OnEnable () {
+		connected = false;
+	}
 
 	void Start () {
-		sp = new SerialPort ("COM" + comNum, 9600);
+		serialPort = new SerialPort ("COM" + comNum, 9600);
 	}
 
 	void parseValues (string av) {
@@ -81,14 +91,14 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	}
 
 	void recData () {
-		if ((sp != null) && (sp.IsOpen)) {
+		if ((serialPort != null) && (serialPort.IsOpen)) {
 			try {
 				byte tmp;
 				string data = "";
 				string avalues = "";
-				tmp = (byte) sp.ReadByte ();
+				tmp = (byte) serialPort.ReadByte ();
 				do {
-					tmp = (byte) sp.ReadByte ();
+					tmp = (byte) serialPort.ReadByte ();
 					if ((tmp == 10)) {
 						avalues = data;
 						data = "";
@@ -104,13 +114,13 @@ public class FBPhoneDataHandler : MonoBehaviour {
 
 	public void connect () {
 		Debug.Log ("Connection started");
-		if (sp.PortName.CompareTo ("COM" + comNum) != 0) {
-			sp = new SerialPort ("COM" + comNum, 9600);
+		if (serialPort.PortName.CompareTo ("COM" + comNum) != 0) {
+			serialPort = new SerialPort ("COM" + comNum, 9600);
 		}
 		try {
-			sp.Open ();
-			sp.ReadTimeout = 400;
-			sp.Handshake = Handshake.None;
+			serialPort.Open ();
+			serialPort.ReadTimeout = 400;
+			serialPort.Handshake = Handshake.None;
 			connected = true;
 			serialThread = new Thread (ReadData);
 			serialThread.Start ();
@@ -124,21 +134,21 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		Debug.Log ("Closing port...");
 		connected = false;
 		try {
-			sp.Close ();
+			serialPort.Close ();
 			Debug.Log ("Port Closed!");
 		} catch (SystemException e) {
 			Debug.Log ("Error closing = " + e.Message);
 		}
 	}
 
-	void Update () {/*
-		if (Input.GetKeyDown ("x")) {
-			Debug.Log ("Connection establishing...");
-			connect ();
+	public FBPhoneDataHandler SetState (FBPhoneDataHandler other) {
+		if (other != this) {
+			serialPort = other.serialPort;
+			comNum = other.comNum;
+			serialThread = other.serialThread;
+			connected = other.connected;
 		}
-		if (Input.GetKeyDown ("w")) {
-			close ();
-		}//*/
+		return this;
 	}
 
 	private void OnDestroy () {
