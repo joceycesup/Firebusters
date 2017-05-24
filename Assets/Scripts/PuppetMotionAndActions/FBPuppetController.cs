@@ -175,7 +175,8 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private GameObject CheckForPickable () {
-		throw new NotImplementedException ();
+		Debug.LogWarning ("CheckForPickable not implemented");
+		Debug.Break ();
 		return null;
 	}
 

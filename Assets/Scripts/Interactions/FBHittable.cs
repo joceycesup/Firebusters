@@ -17,7 +17,8 @@ public enum FBAxeSound {
 }//*/
 
 public class FBHittable : MonoBehaviour {
-	public delegate void HitEvent(GameObject go);
+
+	public delegate void HitEvent (GameObject go);
 	public event HitEvent OnDestroyed;
 	public event HitEvent OnHit;
 	public event HitEvent OnHitByAxe;
@@ -25,7 +26,12 @@ public class FBHittable : MonoBehaviour {
 	public bool destructible = false;
 	public FBHitSound hitSound = FBHitSound.None;
 	public FBAxeSound axeSound = FBAxeSound.None;
-	public float maxVelocity;
+	public static float _maxVelocity;
+	[SerializeField]
+	public float maxVelocity {
+		get { return _maxVelocity; }
+		set { _maxVelocity = value; }
+	}
 
 	private void Awake () {
 		tag = "Hittable";
@@ -33,6 +39,7 @@ public class FBHittable : MonoBehaviour {
 	}
 
 	private void OnCollisionEnter (Collision collision) {
+		AkSoundEngine.SetRTPCValue ("Velocite_Props", collision.relativeVelocity.magnitude / maxVelocity, gameObject);
 		if (collision.collider.tag == "Axe") {
 			HitByAxe (collision);
 		}
