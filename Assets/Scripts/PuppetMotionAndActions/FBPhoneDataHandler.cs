@@ -3,6 +3,9 @@ using System.Collections;
 using System.IO.Ports;
 using System;
 using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
 public class FBPhoneDataHandler : MonoBehaviour {
 	public int comNum = 4;
@@ -46,8 +49,19 @@ public class FBPhoneDataHandler : MonoBehaviour {
 
 	private bool connected = false;
 
+	private UdpClient _client;
+	private IPEndPoint _sender;
+
 	void Start () {
 		sp = new SerialPort ("COM" + comNum, 9600);
+
+		IPEndPoint ipep = new IPEndPoint(IPAddress.Any, 1234);
+		_client = new UdpClient(ipep);
+
+		_sender = new IPEndPoint(IPAddress.Any, 0);
+
+		Debug.Log ("Connection establishing...");
+		connect ();
 	}
 
 	void parseValues (string h, string av) {
@@ -82,6 +96,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	}
 
 	void recData () {
+		/*
 		if ((sp != null) && (sp.IsOpen)) {
 			try {
 				byte tmp;
@@ -107,10 +122,37 @@ public class FBPhoneDataHandler : MonoBehaviour {
 				Debug.Log ("FBPhoneDataHandler : reached timeout");
 			}
 		}
+		*/
+
+		byte[] data = _client.Receive(ref _sender);
+
+		string message = System.Text.Encoding.UTF8.GetString(data);
+
+		if (message.Equals("FB_PAIRING"))
+		{
+			string welcome = "Client Paired !";
+
+			byte[] toSend = Encoding.ASCII.GetBytes(welcome);
+
+			_client.Send(toSend, toSend.Length, _sender);
+		}
+		else
+		{
+			string[] bits = message.Split('>');
+			if(bits.Length != 2)
+			{
+				Debug.Log("ERROR : stream message from client of incorrect size !");
+				return;
+			}
+			string head = bits[0];
+			string values = bits[1];
+			parseValues(head, values);
+		}
 	}
 
 	void connect () {
 		Debug.Log ("Connection started");
+		/*
 		if (sp.PortName.CompareTo ("COM" + comNum) != 0) {
 			sp = new SerialPort ("COM" + comNum, 9600);
 		}
@@ -124,13 +166,18 @@ public class FBPhoneDataHandler : MonoBehaviour {
 			Debug.Log ("Port " + comNum + " Opened!");
 		} catch (SystemException e) {
 			Debug.Log ("Error opening " + comNum + " = " + e.Message);
-		}
+		}*/
+		connected = true;
+		serialThread = new Thread (ReadData);
+		serialThread.Start ();
 	}
 
 	void close () {
 		Debug.Log ("Closing port...");
+
 		connected = false;
 		try {
+			_client.Close();
 			sp.Close ();
 			Debug.Log ("Port Closed!");
 		} catch (SystemException e) {
@@ -139,6 +186,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	}
 
 	void Update () {
+		/*
 		if (Input.GetKeyDown ("x")) {
 			Debug.Log ("Connection establishing...");
 			connect ();
@@ -146,6 +194,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		if (Input.GetKeyDown ("w")) {
 			close ();
 		}
+		*/
 	}
 
 	private void OnDestroy () {
