@@ -114,7 +114,7 @@ public static class FBActionExtensions {
 }
 
 [Serializable]
-[RequireComponent (typeof (FBPhoneDataHandler))]
+//[RequireComponent (typeof (FBPhoneDataHandler))]
 public class FBMotionAnalyzer : MonoBehaviour {
 	public delegate void ActionEvent ();
 	public event ActionEvent OnStrike;
@@ -140,14 +140,12 @@ public class FBMotionAnalyzer : MonoBehaviour {
 		return abilities.TestMask (a);
 	}
 
-#if PLAYTEST
-	private FBPhoneDataHandler sensor;
-	public FBPhoneDataHandler GetSensor () {
-		return (sensor != null) ? sensor : (sensor = gameObject.GetComponent<FBPhoneDataHandler> ());
+	public FBPhoneDataHandler sensor {
+		get {
+			//Debug.LogWarning ("Sensor " + isAxePuppetIndex + " : " + (isAxePuppet ? "Marius" : "Louis"));
+			return FBPhonesContainer.sensors[isAxePuppetIndex];
+		}
 	}
-#else
-	public FBPhoneDataHandler sensor { get; private set; }
-#endif
 	public bool usePhoneDataHandler = true;
 	public bool useKbRight = true;
 
@@ -155,7 +153,13 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	private bool[] analyzing = { false, false, false };
 
 	//########## actions ##########
-	public bool isAxePuppet = true;
+	private int isAxePuppetIndex;
+	[SerializeField]
+	private bool _isAxePuppet;
+	public bool isAxePuppet {
+		get { return _isAxePuppet; }
+		set { _isAxePuppet = value; isAxePuppetIndex = value ? 1 : 0; }
+	}
 	public bool isCarryingItem = false;
 
 	//########## walking ##########
@@ -214,13 +218,15 @@ public class FBMotionAnalyzer : MonoBehaviour {
 #endif
 
 	void Awake () {
-		sensor = gameObject.GetComponent<FBPhoneDataHandler> ();
 		walking = 0.0f;
+		isAxePuppet = isAxePuppet;//sets isAxePuppetIndex
 	}
 
 	void Update () {
+#if PLAYTEST
 		if (Input.GetKeyDown ("p"))
 			usePhoneDataHandler = !usePhoneDataHandler;
+#endif
 
 		if (usePhoneDataHandler) {
 			steering = Mathf.Sign (-sensor.orientation.z) * pitchFactor.Evaluate (Mathf.Abs (sensor.orientation.z) / maxPitch);
@@ -274,7 +280,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				if (Input.GetButtonDown ("Grab"))
 					OnGrab ();
 			}
-			kbRotation.x -= Input.GetAxis ("VerticalE");
+			kbRotation.x = Mathf.Clamp (kbRotation.x - Input.GetAxis ("VerticalE"), -70.0f, 70.0f);
 			kbRotation.y += Input.GetAxis ("HorizontalE");
 		}
 #if UNITY_EDITOR

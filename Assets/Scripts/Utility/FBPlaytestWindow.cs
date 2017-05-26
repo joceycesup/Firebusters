@@ -19,9 +19,6 @@ public class FBPlaytestWindow : MonoBehaviour {
 	private static int intFieldID = 0;
 	private static bool instanciated = false;
 
-	private GameObject MariusPhoneSafe; //GameObject in which we keep our phone data handlers
-	private GameObject LouisPhoneSafe;
-
 	void Awake () {
 #if !PLAYTEST
 		Destroy (this);
@@ -38,34 +35,11 @@ public class FBPlaytestWindow : MonoBehaviour {
 				LouisMotion = motion;
 		}
 		if (!instanciated) {
-			//Debug.LogWarning ("Setting phone data handlers");
-			DontDestroyOnLoad (MariusPhoneSafe = new GameObject ("MariusPhoneSafe_" + Time.time.ToString ("F3")));
-			DontDestroyOnLoad (LouisPhoneSafe = new GameObject ("LouisPhoneSafe_" + Time.time.ToString ("F3")));
-
 			instanciated = true;
-		}
-		else {
-			try {
-				MariusMotion.GetSensor ().SetState (MariusPhoneSafe.GetComponent<FBPhoneDataHandler> ());
-				Destroy (MariusPhoneSafe.GetComponent<FBPhoneDataHandler> ());
-				LouisMotion.GetSensor ().SetState (LouisPhoneSafe.GetComponent<FBPhoneDataHandler> ());
-				Destroy (LouisPhoneSafe.GetComponent<FBPhoneDataHandler> ());
-			} catch (System.NullReferenceException e) {
-			}
 		}
 	}
 	void SetPhoneDataHandlers (Scene s1, Scene s2) {
 		SetPhoneDataHandlers ();
-	}
-
-	void SavePhoneDataHandlers () {
-		if (MariusPhoneSafe != null) {
-			//Debug.LogWarning ("Setting safe states on " + gameObject.name);
-			MariusPhoneSafe.AddComponent<FBPhoneDataHandler> ().SetState (MariusMotion.GetSensor ());
-			MariusMotion.GetSensor ().serialPort = null;
-			LouisPhoneSafe.AddComponent<FBPhoneDataHandler> ().SetState (LouisMotion.GetSensor ());
-			LouisMotion.GetSensor ().serialPort = null;
-		}
 	}
 
 #if PLAYTEST
@@ -80,10 +54,6 @@ public class FBPlaytestWindow : MonoBehaviour {
 				Destroy (gameObject);
 		}
 	}
-	/*
-	private void OnDestroy () {
-		Debug.LogWarning ("Destroying " + gameObject.name);
-	}//*/
 
 	private void OnDisable () {
 		SceneManager.activeSceneChanged -= SetPhoneDataHandlers;
@@ -108,37 +78,6 @@ public class FBPlaytestWindow : MonoBehaviour {
 			windowRect0 = GUI.Window (0, windowRect0, DoMyWindow, "Playtests controls");
 		}
 	}
-	/*
-	void DoMyWindow (int windowID) {
-		bounds = new Rect (GUI.skin.window.border.left + margin.x, GUI.skin.window.border.top + margin.y, windowRect0.width - margin.x - margin.width - GUI.skin.window.border.horizontal, windowRect0.height - margin.y - margin.height - GUI.skin.window.border.vertical);
-		if (!Application.isPlaying)
-			GUI.enabled = false;
-		if (GUI.Button (GetBounds (20.0f), "Reload scene")) {
-			SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex);
-		}
-		if (GUI.Button (GetBounds (20.0f), (connected ? "Stop" : "Start") + " Connection")) {
-			if (connected) {
-				MariusMotion.sensor.close ();
-				LouisMotion.sensor.close ();
-			}
-			else {
-				MariusMotion.sensor.connect ();
-				LouisMotion.sensor.connect ();
-			}
-			connected = !connected;
-		}
-		if (!Application.isPlaying)
-			GUI.enabled = true;
-
-		{
-			BeginBox (80.0f, "Phone :");
-			MariusMotion.usePhoneDataHandler = GUI.Toggle (GetBounds (20.0f), MariusMotion.usePhoneDataHandler, "Marius use phone");
-			LouisMotion.usePhoneDataHandler = GUI.Toggle (GetBounds (20.0f), LouisMotion.usePhoneDataHandler, "Louis use phone");
-			EndBox ();
-		}
-
-		GUI.DragWindow ();
-	}/*/
 	void DoMyWindow (int windowID) {
 		intFieldID = 0;
 		bounds = new Rect (GUI.skin.window.border.left + margin.x, GUI.skin.window.border.top + margin.y, windowRect0.width - margin.x - margin.width - GUI.skin.window.border.horizontal, windowRect0.height - margin.y - margin.height - GUI.skin.window.border.vertical);
@@ -146,7 +85,6 @@ public class FBPlaytestWindow : MonoBehaviour {
 		if (!Application.isPlaying)
 			GUI.enabled = false;
 		if (GUILayout.Button ("Reload scene")) {
-			SavePhoneDataHandlers ();
 			SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex);
 		}
 		if (!Application.isPlaying)
@@ -155,31 +93,35 @@ public class FBPlaytestWindow : MonoBehaviour {
 		Color tmpBGColor;
 		GUILayout.BeginHorizontal ();
 		GUILayout.Label ("Phone");
-		if (!Application.isPlaying)
-			GUI.enabled = false;
-		if (MariusMotion.GetSensor ().connected == LouisMotion.GetSensor ().connected) {
-			if (GUILayout.Button ((MariusMotion.GetSensor ().connected ? "Stop" : "Start") + " Both")) {
-				if (MariusMotion.GetSensor ().connected) {
-					MariusMotion.GetSensor ().close ();
-					LouisMotion.GetSensor ().close ();
-				}
-				else {
-					MariusMotion.GetSensor ().connect ();
-					LouisMotion.GetSensor ().connect ();
+		if (Application.isPlaying) {
+			if (MariusMotion.sensor.connected == LouisMotion.sensor.connected) {
+				if (GUILayout.Button ((MariusMotion.sensor.connected ? "Stop" : "Start") + " Both")) {
+					if (MariusMotion.sensor.connected) {
+						MariusMotion.sensor.close ();
+						LouisMotion.sensor.close ();
+					}
+					else {
+						MariusMotion.sensor.connect ();
+						LouisMotion.sensor.connect ();
+					}
 				}
 			}
 		}
-		if (!Application.isPlaying)
+		else {
+			GUI.enabled = false;
+			GUILayout.Button ("Start Both");
 			GUI.enabled = true;
+		}
 		GUILayout.EndHorizontal ();
-		{
+
+		if (Application.isPlaying) {
 			bool tmpEnabled = GUI.enabled;
 			GUI.enabled = false;
 			GUILayout.BeginVertical (GUI.skin.textArea);
 			GUI.enabled = tmpEnabled;
 			GUILayout.Label ("Marius");
 			tmpBGColor = GUI.backgroundColor;
-			GUI.backgroundColor = MariusMotion.GetSensor ().connected ? Color.green : Color.red;
+			GUI.backgroundColor = MariusMotion.sensor.connected ? Color.green : Color.red;
 			{
 				tmpEnabled = GUI.enabled;
 				GUI.enabled = false;
@@ -188,25 +130,25 @@ public class FBPlaytestWindow : MonoBehaviour {
 				MariusMotion.usePhoneDataHandler = GUILayout.Toggle (MariusMotion.usePhoneDataHandler, "Marius use phone");
 
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Com num : ");
-				int tmp = IntField (MariusMotion.GetSensor ().comNum, GUILayout.Width (20));
-				if (tmp != MariusMotion.GetSensor ().comNum) {
-					MariusMotion.GetSensor ().comNum = tmp;
-					if (MariusMotion.GetSensor ().connected) {
-						MariusMotion.GetSensor ().close ();
-						MariusMotion.GetSensor ().connect ();
+				GUILayout.Label ("ID : ");
+				int tmp = IntField (MariusMotion.sensor.id, GUILayout.Width (20));
+				if (tmp != MariusMotion.sensor.id) {
+					MariusMotion.sensor.id = tmp;
+					if (MariusMotion.sensor.connected) {
+						MariusMotion.sensor.close ();
+						MariusMotion.sensor.connect ();
 					}
 				}
-				if (GUILayout.Button ((MariusMotion.GetSensor ().connected ? "Stop" : "Start") + " Connection")) {
-					if (MariusMotion.GetSensor ().connected)
-						MariusMotion.GetSensor ().close ();
+				if (GUILayout.Button ((MariusMotion.sensor.connected ? "Stop" : "Start") + " Connection")) {
+					if (MariusMotion.sensor.connected)
+						MariusMotion.sensor.close ();
 					else
-						MariusMotion.GetSensor ().connect ();
+						MariusMotion.sensor.connect ();
 				}
 				GUILayout.EndHorizontal ();
 				GUILayout.EndVertical ();
 			}
-			GUI.backgroundColor = LouisMotion.GetSensor ().connected ? Color.green : Color.red;
+			GUI.backgroundColor = LouisMotion.sensor.connected ? Color.green : Color.red;
 			GUILayout.Label ("Louis");
 			{
 				tmpEnabled = GUI.enabled;
@@ -216,20 +158,20 @@ public class FBPlaytestWindow : MonoBehaviour {
 				LouisMotion.usePhoneDataHandler = GUILayout.Toggle (LouisMotion.usePhoneDataHandler, "Louis use phone");
 
 				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Com num : ");
-				int tmp = IntField (LouisMotion.GetSensor ().comNum, GUILayout.Width (20));
-				if (tmp != LouisMotion.GetSensor ().comNum) {
-					LouisMotion.GetSensor ().comNum = tmp;
-					if (LouisMotion.GetSensor ().connected) {
-						LouisMotion.GetSensor ().close ();
-						LouisMotion.GetSensor ().connect ();
+				GUILayout.Label ("ID : ");
+				int tmp = IntField (LouisMotion.sensor.id, GUILayout.Width (20));
+				if (tmp != LouisMotion.sensor.id) {
+					LouisMotion.sensor.id = tmp;
+					if (LouisMotion.sensor.connected) {
+						LouisMotion.sensor.close ();
+						LouisMotion.sensor.connect ();
 					}
 				}
-				if (GUILayout.Button ((LouisMotion.GetSensor ().connected ? "Stop" : "Start") + " Connection")) {
-					if (LouisMotion.GetSensor ().connected)
-						LouisMotion.GetSensor ().close ();
+				if (GUILayout.Button ((LouisMotion.sensor.connected ? "Stop" : "Start") + " Connection")) {
+					if (LouisMotion.sensor.connected)
+						LouisMotion.sensor.close ();
 					else
-						LouisMotion.GetSensor ().connect ();
+						LouisMotion.sensor.connect ();
 				}
 				GUILayout.EndHorizontal ();
 				GUI.backgroundColor = tmpBGColor;

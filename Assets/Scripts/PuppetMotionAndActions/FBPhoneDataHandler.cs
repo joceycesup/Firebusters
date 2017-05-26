@@ -3,9 +3,12 @@ using System.Collections;
 using System.IO.Ports;
 using System;
 using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
 public class FBPhoneDataHandler : MonoBehaviour {
-	public int comNum = 4;
+	public int id = 0;
 
 	private Vector3 _orientation;
 	public Vector3 orientation {
@@ -41,10 +44,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		accRight = accRotation * Vector3.right;
 	}
 
-	public SerialPort serialPort {
-		get;
-		set;
-	}
+	private SerialPort sp;
 	private Thread serialThread;
 
 	public bool connected {
@@ -52,31 +52,43 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		private set;
 	}
 
-	private void OnEnable () {
+	private UdpClient _client;
+	private IPEndPoint _sender;
+
+	void Awake () {
 		connected = false;
 	}
 
 	void Start () {
-		serialPort = new SerialPort ("COM" + comNum, 9600);
+		sp = new SerialPort ("COM" + id, 9600);
+
+		IPEndPoint ipep = new IPEndPoint (IPAddress.Any, 1234+ id);
+		_client = new UdpClient (ipep);
+
+		_sender = new IPEndPoint (IPAddress.Any, 0);
+
+		Debug.Log ("Connection establishing...");
+		connect ();
 	}
 
-	void parseValues (string av) {
+	void parseValues (string h, string av) {
 		string[] split = av.Split (',');
 		//Debug.Log (av);
-		if (split.Length >= 5) {
-			if (split[0].CompareTo ("3") == 0) {
-				_orientation.x = float.Parse (split[4]);
-				_orientation.y = float.Parse (split[2]);
-				_orientation.z = -float.Parse (split[3]);
+		if (split.Length >= 3) {
+			if (h.Equals ("OR")) {
+				_orientation.x = float.Parse (split[2]);
+				_orientation.y = float.Parse (split[0]);
+				_orientation.z = -float.Parse (split[1]);
 				if (_orientation.y > 180.0f)
 					_orientation.y -= 360.0f;
 				UpdateRotation ();
 				UpdateAcceleration ();
+				Debug.Log ("OR : " + _orientation.x.ToString ("F3") + " ; " + _orientation.y.ToString ("F3") + " ; " + _orientation.z.ToString ("F3") + " ; ");
 			}
-			else if (split[0].CompareTo ("1") == 0) {
-				_acceleration.x = -float.Parse (split[3]);
-				_acceleration.y = float.Parse (split[4]);
-				_acceleration.z = float.Parse (split[2]);
+			else if (h.Equals ("AC")) {
+				_acceleration.x = -float.Parse (split[1]);
+				_acceleration.y = float.Parse (split[2]);
+				_acceleration.z = float.Parse (split[0]);
 				UpdateAcceleration ();
 			}
 		}
@@ -91,64 +103,102 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	}
 
 	void recData () {
-		if ((serialPort != null) && (serialPort.IsOpen)) {
+		/*
+		if ((sp != null) && (sp.IsOpen)) {
 			try {
 				byte tmp;
 				string data = "";
 				string avalues = "";
-				tmp = (byte) serialPort.ReadByte ();
+				string head = "";
 				do {
-					tmp = (byte) serialPort.ReadByte ();
-					if ((tmp == 10)) {
+					tmp = (byte) sp.ReadByte ();
+					if ((tmp == 62)) {
+						head = data;
+						data = "";
+					}
+					else if (tmp == 10) {
 						avalues = data;
 						data = "";
 					}
-					data += ((char) tmp);
+					else {
+						data += ((char) tmp);
+					}
 				} while (tmp != 10 && tmp != 255);
-				parseValues (avalues);
+				parseValues (head, avalues);
 			} catch (TimeoutException) {
-				//Debug.Log ("FBPhoneDataHandler : reached timeout");
+				Debug.Log ("FBPhoneDataHandler : reached timeout");
 			}
+		}
+		*/
+
+		byte[] data = _client.Receive (ref _sender);
+
+		string message = System.Text.Encoding.UTF8.GetString (data);
+
+		if (message.Equals ("FB_PAIRING")) {
+			string welcome = "Client Paired !";
+
+			byte[] toSend = Encoding.ASCII.GetBytes (welcome);
+
+			_client.Send (toSend, toSend.Length, _sender);
+		}
+		else {
+			string[] bits = message.Split ('>');
+			if (bits.Length != 2) {
+				Debug.Log ("ERROR : stream message from client of incorrect size !");
+				return;
+			}
+			string head = bits[0];
+			string values = bits[1];
+			parseValues (head, values);
 		}
 	}
 
 	public void connect () {
 		Debug.Log ("Connection started");
-		if (serialPort.PortName.CompareTo ("COM" + comNum) != 0) {
-			serialPort = new SerialPort ("COM" + comNum, 9600);
+		/*
+		if (sp.PortName.CompareTo ("COM" + comNum) != 0) {
+			sp = new SerialPort ("COM" + comNum, 9600);
 		}
 		try {
-			serialPort.Open ();
-			serialPort.ReadTimeout = 400;
-			serialPort.Handshake = Handshake.None;
+			sp.Open ();
+			sp.ReadTimeout = 400;
+			sp.Handshake = Handshake.None;
 			connected = true;
 			serialThread = new Thread (ReadData);
 			serialThread.Start ();
 			Debug.Log ("Port " + comNum + " Opened!");
 		} catch (SystemException e) {
 			Debug.Log ("Error opening " + comNum + " = " + e.Message);
-		}
+		}*/
+		connected = true;
+		serialThread = new Thread (ReadData);
+		serialThread.Start ();
 	}
 
 	public void close () {
 		Debug.Log ("Closing port...");
+
 		connected = false;
 		try {
-			serialPort.Close ();
+			_client.Close ();
+			sp.Close ();
 			Debug.Log ("Port Closed!");
 		} catch (SystemException e) {
 			Debug.Log ("Error closing = " + e.Message);
 		}
 	}
 
-	public FBPhoneDataHandler SetState (FBPhoneDataHandler other) {
-		if (other != this) {
-			serialPort = other.serialPort;
-			comNum = other.comNum;
-			serialThread = other.serialThread;
-			connected = other.connected;
+	void Update () {
+		/*
+		if (Input.GetKeyDown ("x")) {
+			Debug.Log ("Connection establishing...");
+			connect ();
 		}
-		return this;
+		if (Input.GetKeyDown ("w")) {
+			close ();
+		}
+		*/
 	}
 
 	private void OnDestroy () {
