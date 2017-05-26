@@ -63,8 +63,8 @@ public class FBPuppetWalker : MonoBehaviour {
 		}
 		else if (!Mathf.Approximately (motion.steering, 0.0f)) {
 			float dotFwd = Vector3.Dot (controller.feetForward, controller.transform.forward);
-			float dotRgt = Vector3.Dot (controller.feetRight, controller.transform.forward);
-			Debug.Log (dotFwd.ToString ("F3") + " : " + (dotRgt < 0.0f ? "left" : "right"));
+			//float dotRgt = Vector3.Dot (controller.feetRight, controller.transform.forward);
+			//Debug.Log (dotFwd.ToString ("F3") + " : " + (dotRgt < 0.0f ? "left" : "right"));
 			if (dotFwd < staticRotationDot) {
 				Vector3 lfDelta = controller.leftFoot.transform.position - transform.position;
 				Vector3 rfDelta = controller.rightFoot.transform.position - transform.position;
