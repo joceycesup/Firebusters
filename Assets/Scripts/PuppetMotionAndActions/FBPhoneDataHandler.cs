@@ -8,7 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 
 public class FBPhoneDataHandler : MonoBehaviour {
-	public int comNum = 4;
+	public int id = 0;
 
 	private Vector3 _orientation;
 	public Vector3 orientation {
@@ -60,9 +60,9 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	}
 
 	void Start () {
-		sp = new SerialPort ("COM" + comNum, 9600);
+		sp = new SerialPort ("COM" + id, 9600);
 
-		IPEndPoint ipep = new IPEndPoint (IPAddress.Any, 1234);
+		IPEndPoint ipep = new IPEndPoint (IPAddress.Any, 1234+ id);
 		_client = new UdpClient (ipep);
 
 		_sender = new IPEndPoint (IPAddress.Any, 0);
@@ -75,7 +75,6 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		string[] split = av.Split (',');
 		//Debug.Log (av);
 		if (split.Length >= 3) {
-			Debug.Log (av);
 			if (h.Equals ("OR")) {
 				_orientation.x = float.Parse (split[2]);
 				_orientation.y = float.Parse (split[0]);
@@ -84,11 +83,12 @@ public class FBPhoneDataHandler : MonoBehaviour {
 					_orientation.y -= 360.0f;
 				UpdateRotation ();
 				UpdateAcceleration ();
+				Debug.Log ("OR : " + _orientation.x.ToString ("F3") + " ; " + _orientation.y.ToString ("F3") + " ; " + _orientation.z.ToString ("F3") + " ; ");
 			}
 			else if (h.Equals ("AC")) {
-				_acceleration.x = -float.Parse (split[2]);
-				_acceleration.y = float.Parse (split[0]);
-				_acceleration.z = float.Parse (split[1]);
+				_acceleration.x = -float.Parse (split[1]);
+				_acceleration.y = float.Parse (split[2]);
+				_acceleration.z = float.Parse (split[0]);
 				UpdateAcceleration ();
 			}
 		}

@@ -18,10 +18,17 @@ public class FBPhonesContainer : MonoBehaviour {
 	void OnEnable () {
 		if (instance == null) {
 			instance = this;
-			sensors = GetComponents<FBPhoneDataHandler> ();
 			DontDestroyOnLoad (gameObject);
 		}
 		else
 			Destroy (gameObject);
+	}
+
+	private void Start () {
+		sensors = new FBPhoneDataHandler[2];
+		for (int i = 0; i < sensors.Length; ++i) {
+			sensors[i] = gameObject.AddComponent<FBPhoneDataHandler> ();
+			sensors[i].id = i;
+		}
 	}
 }

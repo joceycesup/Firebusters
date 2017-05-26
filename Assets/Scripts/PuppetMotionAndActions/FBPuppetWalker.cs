@@ -6,10 +6,12 @@ using UnityEngine;
 [RequireComponent (typeof (FBPuppetController))]
 public class FBPuppetWalker : MonoBehaviour {
 	public float legsSpan = 0.6f;
-	public float stepDistance = 1.5f;
+	public float defaultStepDistance = 1.5f;
 	public float centerOffset = -1.0f;
 
 	public float speed = 4.0f;
+	public float staticRotationSpeed = 0.3f;
+	public float staticRotationDot = 0.7f;
 	public float horizontalStepHeight = 0.1f;
 
 	public float distanceToWall = 0.05f;
@@ -59,17 +61,37 @@ public class FBPuppetWalker : MonoBehaviour {
 				MoveFoot (motion.walking > 0.0f);
 			}
 		}
+		else if (!Mathf.Approximately (motion.steering, 0.0f)) {
+			float dotFwd = Vector3.Dot (controller.feetForward, controller.transform.forward);
+			float dotRgt = Vector3.Dot (controller.feetRight, controller.transform.forward);
+			Debug.Log (dotFwd.ToString ("F3") + " : " + (dotRgt < 0.0f ? "left" : "right"));
+			if (dotFwd < staticRotationDot) {
+				Vector3 lfDelta = controller.leftFoot.transform.position - transform.position;
+				Vector3 rfDelta = controller.rightFoot.transform.position - transform.position;
+				MoveFoot (false, (Vector3.Project (lfDelta, transform.forward).sqrMagnitude >= Vector3.Project (rfDelta, transform.forward).sqrMagnitude) ? 0 : 1);
+			}
+		}
 	}
 
-	void MoveFoot (bool walksForward) {
+	//footIndex is used only for handling static rotation
+	void MoveFoot (bool walksForward, int footIndex = -1) {
 		// #########################################
 		//
 		// Initialization
 		//
 		// #########################################
+
+		float stepDistance = defaultStepDistance;
+
 		bool validTarget = true; // the foot can be placed over target
 		FBFootState movingFoot = walksForward ? controller.movingFoot : controller.fixedFoot;
 		FBFootState fixedFoot = walksForward ? controller.fixedFoot : controller.movingFoot;
+
+		if (footIndex >= 0) {
+			movingFoot = footIndex == 0 ? controller.leftFoot : controller.rightFoot;
+			fixedFoot = footIndex == 0 ? controller.rightFoot : controller.leftFoot;
+			stepDistance = 0.0f;
+		}
 		Vector3 footStart = movingFoot.target;
 		Vector3 forward = controller.transform.forward;
 		Vector3 tmpTarget = controller.transform.position;
@@ -87,9 +109,14 @@ public class FBPuppetWalker : MonoBehaviour {
 		// - 9 : VerticalObstacle
 		// #########################################
 		tmpTarget.y = footStart.y;
-		Vector3 relativeHPos = (controller.leftFootOnFloor ? legsSpan : -legsSpan) * Vector3.Cross (Vector3.up, forward);
-		relativeHPos += forward * (stepDistance + centerOffset);
-		tmpTarget += (walksForward ? 1.0f : -1.0f) * relativeHPos;
+		Vector3 relativeHPos = (footIndex >= 0 ? (footIndex == 0 ? -1.0f : 1.0f) : (controller.leftFootOnFloor ? 1.0f : -1.0f)) * legsSpan * Vector3.Cross (Vector3.up, forward);
+		if (footIndex < 0) {
+			relativeHPos += forward * (stepDistance + centerOffset);
+			tmpTarget += (walksForward ? 1.0f : -1.0f) * relativeHPos;
+		}
+		else {
+			tmpTarget += relativeHPos;
+		}
 		//Debug.DrawLine (footStart, tmpTarget, Color.cyan, 10.0f);
 		//Debug.DrawRay (footStart, forward, Color.red, 10.0f);
 		//Debug.Log ("	State : " + controller.state);
@@ -98,7 +125,7 @@ public class FBPuppetWalker : MonoBehaviour {
 
 		if (controller.state != FBPuppetController.MovementState.ClimbingStep || !walksForward) {
 			// we don't need to check for walls if the puppet is walking up stairs
-			ray = new Ray (footStart, walksForward ? forward : -forward); // first raycast needs to start from moving foot
+			ray = new Ray (footStart, tmpTarget - footStart); // first raycast needs to start from moving foot
 			int i = 2; // two iterations at least to handle corners
 			while (Physics.Raycast (ray, out hit, stepDistance + distanceToWall, 1 << 9 | (walksForward ? 0 : 1 << 8)) && i > 0) { // hits wall
 																																   //Debug.Log ("Hits Wall! : " + hit.transform.name);
@@ -230,10 +257,10 @@ public class FBPuppetWalker : MonoBehaviour {
 		if (validTarget) {
 			movingFoot.target = tmpTarget;
 			if (hitsStep) {
-				StartCoroutine (TakeStep (movingFoot, fixedFoot.onStep ? 2 : 1));
+				StartCoroutine (TakeStep (movingFoot, fixedFoot.onStep ? 2 : 1, footIndex >= 0));
 			}
 			else {
-				StartCoroutine (TakeStep (movingFoot, 0));
+				StartCoroutine (TakeStep (movingFoot, 0, footIndex >= 0));
 			}
 		}
 	}
@@ -246,7 +273,7 @@ public class FBPuppetWalker : MonoBehaviour {
 		correction += v;
 	}
 
-	IEnumerator TakeStep (FBFootState foot, int steps) {
+	IEnumerator TakeStep (FBFootState foot, int steps, bool staticRotation = false) {
 		isMovingFoot = true;
 
 		Vector3 startPos = foot.transform.position;
@@ -255,13 +282,15 @@ public class FBPuppetWalker : MonoBehaviour {
 
 		Vector3 controllerStartPos = controller.transform.position;
 		Vector3 controllerTargetPos = controllerStartPos;
-		if (correctionNeeded) {
-			correction.y = 0.0f;
-			controllerTargetPos += (Vector3.ProjectOnPlane (deltaPos, controller.transform.right) + correction) / 2.0f;
-			correctionNeeded = false;
-		}
-		else {
-			controllerTargetPos += Vector3.ProjectOnPlane (deltaPos, controller.transform.right) / 2.0f;
+		if (!staticRotation) {
+			if (correctionNeeded) {
+				correction.y = 0.0f;
+				controllerTargetPos += (Vector3.ProjectOnPlane (deltaPos, controller.transform.right) + correction) / 2.0f;
+				correctionNeeded = false;
+			}
+			else {
+				controllerTargetPos += Vector3.ProjectOnPlane (deltaPos, controller.transform.right) / 2.0f;
+			}
 		}
 
 		deltaPos.y = 0.0f;
@@ -290,14 +319,14 @@ public class FBPuppetWalker : MonoBehaviour {
 			//Debug.Log ((controller.leftFootOnFloor ? "left" : "right") + " foot : " + totalDistance);
 			do {
 				distance = new Vector2 (foot.transform.position.x - foot.target.x, foot.transform.position.z - foot.target.z).magnitude;
-				factor = (speed * 2.0f * Time.deltaTime) / distance;
+				factor = ((staticRotation ? staticRotationSpeed : speed) * 2.0f * Time.deltaTime) / distance;
 				Vector3 newPos = Vector3.Lerp (foot.transform.position, foot.target,
 					factor);
 				distance = Horizontal (startPos, newPos).magnitude;
 				newPos.y = startPos.y + a * distance * distance + b * distance;
 				foot.transform.position = newPos;
-
-				controller.transform.position = Vector3.Lerp (controllerStartPos, controllerTargetPos, distance / totalDistance);
+				if (!staticRotation)
+					controller.transform.position = Vector3.Lerp (controllerStartPos, controllerTargetPos, distance / totalDistance);
 
 				if (factor >= 1.0f) {
 					foot.transform.position = foot.target;

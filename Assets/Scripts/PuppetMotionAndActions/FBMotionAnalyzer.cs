@@ -280,7 +280,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 				if (Input.GetButtonDown ("Grab"))
 					OnGrab ();
 			}
-			kbRotation.x -= Input.GetAxis ("VerticalE");
+			kbRotation.x = Mathf.Clamp (kbRotation.x - Input.GetAxis ("VerticalE"), -70.0f, 70.0f);
 			kbRotation.y += Input.GetAxis ("HorizontalE");
 		}
 #if UNITY_EDITOR

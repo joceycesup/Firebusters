@@ -65,8 +65,8 @@ public class FBPuppetController : MonoBehaviour {
 		private set { }
 	}
 
-	private Vector3 feetForward;
-	private Vector3 feetRight;
+	public Vector3 feetForward { get; private set; }
+	public Vector3 feetRight { get; private set; }
 
 	//-------------------- general rotation and position --------------------
 	private float controllerHeight;
@@ -112,7 +112,7 @@ public class FBPuppetController : MonoBehaviour {
 
 	public Rigidbody tool;
 	private Rigidbody toolBottom;
-	private Transform toolTip;
+	private FBTool toolTip;
 	public Vector3 anticipationBottomDirection;
 	public Vector3 strikeBottomDirection;
 	public Vector3 anticipationBladeDirection;
@@ -278,7 +278,7 @@ public class FBPuppetController : MonoBehaviour {
 				Debug.Log ("Ended action " + FBAction.Sheathe);
 			}, -1.0f));
 			AkSoundEngine.PostEvent ("Stop_Extincteur", toolTip.gameObject);
-			toolTip.gameObject.SetActive (false);
+			toolTip.Disable ();
 		}
 	}
 
@@ -292,13 +292,13 @@ public class FBPuppetController : MonoBehaviour {
 				strikeAnchors.SetActive (true);
 			}
 			tool.velocity = Vector3.zero;
-			toolTip.tag = "Axe";
+			toolTip.Enable ();
 			StartCoroutine (DoItAfter ((dt) => {
 				Vector3 right = Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up));
 				tool.AddForce ((transform.forward * strikeBladeDirection.z + right * strikeBladeDirection.x) * dt * bladeForce, ForceMode.Impulse);
 				toolBottom.AddForce ((strikeBottomDirection.x * right + strikeBottomDirection.z * transform.forward) * dt * bottomForce, ForceMode.Impulse);
 			}, () => {
-				toolTip.tag = "Untagged";
+				toolTip.Disable ();
 				if (anticipationAnchors) {
 					strikeAnchors.SetActive (false);
 					anticipationAnchors.SetActive (true);
@@ -432,11 +432,11 @@ public class FBPuppetController : MonoBehaviour {
 
 	private void Awake () {
 #if USEKB
-		Debug.Log ("Using keyboard on "+(motion.isAxePuppet?"axe":"extinguisher")+" puppet");
+		Debug.Log ("Using keyboard on " + (motion.isAxePuppet ? "axe" : "extinguisher") + " puppet");
 #endif
 		if (motion == null)
 			motion = GetComponent<FBMotionAnalyzer> ();
-		toolTip = tool.transform.GetChild (0);
+		toolTip = tool.transform.GetChild (0).GetComponent<FBTool> ();
 		detectionSphere = GetComponent<SphereCollider> ();
 		toolBottom = tool.transform.GetChild (1).gameObject.GetComponent<Rigidbody> ();
 		leftHandCJ = leftHand.GetComponents<CharacterJoint> ()[1];
@@ -535,11 +535,11 @@ public class FBPuppetController : MonoBehaviour {
 	private void FixedUpdate () {
 		if (actions.TestMask (FBAction.Aim)) {
 			//Debug.Log ("aiming");
-			tool.transform.rotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z);
+			tool.MoveRotation (Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z));
 		}
 		else if (actions.TestMask (FBAction.Draw)) {
 			Quaternion aimRotation = Quaternion.Euler (motion.rotation.x, motion.rotation.y - extinguisherYRotation + yRotation, tool.rotation.eulerAngles.z);
-			tool.transform.rotation = Quaternion.RotateTowards (tool.transform.rotation, aimRotation, drawTurnRate * Time.fixedDeltaTime);
+			tool.MoveRotation (Quaternion.RotateTowards (tool.transform.rotation, aimRotation, drawTurnRate * Time.fixedDeltaTime));
 			float angle = Quaternion.Angle (tool.transform.rotation, aimRotation);
 			//Debug.Log (angle + " : " + (drawTurnRate * Time.fixedDeltaTime));
 			if (angle < drawTurnRate * Time.fixedDeltaTime) {
@@ -547,7 +547,7 @@ public class FBPuppetController : MonoBehaviour {
 				tool.constraints = RigidbodyConstraints.FreezeRotation;
 				actions &= ~FBAction.Draw;
 				actions |= FBAction.Aim;
-				toolTip.gameObject.SetActive (true);
+				toolTip.Enable ();
 				Debug.Log ("Ended action " + FBAction.Draw + " and started " + FBAction.Aim);
 			}
 		}
