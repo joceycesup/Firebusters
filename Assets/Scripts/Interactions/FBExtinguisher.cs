@@ -28,17 +28,24 @@ public class FBExtinguisher : FBTool {
 		if (ps.isPlaying) {
 			Debug.DrawRay (transform.position, transform.forward * raycastDistance, Color.red);
 			Ray ray = new Ray (transform.position, transform.forward);
-			RaycastHit[] hits = Physics.RaycastAll (ray, raycastDistance, (1 << 9) | 1 | (1 << 12));
-			foreach (RaycastHit hit in hits) { // 9 : VerticalObstacle
-				float delay = hit.distance / ps.main.startSpeedMultiplier;
-				if (delay < ps.main.startLifetimeMultiplier) {
-					if (hit.collider.CompareTag ("Fire")) {
-						if (!fires.Contains (hit.collider.gameObject)) {
-							StartCoroutine (PutOutFire (hit.collider.gameObject, delay));
-						}
+			float maxDistance = float.MaxValue;
+			RaycastHit[] hits = Physics.RaycastAll (ray, raycastDistance, (1 << 9) | 1); // 9 : VerticalObstacle, 1 : Default, 12 : Fire
+			foreach (RaycastHit hit in hits) {
+				if (hit.collider.gameObject.layer == 9) {
+					if (hit.distance < maxDistance) {
+						maxDistance = hit.distance;
 					}
-					else if (hit.rigidbody && !hit.rigidbody.isKinematic) {
-						hit.rigidbody.AddForce (transform.forward * force * forceDecrease.Evaluate (hit.distance), forceMode);
+				}
+				else if (hit.rigidbody && !hit.rigidbody.isKinematic) {
+					hit.rigidbody.AddForce (transform.forward * force * forceDecrease.Evaluate (hit.distance / raycastDistance), forceMode);
+				}
+			}//*/
+			hits = Physics.RaycastAll (ray, raycastDistance, 1 << 12); // 9 : VerticalObstacle, 1 : Default, 12 : Fire
+			foreach (RaycastHit hit in hits) {
+				float delay = hit.distance / ps.main.startSpeedMultiplier;
+				if (delay < ps.main.startLifetimeMultiplier && hit.distance < maxDistance) {
+					if (!fires.Contains (hit.collider.gameObject)) {
+						StartCoroutine (PutOutFire (hit.collider.gameObject, delay));
 					}
 				}
 			}//*/

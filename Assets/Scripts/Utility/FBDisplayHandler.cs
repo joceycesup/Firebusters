@@ -57,6 +57,26 @@ public class FBDisplayHandler : MonoBehaviour {
 				rt.anchorMin = new Vector2 (0.0f, rt.anchorMin.y);
 				rt.anchorMax = new Vector2 (0.0f, rt.anchorMax.y);
 			}
+#if TRIPEL
+			if (Display.displays.Length > 2) {
+				Display.displays[2].Activate ();
+				GameObject fstCameraBisGO = new GameObject ();
+				Camera fstCameraBis = fstCameraBisGO.AddComponent<Camera> ();
+				fstCameraBis.CopyFrom (fstCamera);
+				fstCameraBisGO.transform.SetParent (fstCamera.transform);
+
+				GameObject sndCameraBisGO = new GameObject ();
+				Camera sndCameraBis = sndCameraBisGO.AddComponent<Camera> ();
+				sndCameraBis.CopyFrom (sndCamera);
+				sndCameraBisGO.transform.SetParent (sndCamera.transform);
+
+				fstCameraBisGO.transform.localEulerAngles = fstCameraBisGO.transform.localPosition = sndCameraBisGO.transform.localEulerAngles = sndCameraBisGO.transform.localPosition = Vector3.zero;
+
+				fstCameraBis.targetDisplay = sndCameraBis.targetDisplay = 2;
+				fstCameraBis.rect = new Rect (0.0f, 0.0f, 0.5f, 1.0f);
+				sndCameraBis.rect = new Rect (0.5f, 0.0f, 0.5f, 1.0f);
+			}
+#endif
 		}
 		Destroy (this);
 	}

@@ -82,6 +82,14 @@ public class FBPlaytestWindow : MonoBehaviour {
 		intFieldID = 0;
 		bounds = new Rect (GUI.skin.window.border.left + margin.x, GUI.skin.window.border.top + margin.y, windowRect0.width - margin.x - margin.width - GUI.skin.window.border.horizontal, windowRect0.height - margin.y - margin.height - GUI.skin.window.border.vertical);
 		GUILayout.BeginArea (bounds);
+
+		if (Application.isEditor)
+			GUI.enabled = false;
+		if (GUILayout.Button ("Exit Game"))
+			Application.Quit ();
+		if (Application.isEditor)
+			GUI.enabled = true;
+
 		if (!Application.isPlaying)
 			GUI.enabled = false;
 		if (GUILayout.Button ("Reload scene")) {
@@ -180,6 +188,9 @@ public class FBPlaytestWindow : MonoBehaviour {
 			}
 			GUILayout.EndVertical ();
 		}
+
+		GUILayout.Label ("Displays : " + Display.displays.Length);
+
 		GUILayout.EndArea ();
 		GUI.DragWindow ();
 	}
