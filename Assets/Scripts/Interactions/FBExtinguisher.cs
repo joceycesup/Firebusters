@@ -28,7 +28,7 @@ public class FBExtinguisher : FBTool {
 		if (ps.isPlaying) {
 			Debug.DrawRay (transform.position, transform.forward * raycastDistance, Color.red);
 			Ray ray = new Ray (transform.position, transform.forward);
-			RaycastHit[] hits = Physics.RaycastAll (ray, raycastDistance, (1 << 9) | 1);
+			RaycastHit[] hits = Physics.RaycastAll (ray, raycastDistance, (1 << 9) | 1 | (1 << 12));
 			foreach (RaycastHit hit in hits) { // 9 : VerticalObstacle
 				float delay = hit.distance / ps.main.startSpeedMultiplier;
 				if (delay < ps.main.startLifetimeMultiplier) {
