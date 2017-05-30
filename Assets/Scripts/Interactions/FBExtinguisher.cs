@@ -11,7 +11,11 @@ public class FBExtinguisher : FBTool {
 	public float force = 50.0f;
 	public ForceMode forceMode = ForceMode.Impulse;
 
-	[Range (1.0f, 20.0f)]
+	[Range (1, 20)]
+	public int testRate = 1;
+	private int testFrame = 0;
+
+	[Range (1.0f, 50.0f)]
 	public float raycastDivisions = 10.0f;
 
 	void Awake () {
@@ -29,36 +33,12 @@ public class FBExtinguisher : FBTool {
 		ps.Stop ();
 	}
 
-	void Update () {
-#if DEBUG_ENABLED
-		if (!Application.isPlaying)
-			raycastDivisions = Mathf.Round (raycastDivisions) - 0.01f;
-#endif
-		if (ps.isPlaying) {/*
-			Debug.DrawRay (transform.position, transform.forward * raycastDistance, Color.red);
-			Ray ray = new Ray (transform.position, transform.forward);
-			float maxDistance = float.MaxValue;
-			RaycastHit[] hits = Physics.RaycastAll (ray, raycastDistance, (1 << 9) | 1); // 9 : VerticalObstacle, 1 : Default, 12 : Fire
-			foreach (RaycastHit hit in hits) {
-				if (hit.collider.gameObject.layer == 9) {
-					if (hit.distance < maxDistance) {
-						maxDistance = hit.distance;
-					}
-				}
-				else if (hit.rigidbody && !hit.rigidbody.isKinematic) {
-					hit.rigidbody.AddForce (transform.forward * force * forceDecrease.Evaluate (hit.distance / raycastDistance), forceMode);
-				}
-			}
-			hits = Physics.RaycastAll (ray, raycastDistance, 1 << 12); // 9 : VerticalObstacle, 1 : Default, 12 : Fire
-			foreach (RaycastHit hit in hits) {
-				float delay = hit.distance / ps.main.startSpeedMultiplier;
-				if (delay < ps.main.startLifetimeMultiplier && hit.distance < maxDistance) {
-					if (!fires.Contains (hit.collider.gameObject)) {
-						StartCoroutine (PutOutFire (hit.collider.gameObject, delay));
-					}
-				}
-			}//*/
+	void FixedUpdate () {
+		testFrame++;
+		if ((testFrame = (testFrame + 1) % testRate) != 0)
+			return;
 
+		if (ps.isPlaying) {
 			Ray ray = new Ray ();
 			float maxDistance = float.MaxValue;
 			RaycastHit[] hits;
@@ -71,7 +51,7 @@ public class FBExtinguisher : FBTool {
 			Vector3 speed = transform.forward * ps.main.startSpeedMultiplier;
 			Vector3 position = transform.position;
 			float time = 0.0f;
-			float i = 1.0f;
+			float division = 1.0f;
 			while (time < ps.main.startLifetimeMultiplier) {
 #if DEBUG_ENABLED
 				Vector3 oldDirection = speed;
@@ -90,12 +70,12 @@ public class FBExtinguisher : FBTool {
 							maxDistance = hit.distance;
 					}
 					else if (hit.rigidbody && !hit.rigidbody.isKinematic) {
-						hit.rigidbody.AddForce (transform.forward * force * forceDecrease.Evaluate (((distance + hit.distance) / (totalSpeed / i)) / ps.main.startLifetimeMultiplier), forceMode);
+						hit.rigidbody.AddForce (transform.forward * force * forceDecrease.Evaluate (((distance + hit.distance) / (totalSpeed / division)) / ps.main.startLifetimeMultiplier), forceMode);
 					}
 				}
 				foreach (RaycastHit hit in hits) {
 					if (hit.collider.gameObject.layer == 12) {
-						float delay = (distance + hit.distance) / (totalSpeed / i);
+						float delay = (distance + hit.distance) / (totalSpeed / division);
 						if (delay < ps.main.startLifetimeMultiplier && hit.distance < maxDistance) {
 							if (!fires.Contains (hit.collider.gameObject)) {
 								StartCoroutine (PutOutFire (hit.collider.gameObject, delay));
@@ -106,14 +86,14 @@ public class FBExtinguisher : FBTool {
 
 
 #if DEBUG_ENABLED
-				Debug.DrawRay (position, speed * raycastDelta, Color.red);
+				Debug.DrawRay (position, speed * raycastDelta, Color.red, Time.fixedDeltaTime * testRate);
 #endif
 				distance += (position - (position += speed * raycastDelta)).magnitude;
 #if DEBUG_ENABLED
-				Debug.DrawLine (position, position + (speed.normalized - oldDirection.normalized).normalized / -5.0f, new Color (1.0f, 0.5f, 0.0f));
+				Debug.DrawLine (position, position + (speed.normalized - oldDirection.normalized).normalized / -5.0f, new Color (1.0f, 0.5f, 0.0f), Time.fixedDeltaTime * testRate);
 #endif
 				time += raycastDelta;
-				i += 1.0f;
+				division += 1.0f;
 			}
 		}
 
