@@ -7,7 +7,7 @@ public class FBChandelier : MonoBehaviour {
 
 	void Start () {
 		rb = GetComponent<Rigidbody> ();
-		AkSoundEngine.PostEvent ("Play_Squeek", gameObject);
+		AkSoundEngine.PostEvent ("Play_Squeak", gameObject);
 	}
 
 	void Update () {
