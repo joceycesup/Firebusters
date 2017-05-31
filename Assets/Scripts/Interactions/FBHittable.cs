@@ -6,7 +6,10 @@ public enum FBHitSound {
 	None,
 	Metal,
 	Wood,
-	Ceramic
+	Ceramic,
+	Pan,
+	Chandelier,
+	Chair
 }
 [Serializable]
 public enum FBAxeSound {
@@ -37,6 +40,11 @@ public class FBHittable : MonoBehaviour {
 		tag = "Hittable";
 		//Debug.Log (name);
 	}
+#if UNITY_EDITOR
+	private void Start () {
+		gameObject.AddComponent<FBHitInEditor> ().hittable = this;
+	}
+#endif
 
 	private void OnCollisionEnter (Collision collision) {
 		AkSoundEngine.SetRTPCValue ("Velocite_Props", collision.relativeVelocity.magnitude / maxVelocity, gameObject);
@@ -49,21 +57,14 @@ public class FBHittable : MonoBehaviour {
 	}
 
 	public virtual void HitByAxe (Collision collision = null) {
-		Debug.Log ("Ouille!");
+		//Debug.Log ("Ouille!");
 		if (OnHitByAxe != null)
 			OnHitByAxe (gameObject);
 		PlayAxeSound ();
-		if (destructible) {
-			Transform subItemsContainer = transform.GetChild (0);
-			subItemsContainer.gameObject.SetActive (true);
-			subItemsContainer.DetachChildren ();
-			if (OnDestroyed != null)
-				OnDestroyed (gameObject);
-			Destroy (gameObject);
-		}
+		DestroyHittable ();
 	}
 	public virtual void Hit (Collision collision = null) {
-		Debug.Log ("Clonk!");
+		//Debug.Log ("Clonk!");
 		if (OnHit != null)
 			OnHit (gameObject);
 		float velocity = 0.0f;
@@ -102,9 +103,29 @@ public class FBHittable : MonoBehaviour {
 			case FBHitSound.Wood:
 				AkSoundEngine.PostEvent ("Play_Marionnette_hit_bois", gameObject);
 				break;
+			case FBHitSound.Pan:
+				AkSoundEngine.PostEvent ("Play_Marionnette_hit_casserole", gameObject);
+				break;
+			case FBHitSound.Chandelier:
+				AkSoundEngine.PostEvent ("Play_Marionnette_hit_chandelier", gameObject);
+				break;
+			case FBHitSound.Chair:
+				AkSoundEngine.PostEvent ("Play_Marionnette_hit_fauteuil", gameObject);
+				break;
 			case FBHitSound.None:
 			default:
 				break;
+		}
+	}
+
+	protected void DestroyHittable () {
+		if (destructible) {
+			Transform subItemsContainer = transform.GetChild (0);
+			subItemsContainer.gameObject.SetActive (true);
+			subItemsContainer.DetachChildren ();
+			if (OnDestroyed != null)
+				OnDestroyed (gameObject);
+			Destroy (gameObject);
 		}
 	}
 }

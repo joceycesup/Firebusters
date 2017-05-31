@@ -28,6 +28,8 @@ public class FBPuppetControllerInspector : Editor {
 				controller.leftHand = g.GetComponent<Rigidbody> ();
 		}
 		controller.shoulder = (Transform) EditorGUILayout.ObjectField ("Left shoulder", controller.shoulder, typeof (Transform), true);
+		controller.itemDistanceToShoulder = EditorGUILayout.FloatField ("Distance to shoulder", controller.itemDistanceToShoulder);
+
 		//Debug.Log (controller.leftHand.connectedBody);
 		FBPuppetController.grabDelay = EditorGUILayout.FloatField ("Grab delay", FBPuppetController.grabDelay);
 		if (!Application.isPlaying) {

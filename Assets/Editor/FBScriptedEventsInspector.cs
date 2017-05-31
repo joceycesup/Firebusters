@@ -14,17 +14,28 @@ public class FBScriptedEventsInspector : Editor {
 		int moveUpIndex = -1;
 		int moveDownIndex = -1;
 
+		EditorGUILayout.BeginHorizontal ();
+		if (GUILayout.Button ("\u25C0", GUILayout.Width (20))) {//u25B2
+			for (int i = 0; i < script.zones.Count; ++i)
+				script.zones[i].showingInInspector = false;
+		}
+		if (GUILayout.Button ("\u25B6", GUILayout.Width (20))) {//u25B2
+			for (int i = 0; i < script.zones.Count; ++i)
+				script.zones[i].showingInInspector = true;
+		}
+		EditorGUILayout.EndHorizontal ();
+
 		for (int i = 0; i < script.zones.Count; ++i) {
 			EditorGUILayout.BeginHorizontal ();
 			script.zones[i].showingInInspector = EditorGUILayout.Foldout (script.zones[i].showingInInspector, script.zones[i].Name);
 			EditorGUI.BeginDisabledGroup (i == 0);
-			if (GUILayout.Button ("\u25B2", GUILayout.Width (20))) {
+			if (GUILayout.Button ("\u25B2", GUILayout.Width (20))) {//u25B2
 				moveUpIndex = i;
 				break;
 			}
 			EditorGUI.EndDisabledGroup ();
 			EditorGUI.BeginDisabledGroup (i >= script.zones.Count - 1);
-			if (GUILayout.Button ("\u25BC", GUILayout.Width (20))) {
+			if (GUILayout.Button ("\u25BC", GUILayout.Width (20))) {//u25BC
 				moveDownIndex = i;
 				break;
 			}

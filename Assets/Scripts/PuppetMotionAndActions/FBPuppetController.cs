@@ -144,7 +144,18 @@ public class FBPuppetController : MonoBehaviour {
 	public static float letGoDoorDelay = 0.5f;
 
 	public Transform shoulder;
-	private float itemDistance;
+	private float distanceHandShoulder;
+	[SerializeField]
+	private float _itemDistanceToShoulder;
+	[SerializeField]
+	private float _itemDistanceToShoulderFactor;
+	public float itemDistanceToShoulder {
+		get { return _itemDistanceToShoulderFactor; }
+		set {
+			_itemDistanceToShoulderFactor = value;
+			_itemDistanceToShoulder = _itemDistanceToShoulderFactor * distanceHandShoulder;
+		}
+	}
 
 	//-------------------- Actions --------------------
 	private FBAction _actions = FBAction.None;
@@ -369,7 +380,7 @@ public class FBPuppetController : MonoBehaviour {
 			if (!Mathf.Approximately (motion.walking, 0.0f)) {
 				endTime = Time.time + letGoDoorDelay;
 			}
-			if (Vector3.Distance (doorKnob.transform.position, shoulder.position) > itemDistance) {
+			if (Vector3.Distance (doorKnob.transform.position, shoulder.position) > itemDistanceToShoulder) {
 				endTime = 0.0f;
 			}
 			yield return null;
@@ -443,7 +454,8 @@ public class FBPuppetController : MonoBehaviour {
 		toolReference = new CharacterJointValues (leftHandCJ);
 		cameraPosition = camera.transform.parent;
 
-		itemDistance = Vector3.Distance (leftHand.transform.position, shoulder.position) * 1.3f;
+		distanceHandShoulder = Vector3.Distance (leftHand.transform.position, shoulder.position);
+		itemDistanceToShoulder = _itemDistanceToShoulderFactor;
 	}
 
 	void Start () {
@@ -493,10 +505,10 @@ public class FBPuppetController : MonoBehaviour {
 		Vector3 debugRayStart = (feet[1].target + feet[0].target) / 2.0f;
 		Vector3 forwardAnticipate = Vector3.Normalize (feetForward + transform.forward);
 		Quaternion anticipateStrikeRot = Quaternion.Euler (0.0f, 135.0f, 0.0f);
-		Debug.DrawRay (debugRayStart, feetForward, Color.blue);
-		Debug.DrawRay (debugRayStart, forwardAnticipate, Color.magenta);
+		//Debug.DrawRay (debugRayStart, feetForward, Color.blue);
+		//Debug.DrawRay (debugRayStart, forwardAnticipate, Color.magenta);
 		Debug.DrawRay (debugRayStart, transform.forward, Color.red);
-		Debug.DrawRay (debugRayStart, anticipateStrikeRot * forwardAnticipate, Color.green);
+		//Debug.DrawRay (debugRayStart, anticipateStrikeRot * forwardAnticipate, Color.green);
 #endif
 
 		RaycastHit hit;
@@ -510,6 +522,7 @@ public class FBPuppetController : MonoBehaviour {
 			cameraFactor = Vector3.Distance (transform.position, hit.point) / cameraDistance;
 			//camera.transform.position = hit.point;
 			camera.transform.position = Vector3.Lerp (transform.position, cameraPosition.position, cameraFactor);
+			;
 			camera.transform.LookAt (Vector3.Lerp (cameraCloseTarget.position, cameraTarget.position, cameraFactor));
 		}
 		else {

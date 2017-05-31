@@ -45,6 +45,8 @@ public class ObjectAction {
 #if UNITY_EDITOR
 	public ObjectAction GUIField () {
 		Action = (FBScriptedAction) EditorGUILayout.EnumPopup ("Scripted action", Action);
+		if (!Target)
+			EditorGUILayout.HelpBox ("Please specify a non null object!", MessageType.Error);
 
 		switch (Action) {
 			case FBScriptedAction.Destroy:

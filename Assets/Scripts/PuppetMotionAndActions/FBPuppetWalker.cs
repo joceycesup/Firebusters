@@ -28,6 +28,8 @@ public class FBPuppetWalker : MonoBehaviour {
 	private Transform lastStep;
 	private Vector3 lastStepExtents;
 
+	public Transform chest;
+
 	// --------------------------------------------------------------------------
 	// TO DO :
 	// clipping is still possible on walls
@@ -127,6 +129,11 @@ public class FBPuppetWalker : MonoBehaviour {
 			// we don't need to check for walls if the puppet is walking up stairs
 			ray = new Ray (footStart, tmpTarget - footStart); // first raycast needs to start from moving foot
 			int i = 2; // two iterations at least to handle corners
+#if DEBUG_ENABLED
+			Debug.DrawRay (ray.origin, ray.direction * (stepDistance + distanceToWall), Color.cyan, 0.2f);
+			Debug.DrawRay (ray.origin, forward, Color.green, 0.2f);
+			//Debug.Break ();
+#endif
 			while (Physics.Raycast (ray, out hit, stepDistance + distanceToWall, 1 << 9 | (walksForward ? 0 : 1 << 8)) && i > 0) { // hits wall
 																																   //Debug.Log ("Hits Wall! : " + hit.transform.name);
 																																   //Debug.Break ();
@@ -242,17 +249,24 @@ public class FBPuppetWalker : MonoBehaviour {
 				validTarget = false;
 				Debug.Log (" Test resulted in invalid target");
 			}
-
-			//#################################################################################
-			//#################################################################################
-			//#################################################################################
-			//#################################################################################
-			//#################################################################################
-			//#################################################################################
-			//#################################################################################
-			//#################################################################################
-			//#################################################################################
 		}
+
+		/*#################################################################################
+		if (validTarget && controller.state != FBPuppetController.MovementState.ClimbingStep) {
+			Vector3 deltaFoot = tmpTarget - fixedFoot.transform.position;
+			ray = new Ray (fixedFoot.transform.position, deltaFoot);
+			if (Physics.Raycast (ray, out hit, deltaFoot.magnitude, 1 << 9)) { // hits verticalObstacle
+																			   //Debug.Break ();
+				tmpTarget = hit.point + deltaFoot.normalized * (Vector3.Distance (fixedFoot.transform.position, hit.point) / 2.0f);
+				deltaFoot = fixedFoot.transform.position - chest.position;
+				ray = new Ray (chest.position, deltaFoot);
+				if (Physics.Raycast (ray, out hit, deltaFoot.magnitude, 1 << 9)) { // hits verticalObstacle
+					validTarget = false;
+				}
+			}
+		}
+
+		//#################################################################################*/
 
 		if (validTarget) {
 			movingFoot.target = tmpTarget;

@@ -5,11 +5,6 @@ public class FBMailBox : FBHittable {
 	public float throwForce = 200.0f;
 	public float torqueForce = 200.0f;
 	public int itemsPerHit = 1;
-#if UNITY_EDITOR
-	private void Start () {
-		gameObject.AddComponent<FBHitInEditor> ().hittable = this;
-	}
-#endif
 
 	public override void Hit (Collision collision = null) {
 		base.Hit (collision);
