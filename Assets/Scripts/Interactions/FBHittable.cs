@@ -48,7 +48,7 @@ public class FBHittable : MonoBehaviour {
 		}
 	}
 
-	protected virtual void HitByAxe (Collision collision) {
+	public virtual void HitByAxe (Collision collision = null) {
 		Debug.Log ("Ouille!");
 		if (OnHitByAxe != null)
 			OnHitByAxe (gameObject);
@@ -62,11 +62,13 @@ public class FBHittable : MonoBehaviour {
 			Destroy (gameObject);
 		}
 	}
-	protected virtual void Hit (Collision collision) {
+	public virtual void Hit (Collision collision = null) {
 		Debug.Log ("Clonk!");
 		if (OnHit != null)
 			OnHit (gameObject);
-		float velocity = Mathf.Clamp01 (collision.relativeVelocity.magnitude / maxVelocity);
+		float velocity = 0.0f;
+		if (collision != null)
+			velocity = Mathf.Clamp01 (collision.relativeVelocity.magnitude / maxVelocity);
 		AkSoundEngine.SetRTPCValue ("velocite", velocity, gameObject);
 		PlayHitSound ();
 	}

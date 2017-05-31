@@ -9,7 +9,12 @@ public class FBDrawer : MonoBehaviour {
 			Rigidbody rb = GetComponent<Rigidbody> ();
 			rb.constraints = RigidbodyConstraints.None;
 			rb.AddTorque ((transform.right + Random.Range (0.0f, 0.1f) * transform.forward) * torqueForce, ForceMode.Impulse);
-			GetComponent<BoxCollider> ().isTrigger = false;
+			if (transform.childCount > 0) {
+				Destroy (GetComponent<BoxCollider> ());
+				transform.GetChild (0).gameObject.SetActive (true);
+			}
+			else
+				GetComponent<BoxCollider> ().isTrigger = false;
 			Destroy (this);
 		}
 	}

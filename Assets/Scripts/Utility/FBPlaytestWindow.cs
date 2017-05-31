@@ -138,10 +138,17 @@ public class FBPlaytestWindow : MonoBehaviour {
 				MariusMotion.usePhoneDataHandler = GUILayout.Toggle (MariusMotion.usePhoneDataHandler, "Marius use phone");
 
 				GUILayout.BeginHorizontal ();
+#if SENSODUINO
+				GUILayout.Label ("COM : ");
+				int tmp = IntField (MariusMotion.sensor.comNum, GUILayout.Width (20));
+				if (tmp != MariusMotion.sensor.comNum) {
+					MariusMotion.sensor.comNum = tmp;
+#else
 				GUILayout.Label ("ID : ");
 				int tmp = IntField (MariusMotion.sensor.id, GUILayout.Width (20));
 				if (tmp != MariusMotion.sensor.id) {
 					MariusMotion.sensor.id = tmp;
+#endif
 					if (MariusMotion.sensor.connected) {
 						MariusMotion.sensor.close ();
 						MariusMotion.sensor.connect ();
@@ -166,10 +173,17 @@ public class FBPlaytestWindow : MonoBehaviour {
 				LouisMotion.usePhoneDataHandler = GUILayout.Toggle (LouisMotion.usePhoneDataHandler, "Louis use phone");
 
 				GUILayout.BeginHorizontal ();
+#if SENSODUINO
+				GUILayout.Label ("COM : ");
+				int tmp = IntField (LouisMotion.sensor.comNum, GUILayout.Width (20));
+				if (tmp != LouisMotion.sensor.comNum) {
+					LouisMotion.sensor.comNum = tmp;
+#else
 				GUILayout.Label ("ID : ");
 				int tmp = IntField (LouisMotion.sensor.id, GUILayout.Width (20));
 				if (tmp != LouisMotion.sensor.id) {
 					LouisMotion.sensor.id = tmp;
+#endif
 					if (LouisMotion.sensor.connected) {
 						LouisMotion.sensor.close ();
 						LouisMotion.sensor.connect ();

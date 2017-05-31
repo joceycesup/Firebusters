@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class FBPhonesContainer : MonoBehaviour {
 	private static FBPhonesContainer _instance;
@@ -28,7 +26,11 @@ public class FBPhonesContainer : MonoBehaviour {
 		sensors = new FBPhoneDataHandler[2];
 		for (int i = 0; i < sensors.Length; ++i) {
 			sensors[i] = gameObject.AddComponent<FBPhoneDataHandler> ();
+#if SENSODUINO
+			sensors[i].comNum = 4 + i;
+#else
 			sensors[i].id = i;
+#endif
 		}
 	}
 }

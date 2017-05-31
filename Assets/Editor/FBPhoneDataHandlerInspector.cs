@@ -11,8 +11,11 @@ public class FBPhoneDataHandlerInspector : Editor {
 
 	public override void OnInspectorGUI () {
 		EditorGUILayout.HelpBox (sensor.connected ? "Connected" : "Port closed", MessageType.Info);
-
+#if SENSODUINO
+		sensor.comNum = EditorGUILayout.IntField ("COM", sensor.comNum);
+#else
 		sensor.id = EditorGUILayout.IntField ("ID", sensor.id);
+#endif
 
 		if (GUI.changed) {
 			EditorUtility.SetDirty (sensor);
