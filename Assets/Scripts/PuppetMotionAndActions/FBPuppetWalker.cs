@@ -251,16 +251,19 @@ public class FBPuppetWalker : MonoBehaviour {
 			}
 		}
 
-		/*#################################################################################
+		//*#################################################################################
 		if (validTarget && controller.state != FBPuppetController.MovementState.ClimbingStep) {
 			Vector3 deltaFoot = tmpTarget - fixedFoot.transform.position;
 			ray = new Ray (fixedFoot.transform.position, deltaFoot);
+#if DEBUG_ENABLED
+			Debug.DrawRay (ray.origin, deltaFoot, Color.cyan, (movingFoot.transform.position - tmpTarget).magnitude / speed);
+#endif
 			if (Physics.Raycast (ray, out hit, deltaFoot.magnitude, 1 << 9)) { // hits verticalObstacle
-																			   //Debug.Break ();
+																			   // Debug.Break ();
 				tmpTarget = hit.point + deltaFoot.normalized * (Vector3.Distance (fixedFoot.transform.position, hit.point) / 2.0f);
 				deltaFoot = fixedFoot.transform.position - chest.position;
 				ray = new Ray (chest.position, deltaFoot);
-				if (Physics.Raycast (ray, out hit, deltaFoot.magnitude, 1 << 9)) { // hits verticalObstacle
+				if (Physics.Raycast (ray, out hit, deltaFoot.magnitude, 1 << 9)) { // check between chest and foot
 					validTarget = false;
 				}
 			}

@@ -5,6 +5,7 @@ using UnityEngine;
 //[ExecuteInEditMode]
 public class FBExtinguisher : FBTool {
 	private ParticleSystem ps;
+	private ParticleSystem psFaisceau;
 	private List<GameObject> fires;
 	public float raycastDistance = 5.0f;
 	public AnimationCurve forceDecrease;
@@ -20,7 +21,9 @@ public class FBExtinguisher : FBTool {
 
 	void Awake () {
 		ps = gameObject.GetComponent<ParticleSystem> ();
+		psFaisceau = transform.GetChild (0).GetComponent<ParticleSystem> ();
 		ps.Stop ();
+		psFaisceau.Stop ();
 		fires = new List<GameObject> ();
 		raycastDivisions = Mathf.Round (raycastDivisions) - 0.01f;
 	}
@@ -39,25 +42,26 @@ public class FBExtinguisher : FBTool {
 			return;
 
 		if (ps.isPlaying) {
+			Debug.Log (Time.time);
 			Ray ray = new Ray ();
 			float maxDistance = float.MaxValue;
 			RaycastHit[] hits;
 
-			float raycastDelta = ps.main.startLifetimeMultiplier / raycastDivisions;
+			float raycastDelta = psFaisceau.main.startLifetimeMultiplier / raycastDivisions;
 			float distance = 0.0f;
 			float totalSpeed = 0.0f;
 
 			//Debug.Log (ps.main.startSpeedMultiplier + " ; " + ps.main.startLifetimeMultiplier + " ; " + ps.main.gravityModifierMultiplier);
-			Vector3 speed = transform.forward * ps.main.startSpeedMultiplier;
+			Vector3 speed = transform.forward * psFaisceau.main.startSpeedMultiplier;
 			Vector3 position = transform.position;
 			float time = 0.0f;
 			float division = 1.0f;
-			while (time < ps.main.startLifetimeMultiplier) {
+			while (time < psFaisceau.main.startLifetimeMultiplier) {
 #if DEBUG_ENABLED
 				Vector3 oldDirection = speed;
 #endif
 				totalSpeed += speed.magnitude;
-				speed += ps.main.gravityModifierMultiplier * Physics.gravity * raycastDelta;
+				speed += psFaisceau.main.gravityModifierMultiplier * Physics.gravity * raycastDelta;
 
 				maxDistance = float.MaxValue;
 				ray = new Ray (position, speed);
@@ -65,18 +69,18 @@ public class FBExtinguisher : FBTool {
 
 				foreach (RaycastHit hit in hits) {
 					if (hit.collider.gameObject.layer == 9 || hit.collider.gameObject.layer == 8) {
-						time = ps.main.startLifetimeMultiplier;
+						time = psFaisceau.main.startLifetimeMultiplier;
 						if (hit.distance < maxDistance)
 							maxDistance = hit.distance;
 					}
 					else if (hit.rigidbody && !hit.rigidbody.isKinematic) {
-						hit.rigidbody.AddForce (transform.forward * force * forceDecrease.Evaluate (((distance + hit.distance) / (totalSpeed / division)) / ps.main.startLifetimeMultiplier), forceMode);
+						hit.rigidbody.AddForce (transform.forward * force * forceDecrease.Evaluate (((distance + hit.distance) / (totalSpeed / division)) / psFaisceau.main.startLifetimeMultiplier), forceMode);
 					}
 				}
 				foreach (RaycastHit hit in hits) {
 					if (hit.collider.gameObject.layer == 12) {
 						float delay = (distance + hit.distance) / (totalSpeed / division);
-						if (delay < ps.main.startLifetimeMultiplier && hit.distance < maxDistance) {
+						if (delay < psFaisceau.main.startLifetimeMultiplier && hit.distance < maxDistance) {
 							if (!fires.Contains (hit.collider.gameObject)) {
 								StartCoroutine (PutOutFire (hit.collider.gameObject, delay));
 							}
