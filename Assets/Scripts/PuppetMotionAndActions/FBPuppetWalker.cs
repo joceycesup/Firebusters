@@ -251,7 +251,7 @@ public class FBPuppetWalker : MonoBehaviour {
 			}
 		}
 
-		//*#################################################################################
+		/*#################################################################################
 		if (validTarget && controller.state != FBPuppetController.MovementState.ClimbingStep) {
 			Vector3 deltaFoot = tmpTarget - fixedFoot.transform.position;
 			ray = new Ray (fixedFoot.transform.position, deltaFoot);
