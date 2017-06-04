@@ -121,11 +121,23 @@ public class FBHittable : MonoBehaviour {
 	protected void DestroyHittable () {
 		if (destructible) {
 			Transform subItemsContainer = transform.GetChild (0);
-			subItemsContainer.gameObject.SetActive (true);
+			if (subItemsContainer.gameObject.activeInHierarchy) {
+				for (int i = 0; i < subItemsContainer.childCount; ++i) {
+					Rigidbody rb = subItemsContainer.GetChild (i).gameObject.GetComponent<Rigidbody> ();
+					if (rb)
+						rb.isKinematic = false;
+				}
+			}
+			else {
+				subItemsContainer.gameObject.SetActive (true);
+			}
 			subItemsContainer.DetachChildren ();
 			if (OnDestroyed != null)
 				OnDestroyed (gameObject);
 			Destroy (gameObject);
 		}
+	}
+
+	void ActiveRigidbody (GameObject go) {
 	}
 }

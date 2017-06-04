@@ -155,6 +155,17 @@ public class BezierSpline : MonoBehaviour {
 		EnforceMode (points.Length - 4);
 	}
 
+	public void RemoveCurve (int index) {
+		if (index % 3 != 0)
+			return;
+		int pointsToRemove = (index == 0 || index == points.Length - 1) ? 2 : 3;
+		int i = index == 0 ? 0 : index - 1;
+		for (; i < points.Length - pointsToRemove; ++i) {
+			points[i] = points[i + pointsToRemove];
+		}
+		Array.Resize (ref points, points.Length - pointsToRemove);
+	}
+
 	public void Reset () {
 		points = new Vector3[] {
 			new Vector3(1f, 0f, 0f),

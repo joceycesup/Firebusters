@@ -18,13 +18,19 @@ public class BezierSplineInspector : Editor {
 	private BezierSpline spline;
 	private Transform handleTransform;
 	private Quaternion handleRotation;
-	private int selectedIndex = -1;
+	private static int selectedIndex = -1;
+	private static int lastInstanceID = -1;
 
 	public override void OnInspectorGUI () {
+		if (lastInstanceID != (lastInstanceID = GetInstanceID ())) {
+			selectedIndex = -1;
+		}
+		selectedIndex = EditorGUILayout.IntField ("Selected index", selectedIndex);
 		spline = target as BezierSpline;
 		if (selectedIndex >= 0 && selectedIndex < spline.ControlPointCount) {
 			DrawSelectedPointInspector ();
 		}
+
 		if (GUILayout.Button ("Add Curve")) {
 			Undo.RecordObject (spline, "Add Curve");
 			spline.AddCurve ();
@@ -118,13 +124,21 @@ public class BezierSplineInspector : Editor {
 	private Vector3 ShowPoint (int index) {
 		Vector3 point = handleTransform.TransformPoint (spline.GetControlPoint (index));
 		float size = HandleUtility.GetHandleSize (point);
-		if (index == 0) {
+		if (index == 0)
 			size *= 2f;
-		}
+		else if (index % 3 == 0)
+			size *= 1.5f;
 		Handles.color = modeColors[(int) spline.GetControlPointMode (index)];
 		if (Handles.Button (point, handleRotation, size * handleSize, size * pickSize, Handles.DotCap)) {
 			selectedIndex = index;
 			Repaint ();
+			if (Event.current.button == 2) {
+				if (index % 3 == 0) {
+					Undo.RecordObject (spline, "Remove Point");
+					EditorUtility.SetDirty (spline);
+					spline.RemoveCurve (index);
+				}
+			}
 		}
 		if (selectedIndex == index) {
 			EditorGUI.BeginChangeCheck ();
@@ -133,8 +147,7 @@ public class BezierSplineInspector : Editor {
 				Undo.RecordObject (spline, "Move Point");
 				EditorUtility.SetDirty (spline);
 				spline.SetControlPoint (index, handleTransform.InverseTransformPoint (point));
-				if (index == spline.ControlPointCount - 1)
-					Debug.Log (Time.time);
+				//if (index == spline.ControlPointCount - 1)	Debug.Log (Time.time);
 			}
 		}
 		return point;
