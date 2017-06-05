@@ -211,7 +211,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 
 	private UdpClient _client;
 	private IPEndPoint _sender;
-	private IPEndPoint _pairedAddress;
+	private String _pairedAddress;
 
 	private int streamPort;
 
@@ -249,7 +249,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 					_orientation.y -= 360.0f;
 				UpdateRotation ();
 				UpdateAcceleration ();
-				Debug.Log ("OR : " + _orientation.x.ToString ("F3") + " ; " + _orientation.y.ToString ("F3") + " ; " + _orientation.z.ToString ("F3") + " ; ");
+				//Debug.Log ("OR : " + _orientation.x.ToString ("F3") + " ; " + _orientation.y.ToString ("F3") + " ; " + _orientation.z.ToString ("F3") + " ; ");
 			}
 			else if (h.Equals ("AC")) {
 				_acceleration.x = -float.Parse (split[1]);
@@ -280,23 +280,23 @@ public class FBPhoneDataHandler : MonoBehaviour {
 			data = _client.Receive(ref _sender);
 			message = System.Text.Encoding.UTF8.GetString(data);
 
-			Debug.Log("MEssage received ...");
+			Debug.Log("Message received ...");
 
 			if (message.Equals ("FB_PAIRING")) {
 
 				if(isPaired(_sender.Address))
 				{
-					Debug.Log("Address already paired !");
+					//Debug.Log("Address already paired !");
 					return;
 				}
 			
-				_pairedAddress = new IPEndPoint(_sender.Address, streamPort);
-
-				Debug.Log("Paired to client " + _sender.ToString());
+				_pairedAddress = _sender.Address.ToString();
 
 				paired = true;
 
-				string answer = "PAIRING_ANSWER !";
+				Debug.Log(id + " paired to client " + _sender.ToString());
+
+				string answer = "PAIRING_ANSWER";
 
 				byte[] toSend = Encoding.ASCII.GetBytes (answer);
 
@@ -363,7 +363,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	{
 		foreach(FBPhoneDataHandler dh in phoneDataHandlers)
 		{
-			if(_pairedAddress != null && _pairedAddress.Address.Equals(address))
+			if(_pairedAddress != null && _pairedAddress.Equals(address))
 				return true;
 		}
 		return false;
