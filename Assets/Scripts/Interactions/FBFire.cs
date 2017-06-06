@@ -20,7 +20,7 @@ public class FBFire : MonoBehaviour {
 			hittable.destructible = false;
 		}
 #if UNITY_EDITOR
-		gameObject.AddComponent<FBPutOutInEditor> ().fire = this;
+		gameObject.AddComponent<FBInteractInEditor> ().fire = this;
 #endif
 	}
 

@@ -335,19 +335,21 @@ public class FBPuppetWalker : MonoBehaviour {
 
 			//Debug.Log ((controller.leftFootOnFloor ? "left" : "right") + " foot : " + totalDistance);
 			do {
-				distance = new Vector2 (foot.transform.position.x - foot.target.x, foot.transform.position.z - foot.target.z).magnitude;
-				factor = ((staticRotation ? staticRotationSpeed : speed) * 2.0f * Time.deltaTime) / distance;
-				Vector3 newPos = Vector3.Lerp (foot.transform.position, foot.target,
-					factor);
-				distance = Horizontal (startPos, newPos).magnitude;
-				newPos.y = startPos.y + a * distance * distance + b * distance;
-				foot.transform.position = newPos;
-				if (!staticRotation)
-					controller.transform.position = Vector3.Lerp (controllerStartPos, controllerTargetPos, distance / totalDistance);
+				if (!controller.actions.TestMask (FBAction.Strike)) {
+					distance = new Vector2 (foot.transform.position.x - foot.target.x, foot.transform.position.z - foot.target.z).magnitude;
+					factor = ((staticRotation ? staticRotationSpeed : speed) * 2.0f * Time.deltaTime) / distance;
+					Vector3 newPos = Vector3.Lerp (foot.transform.position, foot.target,
+						factor);
+					distance = Horizontal (startPos, newPos).magnitude;
+					newPos.y = startPos.y + a * distance * distance + b * distance;
+					foot.transform.position = newPos;
+					if (!staticRotation)
+						controller.transform.position = Vector3.Lerp (controllerStartPos, controllerTargetPos, distance / totalDistance);
 
-				if (factor >= 1.0f) {
-					foot.transform.position = foot.target;
-					break;
+					if (factor >= 1.0f) {
+						foot.transform.position = foot.target;
+						break;
+					}
 				}
 				yield return null;
 			} while (true);

@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using System;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class BezierSpline : MonoBehaviour {
-
 	[SerializeField]
 	public Vector3[] points;
 
@@ -131,10 +133,11 @@ public class BezierSpline : MonoBehaviour {
 		return GetVelocity (t).normalized;
 	}
 
-	public float GetT (float currentT, float distance, int precision) {
+	public float GetT (float currentT, float distance, int precision, bool forward = true) {
+		if (!forward)
+			distance = -distance;
 		for (int j = 0; j < precision; ++j) {
 			Vector3 velocity = GetVelocity (currentT);
-			//dCurve += Vector3.Normalize (velocity);
 			currentT += (distance / velocity.magnitude) / precision;
 		}
 		return currentT;
@@ -178,4 +181,25 @@ public class BezierSpline : MonoBehaviour {
 			BezierControlPointMode.Free
 		};
 	}
+#if UNITY_EDITOR
+	public void Draw (Color color, bool showLines = true) {
+		Vector3 p0 = transform.TransformPoint (GetControlPoint (0));
+		for (int i = 1; i < ControlPointCount; i += 3) {
+			Vector3 p1 = transform.TransformPoint (GetControlPoint (i));
+			Vector3 p2 = transform.TransformPoint (GetControlPoint (i + 1));
+			Vector3 p3 = transform.TransformPoint (GetControlPoint (i + 2));
+
+			if (showLines) {
+				Handles.color = Color.gray;
+				Handles.DrawLine (p0, p1);
+				Handles.DrawLine (p2, p3);
+				Handles.color = new Color (0.0f, 0.0f, 0.0f, 0.2f);
+				Handles.DrawLine (p1, p2);
+			}
+
+			Handles.DrawBezier (p0, p3, p1, p2, color, null, 2f);
+			p0 = p3;
+		}
+	}
+#endif
 }

@@ -1,15 +1,18 @@
 ﻿#if UNITY_EDITOR
 using UnityEditor;
-#endif
+using UnityEngine;
+using System;
 
-public class FBEditable {
-#if UNITY_EDITOR
+[Serializable]
+public abstract class FBEditable : MonoBehaviour {
+	[HideInInspector]
 	public string Name = "";
+	[HideInInspector]
 	public bool showingInInspector = false;
 
 	private static string[] names = { "Hello gorgeous ;)", "Pls name me :'(", "Monde de merde...", "My name is nobody", "Chuck Norris' favorite" };
 
-	public virtual FBEditable GUIField () {
+	public virtual FBEditable GUIField (string label = "") {
 		EditorGUI.indentLevel++;
 		if (Name.Length <= 0)
 			Name = names[UnityEngine.Random.Range (0, names.Length)];
@@ -17,5 +20,7 @@ public class FBEditable {
 		EditorGUI.indentLevel--;
 		return this;
 	}
-#endif
+
+	public virtual void DrawOnScene (bool externalCall = false) { }
 }
+#endif

@@ -1,15 +1,11 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEditor;
+using System;
 
-public class FBEditorList<T> {
-	private List<T> list;
+public static class FBEditableExtensions<T> where T : FBEditable, new() {
 
-	public FBEditorList () {
-		list = new List<T> ();
-	}
-
-	public void GUIField () {
+	public static List<T> GUIField (List<T> list, GameObject attachedGameObject) {
 		int removeIndex = -1;
 		int moveUpIndex = -1;
 		int moveDownIndex = -1;
@@ -17,18 +13,22 @@ public class FBEditorList<T> {
 		EditorGUILayout.BeginHorizontal ();
 		if (GUILayout.Button ("\u25C0", GUILayout.Width (20))) {//u25B2
 			for (int i = 0; i < list.Count; ++i)
-				((FBEditable) (object) list[i]).showingInInspector = false;
+				list[i].showingInInspector = false;
+			SceneView.RepaintAll ();
 		}
 		if (GUILayout.Button ("\u25B6", GUILayout.Width (20))) {//u25B2
 			for (int i = 0; i < list.Count; ++i)
-				((FBEditable) (object) list[i]).showingInInspector = true;
+				list[i].showingInInspector = true;
+			SceneView.RepaintAll ();
 		}
 		EditorGUILayout.EndHorizontal ();
 
 		for (int i = 0; i < list.Count; ++i) {
 			EditorGUILayout.BeginHorizontal ();
-			FBEditable item = ((FBEditable) (object) list[i]);
-			item.showingInInspector = EditorGUILayout.Foldout (item.showingInInspector, item.Name);
+			EditorGUI.BeginChangeCheck ();
+			list[i].showingInInspector = EditorGUILayout.Foldout (list[i].showingInInspector, list[i].Name);
+			if (EditorGUI.EndChangeCheck ())
+				SceneView.RepaintAll ();
 			EditorGUI.BeginDisabledGroup (i == 0);
 			if (GUILayout.Button ("\u25B2", GUILayout.Width (20))) {//u25B2
 				moveUpIndex = i;
@@ -46,14 +46,16 @@ public class FBEditorList<T> {
 				break;
 			}
 			EditorGUILayout.EndHorizontal ();
-			if (item.showingInInspector) {
-				item.GUIField ();
+			if (list[i].showingInInspector) {
+				list[i].GUIField ();
 				EditorGUILayout.LabelField ("", GUI.skin.horizontalSlider);
 			}
 		}
 
 		if (removeIndex >= 0) {
+			GameObject go = list[removeIndex].gameObject;
 			list.RemoveAt (removeIndex);
+			UnityEngine.Object.DestroyImmediate (go);
 		}
 		else if (moveUpIndex >= 0) {
 			T tmpItem = list[moveUpIndex];
@@ -67,7 +69,11 @@ public class FBEditorList<T> {
 		}
 
 		if (GUILayout.Button ("Add element")) {
-			list.Add ((T) (object) new FBEditable ());
+			GameObject go = new GameObject ();
+			list.Add (go.AddComponent<T> ());
+			go.transform.SetParent (attachedGameObject.transform);
+			//go.hideFlags = HideFlags.HideInHierarchy;
 		}
+		return list;
 	}
 }

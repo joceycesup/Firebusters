@@ -55,7 +55,7 @@ public class SplineDecorator : MonoBehaviour
 				item.transform.rotation = tmpRot;
 			}
 			item.transform.position = position;
-			t = spline.GetT (t, extents [i].y, 10);
+			t = spline.GetT (t, extents [i].y, precision);
 
 			n++;
 			i++;
@@ -90,7 +90,7 @@ public class SplineDecorator : MonoBehaviour
 				item.transform.rotation = tmpRot;
 			}
 			item.transform.position = position;
-			t = spline.GetT (t, extents [i].y, 10);
+			t = spline.GetT (t, extents [i].y, precision);
 
 			n++;
 			i++;

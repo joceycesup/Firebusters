@@ -42,7 +42,7 @@ public class FBHittable : MonoBehaviour {
 	}
 #if UNITY_EDITOR
 	private void Start () {
-		gameObject.AddComponent<FBHitInEditor> ().hittable = this;
+		gameObject.AddComponent<FBInteractInEditor> ().hittable = this;
 	}
 #endif
 

@@ -27,12 +27,12 @@ public class FBFootState {
 [RequireComponent (typeof (FBMotionAnalyzer))]
 public class FBPuppetController : MonoBehaviour {
 	public delegate void ActionEvent (GameObject go);
-	public event ActionEvent OnStrike;
 	public event ActionEvent OnDraw;
-	public event ActionEvent OnSheathe;
 	public event ActionEvent OnGrab;
-	public event ActionEvent OnPickup;
-	public event ActionEvent OnThrow;
+	//public event ActionEvent OnStrike;
+	//public event ActionEvent OnSheathe;
+	//public event ActionEvent OnPickup;
+	//public event ActionEvent OnThrow;
 
 	//-------------------- MovementState --------------------
 	public enum MovementState {
@@ -146,6 +146,7 @@ public class FBPuppetController : MonoBehaviour {
 	public Transform shoulder;
 	private float distanceHandShoulder;
 	[SerializeField]
+#pragma warning disable 0414
 	private float _itemDistanceToShoulder;
 	[SerializeField]
 	private float _itemDistanceToShoulderFactor;
@@ -503,8 +504,8 @@ public class FBPuppetController : MonoBehaviour {
 		}
 #if UNITY_EDITOR
 		Vector3 debugRayStart = (feet[1].target + feet[0].target) / 2.0f;
-		Vector3 forwardAnticipate = Vector3.Normalize (feetForward + transform.forward);
-		Quaternion anticipateStrikeRot = Quaternion.Euler (0.0f, 135.0f, 0.0f);
+		//Vector3 forwardAnticipate = Vector3.Normalize (feetForward + transform.forward);
+		//Quaternion anticipateStrikeRot = Quaternion.Euler (0.0f, 135.0f, 0.0f);
 		//Debug.DrawRay (debugRayStart, feetForward, Color.blue);
 		//Debug.DrawRay (debugRayStart, forwardAnticipate, Color.magenta);
 		Debug.DrawRay (debugRayStart, transform.forward, Color.red);
