@@ -133,14 +133,27 @@ public class BezierSpline : MonoBehaviour {
 		return GetVelocity (t).normalized;
 	}
 
-	public float GetT (float currentT, float distance, int precision, bool forward = true) {
-		if (!forward)
-			distance = -distance;
+	public float GetT (float currentT, float distance, int precision, out bool overflow, bool forward = true) {
+		float res = currentT;
+		overflow = false;
 		for (int j = 0; j < precision; ++j) {
 			Vector3 velocity = GetVelocity (currentT);
-			currentT += (distance / velocity.magnitude) / precision;
+			float deltaT = (distance / velocity.magnitude) / precision;
+			if (forward ? (currentT + deltaT > 1.0f) : (currentT - deltaT < 0.0f)) {
+				overflow = true;
+				res = distance - Vector3.Distance (GetPoint (res), GetPoint (forward ? 1.0f : 0.0f));
+				break;
+			}
+			else {
+				if (forward)
+					currentT += deltaT;
+				else
+					currentT -= deltaT;
+			}
 		}
-		return currentT;
+		if (!overflow)
+			res = currentT;
+		return res;
 	}
 
 	public void AddCurve () {
@@ -199,6 +212,15 @@ public class BezierSpline : MonoBehaviour {
 
 			Handles.DrawBezier (p0, p3, p1, p2, color, null, 2f);
 			p0 = p3;
+		}
+		if (showLines) {
+			for (int i = 1; i < 10; ++i) {
+				Vector3 p = transform.TransformPoint (GetPoint (i * 0.1f)) - transform.position;
+				Vector3 d = Vector3.Cross (GetVelocity (i * 0.1f), Vector3.up).normalized * 0.1f;
+
+				Handles.color = Color.magenta;
+				Handles.DrawLine (p - d, p + d);
+			}
 		}
 	}
 #endif

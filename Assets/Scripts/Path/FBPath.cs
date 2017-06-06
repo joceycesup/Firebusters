@@ -24,6 +24,9 @@ public class FBPath :
 		set {
 			_spline = value;
 			if (_spline != null) {
+#if UNITY_EDITOR
+				Name = "path_" + _spline.name;
+#endif
 				if (_start != null)
 					start = _start;
 				if (_end != null)
@@ -36,16 +39,8 @@ public class FBPath :
 	public FBWaypoint start {
 		get { return _start; }
 		set {
-			if (_start != null && _end != value) {
-				OnOpen -= _start.OpenPath;
-				OnClose -= _start.ClosePath;
-				_start.paths.Remove (this);
-			}
 			_start = value;
 			if (value != null) {
-				_start.paths.Add (this);
-				OnOpen += _start.OpenPath;
-				OnClose += _start.ClosePath;
 				if (_spline != null)
 					_spline.transform.position = value.transform.position;
 			}
@@ -56,16 +51,8 @@ public class FBPath :
 	public FBWaypoint end {
 		get { return _end; }
 		set {
-			if (_end != null && _end != value) {
-				OnOpen -= _end.OpenPath;
-				OnClose -= _end.ClosePath;
-				_end.paths.Remove (this);
-			}
 			_end = value;
 			if (value != null) {
-				_start.paths.Add (this);
-				OnOpen += _end.OpenPath;
-				OnClose += _end.ClosePath;
 				if (_spline != null) {
 					if (_start == null)
 						_spline.transform.position = value.transform.position - _spline.points[_spline.points.Length - 1];
@@ -91,8 +78,23 @@ public class FBPath :
 	}
 
 #if UNITY_EDITOR
+	public bool highlight {
+		get;
+		private set;
+	}
+
+	void Awake () {
+		start.AddPath (this);
+		end.AddPath (this);
+	}
+
 	public override FBEditable GUIField (string label = "") {
 		base.GUIField ();
+		EditorGUI.BeginChangeCheck ();
+		highlight = GUILayout.Button ("Show");
+		if (EditorGUI.EndChangeCheck ()) {
+			SceneView.RepaintAll ();
+		}
 
 		start = _start;
 		end = _end;
@@ -107,6 +109,7 @@ public class FBPath :
 		EditorGUI.BeginChangeCheck ();
 		bool tmpOpen = EditorGUILayout.Toggle ("Open", open);
 		if (EditorGUI.EndChangeCheck ()) {
+			//Debug.Log (tmpOpen);
 			open = tmpOpen;
 			SceneView.RepaintAll ();
 		}
@@ -116,7 +119,7 @@ public class FBPath :
 	public override void DrawOnScene (bool externalCall = false) {
 		if (spline == null)
 			return;
-		spline.Draw (new Color (open ? 0.0f : 1.0f, open ? 1.0f : 0.0f, 0.0f, showingInInspector || !externalCall ? 1.0f : 0.2f), showingInInspector || !externalCall);
+		spline.Draw (highlight ? Color.white : new Color (open ? 0.0f : 1.0f, open ? 1.0f : 0.0f, 0.0f, showingInInspector || !externalCall ? 1.0f : 0.2f), showingInInspector || !externalCall);
 	}
 #endif
 }
