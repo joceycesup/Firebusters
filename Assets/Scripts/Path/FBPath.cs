@@ -76,6 +76,12 @@ public class FBPath :
 				OnClose (this);
 		}
 	}
+	[SerializeField, HideInInspector]
+	private bool _twoWays;
+	public bool twoWays {
+		get { return _twoWays; }
+		set { _twoWays = value; }
+	}
 
 #if UNITY_EDITOR
 	public bool highlight {
@@ -101,8 +107,7 @@ public class FBPath :
 
 		if (spline == null) {
 			GUILayout.BeginHorizontal ();
-			if (start == null || end == null)
-				EditorGUI.BeginDisabledGroup (false);
+			EditorGUI.BeginDisabledGroup (start == null || end == null);
 			if (GUILayout.Button ("Create")) {
 				GameObject newBezier = new GameObject ("spline_" + start.Name + "_" + end.Name);
 				newBezier.transform.SetParent (transform.parent);
@@ -112,8 +117,7 @@ public class FBPath :
 					spline.points[i] = Vector3.Lerp (start.transform.position, end.transform.position, i / (spline.points.Length - 1.0f)) - spline.transform.position;
 				}
 			}
-			if (start == null || end == null)
-				EditorGUI.EndDisabledGroup ();
+			EditorGUI.EndDisabledGroup ();
 			spline = (BezierSpline) EditorGUILayout.ObjectField ("Spline", spline, typeof (BezierSpline), true);
 			GUILayout.EndHorizontal ();
 			EditorGUI.BeginChangeCheck ();
@@ -134,13 +138,24 @@ public class FBPath :
 			open = tmpOpen;
 			SceneView.RepaintAll ();
 		}
+		EditorGUI.BeginChangeCheck ();
+		bool tmpTW = EditorGUILayout.Toggle ("Two ways", twoWays);
+		if (EditorGUI.EndChangeCheck ()) {
+			//Debug.Log (tmpOpen);
+			twoWays = tmpTW;
+			SceneView.RepaintAll ();
+		}
 		return this;
 	}
 
 	public override void DrawOnScene (bool externalCall = false) {
 		if (spline == null)
 			return;
-		spline.Draw (highlight ? Color.white : new Color (open ? 0.0f : 1.0f, open ? 1.0f : 0.0f, 0.0f, showingInInspector || !externalCall ? 1.0f : 0.2f), showingInInspector || !externalCall);
+		Color c = highlight ? Color.white : new Color (open ? 0.0f : 1.0f, open ? 1.0f : 0.0f, 0.0f, showingInInspector || !externalCall ? 1.0f : 0.2f);
+		spline.Draw (c, showingInInspector || !externalCall);
+		spline.DrawArrow (c);
+		if (twoWays)
+			spline.DrawArrow (c, false);
 	}
 #endif
 }

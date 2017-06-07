@@ -24,9 +24,12 @@ public class BezierSplineInspector : Editor {
 	public override void OnInspectorGUI () {
 		if (lastInstanceID != (lastInstanceID = GetInstanceID ())) {
 			selectedIndex = -1;
+			SceneView.RepaintAll ();
 		}
 		selectedIndex = EditorGUILayout.IntField ("Selected index", selectedIndex);
 		spline = target as BezierSpline;
+		if (spline.points.Length != spline.modes.Length)
+			System.Array.Resize (ref spline.modes, spline.points.Length);
 		if (selectedIndex >= 0 && selectedIndex < spline.ControlPointCount) {
 			DrawSelectedPointInspector ();
 		}
@@ -54,6 +57,38 @@ public class BezierSplineInspector : Editor {
 			spline.SetControlPointMode (selectedIndex, mode);
 			EditorUtility.SetDirty (spline);
 		}
+		GUILayout.BeginHorizontal ();
+		EditorGUI.BeginDisabledGroup (selectedIndex <= 0);
+		if (GUILayout.Button ("Add before")) {
+			System.Array.Resize (ref spline.points, spline.points.Length + 3);
+			System.Array.Resize (ref spline.modes, spline.points.Length + 3);
+			for (int i = spline.points.Length - 1; i >= selectedIndex + 3; --i) {
+				spline.points[i] = spline.points[i - 3];
+				spline.modes[i] = spline.modes[i - 3];
+			}
+			for (int i = 1; i < 4; ++i) {
+				spline.points[selectedIndex - 1 + i] = Vector3.Lerp (spline.points[selectedIndex - 1], spline.points[selectedIndex + 3], i / 4.0f);
+				spline.modes[selectedIndex - 1 + i] = BezierControlPointMode.Free;
+			}
+			SceneView.RepaintAll ();
+		}
+		EditorGUI.EndDisabledGroup ();
+		EditorGUI.BeginDisabledGroup (selectedIndex >= spline.points.Length - 1);
+		if (GUILayout.Button ("Add after")) {
+			System.Array.Resize (ref spline.points, spline.points.Length + 3);
+			System.Array.Resize (ref spline.modes, spline.points.Length + 3);
+			for (int i = spline.points.Length - 1; i > selectedIndex + 3; --i) {
+				spline.points[i] = spline.points[i - 3];
+				spline.modes[i] = spline.modes[i - 3];
+			}
+			for (int i = 1; i < 4; ++i) {
+				spline.points[selectedIndex + i] = Vector3.Lerp (spline.points[selectedIndex], spline.points[selectedIndex + 4], i / 4.0f);
+				spline.modes[selectedIndex + i] = BezierControlPointMode.Free;
+			}
+			SceneView.RepaintAll ();
+		}
+		EditorGUI.EndDisabledGroup ();
+		GUILayout.EndHorizontal ();
 	}
 
 	private void OnSceneGUI () {

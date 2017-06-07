@@ -9,7 +9,7 @@ public class BezierSpline : MonoBehaviour {
 	public Vector3[] points;
 
 	[SerializeField]
-	private BezierControlPointMode[] modes;
+	public BezierControlPointMode[] modes;
 
 	public int ControlPointCount {
 		get {
@@ -214,13 +214,36 @@ public class BezierSpline : MonoBehaviour {
 			p0 = p3;
 		}
 		if (showLines) {
+			Vector3 p, d;
 			for (int i = 1; i < 10; ++i) {
-				Vector3 p = transform.TransformPoint (GetPoint (i * 0.1f)) - transform.position;
-				Vector3 d = Vector3.Cross (GetVelocity (i * 0.1f), Vector3.up).normalized * 0.1f;
+				p = transform.TransformPoint (GetPoint (i * 0.1f)) - transform.position;
+				d = Vector3.Cross (GetVelocity (i * 0.1f), Vector3.up).normalized * 0.1f;
 
 				Handles.color = Color.magenta;
 				Handles.DrawLine (p - d, p + d);
 			}
+		}
+	}
+
+	public void DrawArrow (Color color, bool end = true, float size = 0.2f) {
+		float curvesCount = points.Length / 3;
+		bool osef;
+		float t = GetT (end ? 1.0f : 0.0f, size, 5, out osef, !end);
+		if (osef) { 
+			if (end)
+				t = 1.0f - size / curvesCount;
+			else
+				t = 0.0f + size / curvesCount;
+	}
+		Vector3 p = transform.TransformPoint (GetPoint (t)) - transform.position;
+		Vector3 d = Vector3.Cross (GetVelocity (t), Vector3.up).normalized * size / 2.0f;
+		Handles.color = color;
+		Handles.DrawLine (p - d, p + d);
+		float step = 0.2f;
+		int arrowPointIndex = end ? points.Length - 1 : 0;
+		for (float i = step; i <= 1.0f; i += step) {
+			Handles.DrawLine (p - d * i, points[arrowPointIndex] + transform.position);
+			Handles.DrawLine (p + d * i, points[arrowPointIndex] + transform.position);
 		}
 	}
 #endif

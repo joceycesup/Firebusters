@@ -20,8 +20,11 @@ FBEditable
 
 	[HideInInspector, SerializeField]
 	public List<FBPath> paths;// = new List<FBPath> ();
-#if UNITY_EDITOR
 	private void Awake () {
+#if !UNITY_EDITOR
+		Destroy (GetComponent<MeshRenderer> ());
+		}
+#else
 		paths = new List<FBPath> ();
 		if (Name.Length <= 0)
 			Name = name;
@@ -55,8 +58,12 @@ FBEditable
 
 	public FBPath GetNextPath (FBPath from) {
 		int[] openPaths = GetOpenPaths (from);
-		if (openPaths.Length == 0)
-			return from;
+		if (openPaths.Length == 0) {
+			if (from != null && (from.twoWays || from.start == this))
+				return from;
+			else
+				return null;
+		}
 		return paths[openPaths[UnityEngine.Random.Range (0, openPaths.Length)]];
 	}
 
@@ -65,8 +72,10 @@ FBEditable
 		int count = 0;
 		for (int i = 0; i < paths.Count; ++i) {
 			if (paths[i].open && paths[i] != ignored) {
-				res[count] = i;
-				count++;
+				if (paths[i].twoWays || paths[i].start == this) {
+					res[count] = i;
+					count++;
+				}
 			}
 		}
 		Array.Resize (ref res, count);
