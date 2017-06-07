@@ -99,8 +99,29 @@ public class FBPath :
 		start = _start;
 		end = _end;
 
-		EditorGUI.BeginChangeCheck ();
-		spline = (BezierSpline) EditorGUILayout.ObjectField ("Spline", spline, typeof (BezierSpline), true);
+		if (spline == null) {
+			GUILayout.BeginHorizontal ();
+			if (start == null || end == null)
+				EditorGUI.BeginDisabledGroup (false);
+			if (GUILayout.Button ("Create")) {
+				GameObject newBezier = new GameObject ("spline_" + start.Name + "_" + end.Name);
+				newBezier.transform.SetParent (transform.parent);
+				spline = newBezier.AddComponent<BezierSpline> ();
+				spline.transform.position = start.transform.position;
+				for (int i = 0; i < spline.points.Length; ++i) {
+					spline.points[i] = Vector3.Lerp (start.transform.position, end.transform.position, i / (spline.points.Length - 1.0f)) - spline.transform.position;
+				}
+			}
+			if (start == null || end == null)
+				EditorGUI.EndDisabledGroup ();
+			spline = (BezierSpline) EditorGUILayout.ObjectField ("Spline", spline, typeof (BezierSpline), true);
+			GUILayout.EndHorizontal ();
+			EditorGUI.BeginChangeCheck ();
+		}
+		else {
+			EditorGUI.BeginChangeCheck ();
+			spline = (BezierSpline) EditorGUILayout.ObjectField ("Spline", spline, typeof (BezierSpline), true);
+		}
 		start = (FBWaypoint) EditorGUILayout.ObjectField ("Start", start, typeof (FBWaypoint), true);
 		end = (FBWaypoint) EditorGUILayout.ObjectField ("End", end, typeof (FBWaypoint), true);
 		if (EditorGUI.EndChangeCheck ()) {

@@ -136,23 +136,23 @@ public class BezierSpline : MonoBehaviour {
 	public float GetT (float currentT, float distance, int precision, out bool overflow, bool forward = true) {
 		float res = currentT;
 		overflow = false;
+		float deltaD = 0.0f;
+		float curvesCount = points.Length / 3;
 		for (int j = 0; j < precision; ++j) {
 			Vector3 velocity = GetVelocity (currentT);
-			float deltaT = (distance / velocity.magnitude) / precision;
+			float deltaT = (distance / (velocity.magnitude * curvesCount)) / precision;
 			if (forward ? (currentT + deltaT > 1.0f) : (currentT - deltaT < 0.0f)) {
 				overflow = true;
-				res = distance - Vector3.Distance (GetPoint (res), GetPoint (forward ? 1.0f : 0.0f));
+				res = distance - (deltaD += Vector3.Distance (GetPoint (res), GetPoint (forward ? 1.0f : 0.0f)));
 				break;
 			}
 			else {
-				if (forward)
-					currentT += deltaT;
-				else
-					currentT -= deltaT;
+				deltaD += Vector3.Distance (GetPoint (currentT), GetPoint (currentT += (forward ? deltaT : -deltaT)));
 			}
 		}
 		if (!overflow)
 			res = currentT;
+		//if (!overflow)			Debug.Log (distance.ToString("F5") + " : " + deltaD.ToString ("F5") + " : " + Mathf.Abs(1.0f-deltaD / distance).ToString ("F5"));
 		return res;
 	}
 

@@ -8,7 +8,7 @@ public class FBPathFollower : MonoBehaviour {
 	public float rotateRate = 180.0f;
 	public int precision = 5;
 	private float currentT = 0.0f;
-	private Quaternion targetRotation = Quaternion.Euler (Vector3.zero);
+	private FBWaypoint waitingPath = null;
 
 	void Start () {
 		if (currentWaypoint) {
@@ -18,6 +18,10 @@ public class FBPathFollower : MonoBehaviour {
 	}
 
 	void ReachPath (FBPath path) {
+		if (waitingPath) {
+			waitingPath.OnOpenPath -= ReachPath;
+			waitingPath = null;
+		}
 		ReachPath (path, 0.0f);
 	}
 
@@ -43,8 +47,10 @@ public class FBPathFollower : MonoBehaviour {
 
 		FBPath path = currentWaypoint.GetNextPath (from);
 
-		if (path == null)
+		if (path == null || !path.open) {
 			currentWaypoint.OnOpenPath += ReachPath;
+			waitingPath = currentWaypoint;
+		}
 		else {
 			ReachPath (path, initialDistance);
 		}

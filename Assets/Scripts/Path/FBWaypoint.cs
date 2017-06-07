@@ -20,22 +20,15 @@ FBEditable
 
 	[HideInInspector, SerializeField]
 	public List<FBPath> paths;// = new List<FBPath> ();
-	[HideInInspector, SerializeField]
-	public List<bool> openPaths;// = new List<bool> ();
-	[HideInInspector, SerializeField]
-	public int openPathsCount = 0;
 #if UNITY_EDITOR
 	private void Awake () {
 		paths = new List<FBPath> ();
-		openPaths = new List<bool> ();
 		if (Name.Length <= 0)
 			Name = name;
 	}
 
 	public override FBEditable GUIField (string label = "") {
 		base.GUIField ();
-		paths = new List<FBPath> ();
-		openPaths = new List<bool> ();
 		return this;
 	}
 #endif
@@ -44,16 +37,9 @@ FBEditable
 		paths.Add (path);
 		path.OnOpen += OpenPath;
 		path.OnClose += ClosePath;
-		openPaths.Add (path.open);
-		if (path.open)
-			openPathsCount++;
 	}
 	public void RemovePath (FBPath path) {
-		int index = paths.FindIndex ((p) => { return p == path; });
-		openPaths.RemoveAt (index);
-		if (path.open)
-			openPathsCount--;
-		paths.RemoveAt (index);
+		paths.Remove (path);
 		path.OnOpen -= OpenPath;
 		path.OnClose -= ClosePath;
 	}
@@ -61,46 +47,35 @@ FBEditable
 	public void OpenPath (FBPath path) {
 		if (OnOpenPath != null)
 			OnOpenPath (path);
-		int index = paths.FindIndex ((p) => { return p == path; });
-		if (!openPaths[index])
-			openPathsCount++;
 	}
 	public void ClosePath (FBPath path) {
 		if (OnClosePath != null)
 			OnClosePath (path);
-		int index = paths.FindIndex ((p) => { return p == path; });
-		if (openPaths[index])
-			openPathsCount--;
 	}
 
 	public FBPath GetNextPath (FBPath from) {
-		FBPath res = from;
-		int max = openPathsCount;
-		if (openPathsCount == 0)
-			return null;
-		if (from != null) {
-			if (openPathsCount == 1)
-				return from;
-			max--;
-		}
-		int index = UnityEngine.Random.Range (0, max);
-		int i = 0;
-		for (int j = 0; i < paths.Count; ++i) {
-			if (paths[i].open && paths[i] != from)
-				j++;
-			if (j == index + 1)
-				break;
-		}
-		if (i >= paths.Count)
-			return null;
-		res = paths[i];
+		int[] openPaths = GetOpenPaths (from);
+		if (openPaths.Length == 0)
+			return from;
+		return paths[openPaths[UnityEngine.Random.Range (0, openPaths.Length)]];
+	}
 
+	public int[] GetOpenPaths (FBPath ignored = null) {
+		int[] res = new int[paths.Count];
+		int count = 0;
+		for (int i = 0; i < paths.Count; ++i) {
+			if (paths[i].open && paths[i] != ignored) {
+				res[count] = i;
+				count++;
+			}
+		}
+		Array.Resize (ref res, count);
 		return res;
 	}
 
 #if UNITY_EDITOR
 	public override string ToString () {
-		string res = "FBWaypoint " + Name + " (" + openPathsCount + " open) : ";
+		string res = "FBWaypoint " + Name + " (" + GetOpenPaths ().Length + " open) : ";
 		for (int i = 0; i < paths.Count; ++i) {
 			if (paths[i].start == this) {
 				if (i > 0)
