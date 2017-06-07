@@ -255,12 +255,15 @@ public class FBPuppetWalker : MonoBehaviour {
 		if (validTarget && controller.state != FBPuppetController.MovementState.ClimbingStep) {
 			Vector3 deltaFoot = tmpTarget - fixedFoot.transform.position;
 			ray = new Ray (fixedFoot.transform.position, deltaFoot);
+#if DEBUG_ENABLED
+			Debug.DrawRay (ray.origin, deltaFoot, Color.cyan, (movingFoot.transform.position - tmpTarget).magnitude / speed);
+#endif
 			if (Physics.Raycast (ray, out hit, deltaFoot.magnitude, 1 << 9)) { // hits verticalObstacle
-																			   //Debug.Break ();
+																			   // Debug.Break ();
 				tmpTarget = hit.point + deltaFoot.normalized * (Vector3.Distance (fixedFoot.transform.position, hit.point) / 2.0f);
 				deltaFoot = fixedFoot.transform.position - chest.position;
 				ray = new Ray (chest.position, deltaFoot);
-				if (Physics.Raycast (ray, out hit, deltaFoot.magnitude, 1 << 9)) { // hits verticalObstacle
+				if (Physics.Raycast (ray, out hit, deltaFoot.magnitude, 1 << 9)) { // check between chest and foot
 					validTarget = false;
 				}
 			}
@@ -332,19 +335,21 @@ public class FBPuppetWalker : MonoBehaviour {
 
 			//Debug.Log ((controller.leftFootOnFloor ? "left" : "right") + " foot : " + totalDistance);
 			do {
-				distance = new Vector2 (foot.transform.position.x - foot.target.x, foot.transform.position.z - foot.target.z).magnitude;
-				factor = ((staticRotation ? staticRotationSpeed : speed) * 2.0f * Time.deltaTime) / distance;
-				Vector3 newPos = Vector3.Lerp (foot.transform.position, foot.target,
-					factor);
-				distance = Horizontal (startPos, newPos).magnitude;
-				newPos.y = startPos.y + a * distance * distance + b * distance;
-				foot.transform.position = newPos;
-				if (!staticRotation)
-					controller.transform.position = Vector3.Lerp (controllerStartPos, controllerTargetPos, distance / totalDistance);
+				if (!controller.actions.TestMask (FBAction.Strike)) {
+					distance = new Vector2 (foot.transform.position.x - foot.target.x, foot.transform.position.z - foot.target.z).magnitude;
+					factor = ((staticRotation ? staticRotationSpeed : speed) * 2.0f * Time.deltaTime) / distance;
+					Vector3 newPos = Vector3.Lerp (foot.transform.position, foot.target,
+						factor);
+					distance = Horizontal (startPos, newPos).magnitude;
+					newPos.y = startPos.y + a * distance * distance + b * distance;
+					foot.transform.position = newPos;
+					if (!staticRotation)
+						controller.transform.position = Vector3.Lerp (controllerStartPos, controllerTargetPos, distance / totalDistance);
 
-				if (factor >= 1.0f) {
-					foot.transform.position = foot.target;
-					break;
+					if (factor >= 1.0f) {
+						foot.transform.position = foot.target;
+						break;
+					}
 				}
 				yield return null;
 			} while (true);

@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent (typeof (Rigidbody))]
 [RequireComponent (typeof (Collider))]
-public class FBWWiseTests : MonoBehaviour {
+public class FBPuppetSound : MonoBehaviour {
 	public AnimationCurve curve;
 	public float maxVelocity;
 

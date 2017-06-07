@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-[CustomEditor (typeof (FBHittable))]
+[CustomEditor (typeof (FBHittable)), CanEditMultipleObjects]
 public class FBHittableInspector : Editor {
 	private FBHittable hittable;
 

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public static class ColliderExtension {
+public static class FBColliderExtensions {
 
 	public static Collider[] OverlapBox (this BoxCollider bc, int layerMask = Physics.AllLayers) {
 		return Physics.OverlapBox (bc.transform.rotation * Vector3.Scale (bc.center, bc.transform.lossyScale) + bc.transform.position, Vector3.Scale (bc.size / 2.0f, bc.transform.lossyScale), bc.transform.rotation, layerMask);

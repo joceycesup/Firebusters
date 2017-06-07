@@ -24,6 +24,7 @@ public enum FBScriptedAction {
 	Disable,
 	Enable,
 	Open,
+	Close,
 	SetDestructible,
 	PlayAnimation
 }
@@ -56,8 +57,13 @@ public class ObjectAction {
 				break;
 			case FBScriptedAction.Open:
 				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
-				if (Target && !Target.GetComponent<FBDoor> ())
-					EditorGUILayout.HelpBox ("This object doesn't have a FBDoor", MessageType.Warning);
+				if (Target && !(Target.GetComponent<FBDoor> () || Target.GetComponent<FBPath> ()))
+					EditorGUILayout.HelpBox ("This object doesn't have either a FBDoor or a FBPath", MessageType.Warning);
+				break;
+			case FBScriptedAction.Close:
+				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
+				if (Target && !Target.GetComponent<FBPath> ())
+					EditorGUILayout.HelpBox ("This object doesn't have a FBPath", MessageType.Warning);
 				break;
 			case FBScriptedAction.SetDestructible:
 				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
@@ -315,7 +321,14 @@ public class FBScriptedEvents : MonoBehaviour {
 				a.Target.SetActive (true);
 				break;
 			case FBScriptedAction.Open:
-				a.Target.GetComponent<FBDoor> ().Open ();
+				FBDoor door = a.Target.GetComponent<FBDoor> ();
+				if (door)
+					door.Open ();
+				else
+					a.Target.GetComponent<FBPath> ().open = true;
+				break;
+			case FBScriptedAction.Close:
+				a.Target.GetComponent<FBPath> ().open = false;
 				break;
 			case FBScriptedAction.SetDestructible:
 				a.Target.GetComponent<FBHittable> ().destructible = true;

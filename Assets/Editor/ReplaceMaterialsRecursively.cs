@@ -1,15 +1,15 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-public class ReplaceMAterialsRecursively : EditorWindow {
+public class ReplaceMaterialsRecursively : EditorWindow {
 	static int go_count = 0, replacing_count = 0;
 
 	public static Material lastMaterial;
 	public static Material newMaterial;
 
-	[MenuItem ("Window/ReplaceMAterialsRecursively")]
+	[MenuItem ("Window/ReplaceMaterialsRecursively")]
 	public static void ShowWindow () {
-		EditorWindow.GetWindow (typeof (ReplaceMAterialsRecursively));
+		EditorWindow.GetWindow (typeof (ReplaceMaterialsRecursively));
 	}
 
 	public void OnGUI () {
