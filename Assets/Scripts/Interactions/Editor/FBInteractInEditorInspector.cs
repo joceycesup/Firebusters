@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-[CustomEditor (typeof (FBInteractInEditor))]
+[CustomEditor (typeof (FBInteractInEditor)), CanEditMultipleObjects]
 public class FBInteractInEditorInspector : Editor {
 	private FBInteractInEditor iie;
 
