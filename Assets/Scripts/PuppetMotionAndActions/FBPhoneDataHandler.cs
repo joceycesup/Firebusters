@@ -32,6 +32,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		float theoreticalXLength = 9.81f * Mathf.Cos (Vector3.Angle (accRight.y >= 0.0f ? Vector3.up : Vector3.down, accRight) * Mathf.Deg2Rad);
 		float theoreticalZLength = 9.81f * Mathf.Cos (Vector3.Angle (accForward.y >= 0.0f ? Vector3.up : Vector3.down, accForward) * Mathf.Deg2Rad);
 		cleanAcceleration = acceleration - new Vector3 (theoreticalXLength, theoreticalYLength, theoreticalZLength);
+
 		//Debug.Log (cleanAcceleration);
 	}
 	private void UpdateRotation () {
@@ -58,6 +59,9 @@ public class FBPhoneDataHandler : MonoBehaviour {
 
 	void Start () {
 		serialPort = new SerialPort ("COM" + comNum, 9600);
+		Debug.Log((char)10);
+		Debug.Log((char)255);
+
 	}
 
 	void parseValues (string av) {
@@ -105,6 +109,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 					}
 					data += ((char) tmp);
 				} while (tmp != 10 && tmp != 255);
+				Debug.Log(avalues);
 				parseValues (avalues);
 			} catch (TimeoutException) {
 				//Debug.Log ("FBPhoneDataHandler : reached timeout");
@@ -191,6 +196,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		float theoreticalZLength = 9.81f * Mathf.Cos (Vector3.Angle (accForward.y >= 0.0f ? Vector3.up : Vector3.down, accForward) * Mathf.Deg2Rad);
 		cleanAcceleration = acceleration - new Vector3 (theoreticalXLength, theoreticalYLength, theoreticalZLength);
 		//Debug.Log (cleanAcceleration);
+
 	}
 	private void UpdateRotation () {
 		accRotation = Quaternion.Euler (_orientation);
@@ -202,6 +208,9 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	private SerialPort sp;
 	private Thread serialThread;
 
+	private long time1;
+	private long timespan1;
+
 	public bool connected {
 		get;
 		private set;
@@ -211,7 +220,13 @@ public class FBPhoneDataHandler : MonoBehaviour {
 
 	private UdpClient _client;
 	private IPEndPoint _sender;
+
 	private String _pairedAddress;
+	public String pairedAddress {
+		get { return _pairedAddress; }
+		private set { _pairedAddress = value; }
+	}
+
 
 	private int streamPort;
 
@@ -223,11 +238,11 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	}
 
 	void Start () {
-		sp = new SerialPort ("COM" + id, 9600);
-
+	
 		streamPort = 1230 + id;
 		IPEndPoint ipep = new IPEndPoint (IPAddress.Any, streamPort);
 		_client = new UdpClient (ipep);
+		_client.Client.ReceiveBufferSize = 40;
 
 		_sender = new IPEndPoint (IPAddress.Any, streamPort);
 
@@ -266,8 +281,58 @@ public class FBPhoneDataHandler : MonoBehaviour {
 			recData ();
 		}
 		Debug.Log ("ReadData Thread completed");
+
+		//_client.BeginReceive(new AsyncCallback(recStream), null);
 	}
 
+/*
+	void recStream(IAsyncResult res) 
+	{
+		try {
+
+			byte[] data = _client.EndReceive(res, ref _sender);
+			string message = System.Text.Encoding.UTF8.GetString(data);
+			
+			
+			if(message.Contains("TIME:"))
+			{
+				
+				string stime = message.Split(':')[1];
+				long ltime = long.Parse(stime);
+
+				//Java apk is returning date from January 1st 1970, so we need to get time from the same date
+				DateTime date = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+				double now = System.DateTime.Now.ToUniversalTime().Subtract(date).TotalMilliseconds;
+				long delay = (long)now - ltime;
+				Debug.Log("Delay : " + delay);
+				return;
+			}
+			
+
+			time1 = System.DateTime.Now.Millisecond;
+
+			string[] bits = message.Split('>');
+
+			if(bits.Length != 2)
+			{
+				Debug.LogError("Stream message has incorrect size : " + message);
+				return;
+			}
+			string head = bits[0];
+			string values = bits[1];
+
+			parseValues(head, values);
+
+		}
+		catch(Exception e) {
+			Debug.LogError(e);
+		}
+
+
+		_client.BeginReceive(new AsyncCallback(recStream), null);
+
+	}
+*/
 	void recData () {
 	
 		byte[] data;
@@ -277,53 +342,78 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		{
 			Debug.Log("Wait por pairing ...");
 
-			data = _client.Receive(ref _sender);
-			message = System.Text.Encoding.UTF8.GetString(data);
+			try {
+				_client.Client.ReceiveBufferSize = 40;
 
-			Debug.Log("Message received ...");
+				data = _client.Receive(ref _sender);
+				message = System.Text.Encoding.UTF8.GetString(data);
 
-			if (message.Equals ("FB_PAIRING")) {
+				Debug.Log("Message received ...");
 
-				if(isPaired(_sender.Address))
+				if (message.Equals ("FB_PAIRING")) {
+
+					if(isPaired(_sender.Address.ToString()))
+					{
+						Debug.Log("Address already paired !");
+						return;
+					}
+				
+					_pairedAddress = _sender.Address.ToString();
+
+					paired = true;
+
+					Debug.Log(id + " paired to client " + _sender.ToString());
+
+					string answer = "PAIRING_ANSWER";
+
+					byte[] toSend = Encoding.ASCII.GetBytes (answer);
+
+					try {
+						_client.Send(toSend, toSend.Length, _sender);
+					} catch(Exception e) {
+						Debug.LogError(e);
+					}
+				}
+				else 
 				{
-					//Debug.Log("Address already paired !");
-					return;
+					Debug.Log("Not a valid pairing message : " + message);
 				}
-			
-				_pairedAddress = _sender.Address.ToString();
-
-				paired = true;
-
-				Debug.Log(id + " paired to client " + _sender.ToString());
-
-				string answer = "PAIRING_ANSWER";
-
-				byte[] toSend = Encoding.ASCII.GetBytes (answer);
-
-				try {
-					_client.Send(toSend, toSend.Length, _sender);
-				} catch(Exception e) {
-					Debug.LogError(e);
-				}
-			}
-			else 
-			{
-				Debug.Log("Not a valid pairing message : " + message);
+			} catch(Exception e) {
+				Debug.LogError(e);
 			}
 		}
-
+		
 		//RECEIVE STREAM DATA
 		else
 		{
 			try {
+				Debug.Log(System.DateTime.Now.Millisecond-time1);
 				data = _client.Receive(ref _sender);
+				time1 = System.DateTime.Now.Millisecond;
+
 				message = System.Text.Encoding.UTF8.GetString(data);
+				
+				/*
+				if(message.Contains("TIME:"))
+				{
+					
+					string stime = message.Split(':')[1];
+					long ltime = long.Parse(stime);
+
+					//Java apk is returning date from January 1st 1970, so we need to get time from the same date
+					DateTime date = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+					double now = System.DateTime.Now.ToUniversalTime().Subtract(date).TotalMilliseconds;
+					long delay = (long)now - ltime;
+					Debug.Log("Delay : " + delay);
+					return;
+				}
+				*/
 
 				string[] bits = message.Split('>');
 
 				if(bits.Length != 2)
 				{
-					Debug.LogError("Stream message has incorrect size");
+					Debug.LogError("Stream message has incorrect size : " + message);
 					return;
 				}
 				string head = bits[0];
@@ -335,6 +425,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 				Debug.LogError(e);
 			}
 		}
+		
 	}
 
 	public void connect () {
@@ -352,18 +443,17 @@ public class FBPhoneDataHandler : MonoBehaviour {
 		paired = false;
 		try {
 			_client.Close ();
-			sp.Close ();
 			Debug.Log ("Port Closed!");
 		} catch (SystemException e) {
 			Debug.Log ("Error closing = " + e.Message);
 		}
 	}
 
-	bool isPaired(IPAddress address)
+	bool isPaired(String address)
 	{
 		foreach(FBPhoneDataHandler dh in phoneDataHandlers)
 		{
-			if(_pairedAddress != null && _pairedAddress.Equals(address))
+			if(dh.pairedAddress != null && dh.pairedAddress == address)
 				return true;
 		}
 		return false;
