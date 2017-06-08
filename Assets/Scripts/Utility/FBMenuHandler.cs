@@ -27,14 +27,16 @@ public class FBMenuHandler : MonoBehaviour {
 
 	public void ShowCredits () {
 		StartCoroutine (SlidePanel (creditsPanel, new Vector2 (0.5f, -1.0f), new Vector2 (0.5f, 0.0f)));
-		StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.5f, 1.0f), new Vector2 (0.5f, 2.0f)));
+		if (menuPanel)
+			StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.5f, 1.0f), new Vector2 (0.5f, 2.0f)));
 		StartCoroutine (MoveCamera (menuCamPosition, creditsCamPosition));
 		state = State.Credits;
 	}
 
 	public void ShowMenu () {
 		StartCoroutine (SlidePanel (state == State.Credits ? creditsPanel : playPanel, new Vector2 (0.5f, 0.0f), new Vector2 (0.5f, -1.0f)));
-		StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.5f, 2.0f), new Vector2 (0.5f, 1.0f)));
+		if (menuPanel)
+			StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.5f, 2.0f), new Vector2 (0.5f, 1.0f)));
 		StartCoroutine (MoveCamera (creditsCamPosition, menuCamPosition));
 		state = State.Menu;
 	}

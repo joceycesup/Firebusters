@@ -42,7 +42,7 @@ public class FBExtinguisher : FBTool {
 			return;
 
 		if (ps.isPlaying) {
-			Debug.Log (Time.time);
+			//Debug.Log (Time.time);
 			Ray ray = new Ray ();
 			float maxDistance = float.MaxValue;
 			RaycastHit[] hits;
@@ -73,8 +73,14 @@ public class FBExtinguisher : FBTool {
 						if (hit.distance < maxDistance)
 							maxDistance = hit.distance;
 					}
-					else if (hit.rigidbody && !hit.rigidbody.isKinematic) {
-						hit.rigidbody.AddForce (transform.forward * force * forceDecrease.Evaluate (((distance + hit.distance) / (totalSpeed / division)) / psFaisceau.main.startLifetimeMultiplier), forceMode);
+					else if (hit.rigidbody) {
+						FBShatterable shatterable = hit.collider.GetComponent<FBShatterable> ();
+						if (!hit.rigidbody.isKinematic) {
+							hit.rigidbody.AddForce (transform.forward * force * forceDecrease.Evaluate (((distance + hit.distance) / (totalSpeed / division)) / psFaisceau.main.startLifetimeMultiplier), forceMode);
+						}
+						else if (shatterable != null && shatterable.dispersible) {
+							shatterable.Disperse (transform.forward * force * forceDecrease.Evaluate (((distance + hit.distance) / (totalSpeed / division)) / psFaisceau.main.startLifetimeMultiplier), forceMode);
+						}
 					}
 				}
 				foreach (RaycastHit hit in hits) {

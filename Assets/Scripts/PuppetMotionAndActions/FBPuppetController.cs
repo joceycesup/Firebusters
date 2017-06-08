@@ -221,6 +221,7 @@ public class FBPuppetController : MonoBehaviour {
 
 			//*
 			GrabItem (doorKnobReference, doorKnob, () => {
+				AkSoundEngine.PostEvent ("Play_DoorGrab", doorKnob.gameObject);
 				StartCoroutine (LetGoDoor (doorKnob));
 			});/*/
 			CharacterJoint doorKnobCJ = null;
