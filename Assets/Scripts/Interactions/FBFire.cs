@@ -43,7 +43,8 @@ public class FBFire : MonoBehaviour {
 		do {
 			factor = (endTime - Time.time) / putOutTime;
 			t.localScale = Vector3.Lerp (initialScale, Vector3.zero, 1.0f - factor);
-			fireLight.intensity *= factor;
+			if (fireLight)
+				fireLight.intensity *= factor;
 			yield return null;
 		} while (factor > 0.0f);
 
