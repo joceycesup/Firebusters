@@ -69,4 +69,8 @@ public class FBMenuHandler : MonoBehaviour {
 		cam.transform.position = end.position;
 		cam.transform.rotation = end.rotation;
 	}
+
+	public void Bullshit () {
+		Debug.LogWarning ("Bullshit!");
+	}
 }
