@@ -5,6 +5,13 @@ using UnityEditor;
 #endif
 
 [Serializable]
+public enum FBPathMode {
+	Normal = 0x01,
+	TwoWay = 0x02,
+	Revert = 0x04
+}
+
+[Serializable]
 public class FBPath :
 #if UNITY_EDITOR
 	FBEditable
@@ -62,6 +69,7 @@ public class FBPath :
 			}
 		}
 	}
+	//*
 	[SerializeField, HideInInspector]
 	private bool _open;
 	public bool open {
@@ -75,12 +83,18 @@ public class FBPath :
 			else if (OnClose != null)
 				OnClose (this);
 		}
-	}
-	[SerializeField, HideInInspector]
+	}/*
+	[SerializeField]
 	private bool _twoWays;
 	public bool twoWays {
 		get { return _twoWays; }
 		set { _twoWays = value; }
+	}//*/
+	[SerializeField]
+	private FBPathMode _mode;
+	public FBPathMode mode {
+		get { return _mode; }
+		set { _mode = value; }
 	}
 
 #if UNITY_EDITOR
@@ -138,14 +152,26 @@ public class FBPath :
 			open = tmpOpen;
 			SceneView.RepaintAll ();
 		}
+		/*
 		EditorGUI.BeginChangeCheck ();
 		bool tmpTW = EditorGUILayout.Toggle ("Two ways", twoWays);
 		if (EditorGUI.EndChangeCheck ()) {
-			//Debug.Log (tmpOpen);
 			twoWays = tmpTW;
+			SceneView.RepaintAll ();
+		}//*/
+
+		EditorGUI.BeginChangeCheck ();
+		FBPathMode tmpMode = (FBPathMode) EditorGUILayout.EnumPopup ("Mode", mode);
+		if (EditorGUI.EndChangeCheck ()) {
+			mode = tmpMode;
 			SceneView.RepaintAll ();
 		}
 		return this;
+	}
+
+	public bool CanTakePath (FBWaypoint wp) {
+		return mode == FBPathMode.TwoWay || (mode == FBPathMode.Normal ? start == wp : end == wp);
+		//return twoWays || start == wp;
 	}
 
 	public override void DrawOnScene (bool externalCall = false) {
@@ -153,9 +179,15 @@ public class FBPath :
 			return;
 		Color c = highlight ? Color.white : new Color (open ? 0.0f : 1.0f, open ? 1.0f : 0.0f, 0.0f, showingInInspector || !externalCall ? 1.0f : 0.2f);
 		spline.Draw (c, showingInInspector || !externalCall);
+		/*
 		spline.DrawArrow (c);
 		if (twoWays)
 			spline.DrawArrow (c, false);
+		/*/
+		if (mode == FBPathMode.TwoWay || mode == FBPathMode.Normal)
+			spline.DrawArrow (c, true);
+		if (mode == FBPathMode.TwoWay || mode == FBPathMode.Revert)
+			spline.DrawArrow (c, false);//*/
 	}
 #endif
 }

@@ -59,7 +59,7 @@ FBEditable
 	public FBPath GetNextPath (FBPath from) {
 		int[] openPaths = GetOpenPaths (from);
 		if (openPaths.Length == 0) {
-			if (from != null && (from.twoWays || from.start == this))
+			if (from != null && (from.CanTakePath (this)))
 				return from;
 			else
 				return null;
@@ -72,7 +72,7 @@ FBEditable
 		int count = 0;
 		for (int i = 0; i < paths.Count; ++i) {
 			if (paths[i].open && paths[i] != ignored) {
-				if (paths[i].twoWays || paths[i].start == this) {
+				if (paths[i].CanTakePath(this)) {
 					res[count] = i;
 					count++;
 				}
