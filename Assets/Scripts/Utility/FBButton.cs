@@ -13,16 +13,30 @@ public class FBButton : MonoBehaviour {
 	private Color emissiveColor;
 	private int hoverFrame = 0;
 
+	void OnEnable () {
+		SetAlbedo (Color.white);
+	}
+
+	void OnDisable () {
+		SetAlbedo (Color.gray);
+	}
+
 	void Start () {
 		mr = GetComponent<MeshRenderer> ();
 		emissiveColor = mr.material.GetColor ("_EmissionColor");
+		SetEmissive (0.0f);
+		SetAlbedo (Color.white);
 	}
 
 	public void Click () {
+		if (!enabled)
+			return;
 		onClick.Invoke ();
 	}
 
 	public void Hover () {
+		if (!enabled)
+			return;
 		if (!isHover) {
 			StartCoroutine (ResetEmissive (hoverFrame));
 		}
@@ -32,7 +46,13 @@ public class FBButton : MonoBehaviour {
 	}
 
 	void SetEmissive (float value) {
-		mr.material.SetColor ("_EmissionColor", emissiveColor * Mathf.LinearToGammaSpace (value));
+		if (mr)
+			mr.material.SetColor ("_EmissionColor", emissiveColor * Mathf.LinearToGammaSpace (value));
+	}
+
+	void SetAlbedo (Color c) {
+		if (mr)
+			mr.material.SetColor ("_Color", c);
 	}
 
 	private IEnumerator ResetEmissive (int startFrame) {
