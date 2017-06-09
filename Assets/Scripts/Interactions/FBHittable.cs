@@ -118,7 +118,7 @@ public class FBHittable : MonoBehaviour {
 		}
 	}
 
-	protected void DestroyHittable () {
+	protected void DestroyHittable (Vector3 force = new Vector3 (), ForceMode forceMode = ForceMode.Impulse) {
 		if (destructible) {
 			Transform subItemsContainer = transform.GetChild (0);
 			if (subItemsContainer.gameObject.activeInHierarchy) {
@@ -126,6 +126,7 @@ public class FBHittable : MonoBehaviour {
 					Rigidbody rb = subItemsContainer.GetChild (i).gameObject.GetComponent<Rigidbody> ();
 					if (rb)
 						rb.isKinematic = false;
+					rb.AddForce (force, forceMode);
 				}
 			}
 			else {

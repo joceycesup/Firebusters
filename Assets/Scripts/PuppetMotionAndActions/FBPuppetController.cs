@@ -221,6 +221,7 @@ public class FBPuppetController : MonoBehaviour {
 
 			//*
 			GrabItem (doorKnobReference, doorKnob, () => {
+				AkSoundEngine.PostEvent ("Play_DoorGrab", doorKnob.gameObject);
 				StartCoroutine (LetGoDoor (doorKnob));
 			});/*/
 			CharacterJoint doorKnobCJ = null;
@@ -516,7 +517,7 @@ public class FBPuppetController : MonoBehaviour {
 		Ray ray = new Ray (transform.position, cameraPosition.position - transform.position);
 		float cameraDistance = Vector3.Distance (cameraPosition.position, transform.position);
 		Debug.DrawRay (ray.origin, ray.direction * cameraDistance, Color.red);
-		if (Physics.Raycast (ray, out hit, Vector3.Distance (cameraPosition.position, transform.position), 1 << 9)) {
+		if (Physics.Raycast (ray, out hit, Vector3.Distance (cameraPosition.position, transform.position), (1 << 9) | (1 << 8))) {
 			if (cameraFactor > 1.0f) {
 				StopCoroutine ("ResetCamera");
 			}
