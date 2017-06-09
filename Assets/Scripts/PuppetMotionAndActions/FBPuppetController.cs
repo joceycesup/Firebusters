@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
@@ -142,6 +143,7 @@ public class FBPuppetController : MonoBehaviour {
 	public CharacterJointValues doorKnobReference;
 	private CharacterJointValues toolReference;
 	public static float letGoDoorDelay = 0.5f;
+	private List<Transform> doorKnobs = new List<Transform> ();
 
 	public Transform shoulder;
 	private float distanceHandShoulder;
@@ -217,7 +219,7 @@ public class FBPuppetController : MonoBehaviour {
 			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
 			actions |= FBAction.Grab;
 			doorKnob.tag = "Untagged";
-			doorKnob.transform.parent.GetComponent<Rigidbody> ().isKinematic = false;
+			doorKnob.transform.parent.GetComponent<FBDoor> ().Open ();
 
 			//*
 			GrabItem (doorKnobReference, doorKnob, () => {
@@ -534,6 +536,36 @@ public class FBPuppetController : MonoBehaviour {
 			}
 			//camera.transform.localPosition = Vector3.zero;
 			//camera.transform.LookAt (cameraTarget);
+		}
+
+		if (doorKnobs.Count > 0) {
+			FBDoor door = null;
+			bool doorKnobIsGrabbable = false;
+			foreach (Transform dk in doorKnobs) {
+				door = dk.parent.GetComponent<FBDoor> ();
+				if (door) {
+					doorKnobIsGrabbable |= Vector3.Dot (dk.forward, transform.forward) > 0.0f;
+				}
+			}
+			if (door)
+				door.CanGrabDoorKnob (doorKnobIsGrabbable);
+		}
+	}
+
+	void OnTriggerEnter (Collider c) {
+		if (!c.CompareTag ("DoorKnob"))
+			return;
+		doorKnobs.Add (c.transform);
+	}
+
+	void OnTriggerExit (Collider c) {
+		if (!c.CompareTag ("DoorKnob"))
+			return;
+		Debug.Log (c.name + " ; " + doorKnobs.Count);
+		doorKnobs.Remove (c.transform);
+		FBDoor door = c.transform.parent.GetComponent<FBDoor> ();
+		if (door && doorKnobs.Count <= 0) {
+			door.CanGrabDoorKnob (false);
 		}
 	}
 

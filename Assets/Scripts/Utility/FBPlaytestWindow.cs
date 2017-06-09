@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
+using System;
+using System.Collections;
 using UnityEngine.SceneManagement;
 
 [ExecuteInEditMode]
@@ -67,9 +68,17 @@ public class FBPlaytestWindow : MonoBehaviour {
 #endif
 
 	void Update () {
+#if KONAMI
+		if (Input.GetKeyDown ("b")) {
+			StartCoroutine (KonamiCode ("bite", () => {
+				showWindow = !showWindow;
+			}, 1.0f));
+		}
+#else
 		if (Input.GetKeyDown ("m")) {
 			showWindow = !showWindow;
 		}
+#endif
 		Cursor.visible = showWindow;
 	}
 
@@ -243,4 +252,22 @@ public class FBPlaytestWindow : MonoBehaviour {
 	 afficher le port com
 
 	 //*/
+
+#if KONAMI
+	private IEnumerator KonamiCode (string code, Action callback, float timeBetweenKeys = 0.5f) {
+		float endTime = Time.time + timeBetweenKeys;
+		int currentKey = 1;
+		while (Time.time <= endTime) {
+			if (currentKey >= code.Length)
+				break;
+			if (Input.GetKeyDown (code.Substring (currentKey, 1))) {
+				currentKey++;
+				endTime = Time.time + timeBetweenKeys;
+			}
+			yield return null;
+		}
+		if (currentKey >= code.Length)
+			callback ();
+	}
+#endif
 }

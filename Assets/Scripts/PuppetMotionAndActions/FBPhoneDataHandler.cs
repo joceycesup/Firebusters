@@ -58,7 +58,6 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	}
 
 	void Start () {
-		serialPort = new SerialPort ("COM" + comNum, 9600);
 		Debug.Log((char)10);
 		Debug.Log((char)255);
 
@@ -119,9 +118,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 
 	public void connect () {
 		Debug.Log ("Connection started");
-		if (serialPort.PortName.CompareTo ("COM" + comNum) != 0) {
-			serialPort = new SerialPort ("COM" + comNum, 9600);
-		}
+		serialPort = new SerialPort ("COM" + comNum, 9600);
 		try {
 			serialPort.Open ();
 			serialPort.ReadTimeout = 400;

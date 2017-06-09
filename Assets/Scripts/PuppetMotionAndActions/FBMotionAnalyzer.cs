@@ -283,7 +283,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			kbRotation.x = Mathf.Clamp (kbRotation.x - Input.GetAxis ("VerticalE"), -70.0f, 70.0f);
 			kbRotation.y += Input.GetAxis ("HorizontalE");
 		}
-#if UNITY_EDITOR
+#if DEBUG_ENABLED
 		//Vector3 debugFwd = Quaternion.Euler (rotation) * Vector3.forward;
 		//Debug.DrawRay (Vector3.zero, debugFwd, Color.cyan);
 #endif

@@ -30,88 +30,28 @@ public enum FBScriptedAction {
 }
 
 [Serializable]
-public class ObjectAction {
-	public FBScriptedAction Action;
-	public GameObject Target;
-	public string strArg;
-	public float Delay;
+public class ObjectEvent :
+#if UNITY_EDITOR
+	FBEditable
+#else
+	MonoBehaviour
+#endif
+	{
+	public FBTriggerEvent Event = FBTriggerEvent.Destroyed;
+	public GameObject Source;
+	public GameObject Trigger;
 
-	public ObjectAction (FBScriptedAction action = FBScriptedAction.Destroy, GameObject target = null, string args = "", float delay = -1.0f) {
-		Action = action;
-		Target = target;
-		strArg = args;
-		Delay = delay;
+	public ObjectEvent () {
+	}
+
+	public ObjectEvent (FBTriggerEvent e = FBTriggerEvent.Destroyed, GameObject source = null, GameObject trigger = null) {
+		Event = e;
+		Source = source;
+		Trigger = trigger;
 	}
 
 #if UNITY_EDITOR
-	public ObjectAction GUIField () {
-		Action = (FBScriptedAction) EditorGUILayout.EnumPopup ("Scripted action", Action);
-		if (!Target)
-			EditorGUILayout.HelpBox ("Please specify a non null object!", MessageType.Error);
-
-		switch (Action) {
-			case FBScriptedAction.Destroy:
-			case FBScriptedAction.Disable:
-			case FBScriptedAction.Enable:
-				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
-				break;
-			case FBScriptedAction.Open:
-				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
-				if (Target && !(Target.GetComponent<FBDoor> () || Target.GetComponent<FBPath> ()))
-					EditorGUILayout.HelpBox ("This object doesn't have either a FBDoor or a FBPath", MessageType.Warning);
-				break;
-			case FBScriptedAction.Close:
-				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
-				if (Target && !Target.GetComponent<FBPath> ())
-					EditorGUILayout.HelpBox ("This object doesn't have a FBPath", MessageType.Warning);
-				break;
-			case FBScriptedAction.SetDestructible:
-				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
-				if (Target && !Target.GetComponent<FBHittable> ())
-					EditorGUILayout.HelpBox ("This object doesn't have a FBHittable", MessageType.Warning);
-				break;
-			case FBScriptedAction.PlayAnimation:
-				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
-				if (Target && !Target.GetComponent<Animator> ())
-					EditorGUILayout.HelpBox ("This object doesn't have an Animator", MessageType.Warning);
-				strArg = EditorGUILayout.TextField ("Animation", strArg);
-				break;
-		}
-		Delay = EditorGUILayout.FloatField ("Delay", Delay);
-		return this;
-	}
-#endif
-}
-
-[Serializable]
-public class FBEvent {
-#if UNITY_EDITOR
-	public string Name = "";
-#endif
-	[SerializeField]
-	private FBTriggerEvent _Event;
-	public FBTriggerEvent Event { get { return _Event; } private set { _Event = value; } }
-	public GameObject _Source;
-	public GameObject Source { get { return _Source; } private set { _Source = value; } }
-	public GameObject _Trigger;
-	public GameObject Trigger { get { return _Trigger; } private set { _Trigger = value; } }
-
-	[SerializeField]
-	public List<ObjectAction> Actions = new List<ObjectAction> ();
-
-	public List<IEnumerator> Couroutines = new List<IEnumerator> ();
-
-#if UNITY_EDITOR
-	public bool showingInInspector = false;
-
-	private static string[] names = { "Hello gorgeous ;)", "Pls name me :'(", "Monde de merde...", "My name is nobody", "Chuck Norris' favorite" };
-
-	public FBEvent GUIField () {
-		EditorGUI.indentLevel++;
-		if (Name.Length <= 0)
-			Name = names[UnityEngine.Random.Range (0, names.Length)];
-		Name = EditorGUILayout.TextField ("Name", Name);
-
+	public ObjectEvent GUIField () {
 		Event = (FBTriggerEvent) EditorGUILayout.EnumPopup ("Trigger event", Event);
 
 		GameObject tmpObject = null;
@@ -168,51 +108,98 @@ public class FBEvent {
 					EditorGUILayout.HelpBox ("This object doesn't have a FBPuppetController", MessageType.Warning);
 				break;
 		}
+		return this;
+	}
+#endif
+}
+
+[Serializable]
+public class ObjectAction :
+#if UNITY_EDITOR
+	FBEditable
+#else
+	MonoBehaviour
+#endif
+	{
+	public FBScriptedAction Action = FBScriptedAction.Destroy;
+	public GameObject Target;
+	public string strArg = "";
+	public float Delay = -1.0f;
+
+	public ObjectAction () {
+	}
+
+	public ObjectAction (FBScriptedAction action = FBScriptedAction.Destroy, GameObject target = null, string args = "", float delay = -1.0f) {
+		Action = action;
+		Target = target;
+		strArg = args;
+		Delay = delay;
+	}
+
+#if UNITY_EDITOR
+	public ObjectAction GUIField () {
+		Action = (FBScriptedAction) EditorGUILayout.EnumPopup ("Scripted action", Action);
+		if (!Target)
+			EditorGUILayout.HelpBox ("Please specify a non null object!", MessageType.Error);
+
+		switch (Action) {
+			case FBScriptedAction.Destroy:
+			case FBScriptedAction.Disable:
+			case FBScriptedAction.Enable:
+				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
+				break;
+			case FBScriptedAction.Open:
+				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
+				if (Target && !(Target.GetComponent<FBDoor> () || Target.GetComponent<FBPath> ()))
+					EditorGUILayout.HelpBox ("This object doesn't have either a FBDoor or a FBPath", MessageType.Warning);
+				break;
+			case FBScriptedAction.Close:
+				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
+				if (Target && !Target.GetComponent<FBPath> ())
+					EditorGUILayout.HelpBox ("This object doesn't have a FBPath", MessageType.Warning);
+				break;
+			case FBScriptedAction.SetDestructible:
+				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
+				if (Target && !Target.GetComponent<FBHittable> ())
+					EditorGUILayout.HelpBox ("This object doesn't have a FBHittable", MessageType.Warning);
+				break;
+			case FBScriptedAction.PlayAnimation:
+				Target = (GameObject) EditorGUILayout.ObjectField ("Action target", Target, typeof (GameObject), true);
+				if (Target && !Target.GetComponent<Animator> ())
+					EditorGUILayout.HelpBox ("This object doesn't have an Animator", MessageType.Warning);
+				strArg = EditorGUILayout.TextField ("Animation", strArg);
+				break;
+		}
+		Delay = EditorGUILayout.FloatField ("Delay", Delay);
+		return this;
+	}
+#endif
+}
+
+[Serializable]
+public class FBEvent :
+#if UNITY_EDITOR
+	FBEditable
+#else
+	MonoBehaviour
+#endif
+	{
+	[SerializeField]
+	public List<ObjectEvent> Events = new List<ObjectEvent> ();
+
+	[SerializeField]
+	public List<ObjectAction> Actions = new List<ObjectAction> ();
+
+	public List<IEnumerator> Couroutines = new List<IEnumerator> ();
+
+#if UNITY_EDITOR
+	public FBEvent GUIField () {
+		EditorGUI.indentLevel++;
+		FBEditableExtensions<ObjectEvent>.GUIField (Events, gameObject);
 		//###############################################################
 		EditorGUILayout.Space ();
-		int removeIndex = -1;
-		int moveUpIndex = -1;
-		int moveDownIndex = -1;
 
-		for (int i = 0; i < Actions.Count; ++i) {
-			EditorGUILayout.BeginHorizontal ();
-			EditorGUI.EndDisabledGroup ();
-			if (GUILayout.Button ("X", GUILayout.Width (20))) {
-				removeIndex = i;
-				break;
-			}
-			EditorGUI.BeginDisabledGroup (i == 0);
-			if (GUILayout.Button ("\u25B2", GUILayout.Width (20))) {
-				moveUpIndex = i;
-				break;
-			}
-			EditorGUI.EndDisabledGroup ();
-			EditorGUI.BeginDisabledGroup (i >= Actions.Count - 1);
-			if (GUILayout.Button ("\u25BC", GUILayout.Width (20))) {
-				moveDownIndex = i;
-				break;
-			}
-			EditorGUI.EndDisabledGroup ();
-			EditorGUILayout.EndHorizontal ();
-			Actions[i].GUIField ();
-		}
-
-		if (removeIndex >= 0) {
-			Actions.RemoveAt (removeIndex);
-		}
-		else if (moveUpIndex >= 0) {
-			ObjectAction tmpAction = Actions[moveUpIndex];
-			Actions[moveUpIndex] = Actions[moveUpIndex - 1];
-			Actions[moveUpIndex - 1] = tmpAction;
-		}
-		else if (moveDownIndex >= 0) {
-			ObjectAction tmpAction = Actions[moveDownIndex];
-			Actions[moveDownIndex] = Actions[moveDownIndex + 1];
-			Actions[moveDownIndex + 1] = tmpAction;
-		}
-		if (GUILayout.Button ("Add action")) {
-			Actions.Add (new ObjectAction ());
-		}
+		FBEditableExtensions<ObjectAction>.GUIField (Actions, gameObject);
 
 		EditorGUI.indentLevel--;
 		return this;
@@ -220,7 +207,7 @@ public class FBEvent {
 #endif
 
 	public bool Setup () {
-		bool res = true;
+		bool res = true;/*
 		if (!Source || Actions.Count <= 0 || ((Event == FBTriggerEvent.Enter || Event == FBTriggerEvent.Exit) && !Trigger)) {
 			res = false;
 #if UNITY_EDITOR
@@ -238,7 +225,7 @@ public class FBEvent {
 				default:
 					break;
 			}
-		}
+		}//*/
 		return res;
 	}
 }
@@ -248,7 +235,7 @@ public class FBScriptedEvents : MonoBehaviour {
 	public List<FBEvent> zones = new List<FBEvent> ();
 
 	void Awake () {
-		foreach (FBEvent e in zones) {
+		foreach (FBEvent e in zones) {/*
 			if (e.Setup ()) {
 				switch (e.Event) {
 					case FBTriggerEvent.Enter:
@@ -276,7 +263,7 @@ public class FBScriptedEvents : MonoBehaviour {
 						e.Source.GetComponent<FBPuppetController> ().OnGrab += CheckGrab;
 						break;
 				}
-			}
+			}//*/
 		}
 	}
 
@@ -290,7 +277,7 @@ public class FBScriptedEvents : MonoBehaviour {
 	void CheckExit (GameObject source, GameObject trigger) { CheckEvent (FBTriggerEvent.Exit, source, trigger); }
 
 	void CheckEvent (FBTriggerEvent ev, GameObject source, GameObject trigger = null) {
-		foreach (FBEvent e in zones) {
+		foreach (FBEvent e in zones) {/*
 			if (e.Event != ev)
 				continue;
 			if (e.Source != source)
@@ -304,7 +291,7 @@ public class FBScriptedEvents : MonoBehaviour {
 					e.Couroutines.Add (co);
 				StartCoroutine (co);
 			}
-			break;
+			break;//*/
 		}
 	}
 

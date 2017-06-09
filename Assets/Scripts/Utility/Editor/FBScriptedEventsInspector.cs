@@ -10,64 +10,12 @@ public class FBScriptedEventsInspector : Editor {
 	}
 
 	public override void OnInspectorGUI () {
-		int removeIndex = -1;
-		int moveUpIndex = -1;
-		int moveDownIndex = -1;
-
-		EditorGUILayout.BeginHorizontal ();
-		if (GUILayout.Button ("\u25C0", GUILayout.Width (20))) {//u25B2
-			for (int i = 0; i < script.zones.Count; ++i)
-				script.zones[i].showingInInspector = false;
-		}
-		if (GUILayout.Button ("\u25B6", GUILayout.Width (20))) {//u25B2
-			for (int i = 0; i < script.zones.Count; ++i)
-				script.zones[i].showingInInspector = true;
-		}
-		EditorGUILayout.EndHorizontal ();
-
-		for (int i = 0; i < script.zones.Count; ++i) {
-			EditorGUILayout.BeginHorizontal ();
-			script.zones[i].showingInInspector = EditorGUILayout.Foldout (script.zones[i].showingInInspector, script.zones[i].Name);
-			EditorGUI.BeginDisabledGroup (i == 0);
-			if (GUILayout.Button ("\u25B2", GUILayout.Width (20))) {//u25B2
-				moveUpIndex = i;
-				break;
-			}
-			EditorGUI.EndDisabledGroup ();
-			EditorGUI.BeginDisabledGroup (i >= script.zones.Count - 1);
-			if (GUILayout.Button ("\u25BC", GUILayout.Width (20))) {//u25BC
-				moveDownIndex = i;
-				break;
-			}
-			EditorGUI.EndDisabledGroup ();
-			if (GUILayout.Button ("X", GUILayout.Width (20))) {
-				removeIndex = i;
-				break;
-			}
-			EditorGUILayout.EndHorizontal ();
-			if (script.zones[i].showingInInspector) {
-				script.zones[i].GUIField ();
-				EditorGUILayout.LabelField ("", GUI.skin.horizontalSlider);
-			}
+		DrawDefaultInspector ();
+		if (GUI.changed) {
+			EditorUtility.SetDirty (target);
 		}
 
-		if (removeIndex >= 0) {
-			script.zones.RemoveAt (removeIndex);
-		}
-		else if (moveUpIndex >= 0) {
-			FBEvent tmpEvent = script.zones[moveUpIndex];
-			script.zones[moveUpIndex] = script.zones[moveUpIndex - 1];
-			script.zones[moveUpIndex - 1] = tmpEvent;
-		}
-		else if (moveDownIndex >= 0) {
-			FBEvent tmpEvent = script.zones[moveDownIndex];
-			script.zones[moveDownIndex] = script.zones[moveDownIndex + 1];
-			script.zones[moveDownIndex + 1] = tmpEvent;
-		}
-
-		if (GUILayout.Button ("Add element")) {
-			script.zones.Add (new FBEvent ());
-		}
+		FBEditableExtensions<FBEvent>.GUIField (script.zones, script.gameObject);
 
 		if (GUI.changed) {
 			//Debug.Log ("Dirty");
