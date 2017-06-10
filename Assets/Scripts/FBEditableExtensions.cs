@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using System;
 
 public static class FBEditableExtensions<T> where T : FBEditable, new() {
 

@@ -8,13 +8,7 @@ using UnityEditor;
 #endif
 
 [Serializable]
-public class FBEvent :
-#if UNITY_EDITOR
-	FBEditable
-#else
-	MonoBehaviour
-#endif
-	{
+public class FBEvent : FBEditable {
 	[SerializeField, HideInInspector]
 	public bool repeat = true;
 

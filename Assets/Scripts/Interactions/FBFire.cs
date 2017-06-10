@@ -49,7 +49,7 @@ public class FBFire : MonoBehaviour {
 		} while (factor > 0.0f);
 
 		if (hittable) {
-			gameObject.layer = 1;
+			gameObject.layer = 0;
 			hittable.destructible = true;
 			Destroy (fireLight);
 			Destroy (transform.GetChild (0).gameObject);

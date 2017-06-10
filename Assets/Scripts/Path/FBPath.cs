@@ -12,13 +12,7 @@ public enum FBPathMode {
 }
 
 [Serializable]
-public class FBPath :
-#if UNITY_EDITOR
-	FBEditable
-#else
-	MonoBehaviour
-#endif
-	{
+public class FBPath : FBEditable {
 
 	public delegate void PathEvent (FBPath path);
 	public event PathEvent OnClose;
