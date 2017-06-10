@@ -92,6 +92,7 @@ public class FBMenuHandler : MonoBehaviour {
 		startButton.enabled = false;
 		StartCoroutine (SlidePanel (playPanel, new Vector2 (0.5f, -1.0f), new Vector2 (0.5f, 0.0f), () => {
 			menuPButton.enabled = true;
+			FBPhonesContainer.instance.Connect ();
 		}));
 		StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.5f, 2.0f), new Vector2 (0.5f, 1.0f), () => { }));
 		StartCoroutine (MoveCamera (menuCamPosition, playCamPosition));

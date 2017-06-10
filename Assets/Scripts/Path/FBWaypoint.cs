@@ -6,13 +6,7 @@ using UnityEditor;
 #endif
 
 [Serializable]
-public class FBWaypoint :
-#if UNITY_EDITOR
-FBEditable
-#else
-	MonoBehaviour
-#endif
-	{
+public class FBWaypoint : FBEditable {
 
 	public delegate void WaypointEvent (FBPath path);
 	public event WaypointEvent OnOpenPath;

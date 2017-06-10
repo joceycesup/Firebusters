@@ -101,8 +101,11 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	//-------------------- camera --------------------
-
+#if UNITY_EDITOR
 	public new Camera camera;
+#else
+	public Camera camera;
+#endif
 	public Transform cameraTarget;
 	public Transform cameraCloseTarget;
 	public Transform cameraPosition;

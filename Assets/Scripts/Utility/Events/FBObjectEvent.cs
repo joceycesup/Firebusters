@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
-using System.Collections;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -19,13 +17,7 @@ public enum FBTriggerEvent {
 }
 
 [Serializable]
-public class FBObjectEvent :
-#if UNITY_EDITOR
-	FBEditable
-#else
-	MonoBehaviour
-#endif
-	{
+public class FBObjectEvent : FBEditable {
 	public FBTriggerEvent Event = FBTriggerEvent.Destroyed;
 	public GameObject Source;
 	public GameObject Trigger;

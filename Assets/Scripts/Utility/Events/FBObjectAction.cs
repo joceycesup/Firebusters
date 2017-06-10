@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
-using System.Collections;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -19,13 +17,7 @@ public enum FBScriptedAction {
 }
 
 [Serializable]
-public class FBObjectAction :
-#if UNITY_EDITOR
-	FBEditable
-#else
-	MonoBehaviour
-#endif
-	{
+public class FBObjectAction : FBEditable {
 	public FBScriptedAction Action = FBScriptedAction.Destroy;
 	public GameObject Target;
 	public string strArg = "";

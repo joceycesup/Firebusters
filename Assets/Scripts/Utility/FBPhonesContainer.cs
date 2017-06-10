@@ -33,4 +33,12 @@ public class FBPhonesContainer : MonoBehaviour {
 #endif
 		}
 	}
+
+	public void Connect () {
+		for (int i = 0; i < sensors.Length; ++i) {
+			if (sensors[i].connected)
+				return;
+			sensors[i].connect ();
+		}
+	}
 }

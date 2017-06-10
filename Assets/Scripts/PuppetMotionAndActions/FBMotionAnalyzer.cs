@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+#if DEBUG_ENABLED
+using UnityEngine.UI;
+#endif
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -141,10 +144,11 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	}
 
 	public FBPhoneDataHandler sensor {
-		get {
-			//Debug.LogWarning ("Sensor " + isAxePuppetIndex + " : " + (isAxePuppet ? "Marius" : "Louis"));
-			return FBPhonesContainer.sensors[isAxePuppetIndex];
-		}
+#if DEBUG_ENABLED
+		get { return FBPhonesContainer.sensors == null ? null : FBPhonesContainer.sensors[isAxePuppetIndex]; }
+#else
+		get { return FBPhonesContainer.sensors[isAxePuppetIndex]; }
+#endif
 	}
 	public bool usePhoneDataHandler = true;
 	public bool useKbRight = true;
@@ -184,13 +188,21 @@ public class FBMotionAnalyzer : MonoBehaviour {
 
 	public Vector3 rotation {
 #if USEKB
+#if DEBUG_ENABLED
+		get { return usePhoneDataHandler ? (sensor != null ? sensor.orientation : Vector3.zero) : kbRotation; }
+#else
 		get { return usePhoneDataHandler ? sensor.orientation : kbRotation; }
+#endif
 #else
 		get { return sensor.orientation; }
 #endif
 	}
 	public Vector3 acceleration {
+#if DEBUG_ENABLED
+		get { return sensor != null ? sensor.cleanAcceleration : Vector3.zero; }
+#else
 		get { return sensor.cleanAcceleration; }
+#endif
 	}
 	//----- keyboard rotation -----
 	private Vector3 kbRotation;
@@ -210,6 +222,9 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public float strikeInitialAcc = 2.0f;
 	public float strikeFinalAcc = -2.0f;
 	public float strikeAngle = -20.0f;//*/
+#if DEBUG_ENABLED
+	private Text debugText;
+#endif
 
 #if UNITY_EDITOR
 	//########## debug #########
@@ -218,11 +233,25 @@ public class FBMotionAnalyzer : MonoBehaviour {
 #endif
 
 	void Awake () {
+#if DEBUG_ENABLED
+		debugText = GameObject.Find ("TextDebug").GetComponent<Text> ();
+#endif
 		walking = 0.0f;
 		isAxePuppet = isAxePuppet;//sets isAxePuppetIndex
 	}
 
 	void Update () {
+#if DEBUG_ENABLED
+		if (sensor == null) {
+			debugText.gameObject.SetActive (true);
+			Debug.Log ("Phone " + (isAxePuppet ? "Marius" : "Louis") + " not found");
+			debugText.text = "Phone not found";
+			return;
+		}
+		else {
+			debugText.gameObject.SetActive (false);
+		}
+#endif
 #if PLAYTEST
 		if (Input.GetKeyDown ("p"))
 			usePhoneDataHandler = !usePhoneDataHandler;

@@ -31,7 +31,7 @@ public class FBDoor : MonoBehaviour {
 #endif
 		if (!isLocked)
 			return;
-		gameObject.layer = 1;
+		gameObject.layer = 0;
 		GetComponent<Rigidbody> ().isKinematic = false;
 		if (OnOpen != null)
 			OnOpen (gameObject);
