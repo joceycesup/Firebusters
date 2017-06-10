@@ -23,6 +23,7 @@ public class FBPath :
 	public delegate void PathEvent (FBPath path);
 	public event PathEvent OnClose;
 	public event PathEvent OnOpen;
+	public event PathEvent OnDestroyed;
 
 	[SerializeField, HideInInspector]
 	private BezierSpline _spline;
@@ -108,6 +109,11 @@ public class FBPath :
 		end.AddPath (this);
 	}
 
+	void OnDestroy () {
+		if (OnDestroyed != null)
+			OnDestroyed (this);
+	}
+
 	public override FBEditable GUIField (string label = "") {
 		base.GUIField ();
 		EditorGUI.BeginChangeCheck ();
@@ -134,12 +140,12 @@ public class FBPath :
 			EditorGUI.EndDisabledGroup ();
 			spline = (BezierSpline) EditorGUILayout.ObjectField ("Spline", spline, typeof (BezierSpline), true);
 			GUILayout.EndHorizontal ();
-			EditorGUI.BeginChangeCheck ();
 		}
-		else {
-			EditorGUI.BeginChangeCheck ();
-			spline = (BezierSpline) EditorGUILayout.ObjectField ("Spline", spline, typeof (BezierSpline), true);
-		}
+		EditorGUI.BeginChangeCheck ();
+		BezierSpline bs = (BezierSpline) EditorGUILayout.ObjectField ("Spline", spline, typeof (BezierSpline), true);
+		if (EditorGUI.EndChangeCheck ())
+			spline = bs;
+		EditorGUI.BeginChangeCheck ();
 		start = (FBWaypoint) EditorGUILayout.ObjectField ("Start", start, typeof (FBWaypoint), true);
 		end = (FBWaypoint) EditorGUILayout.ObjectField ("End", end, typeof (FBWaypoint), true);
 		if (EditorGUI.EndChangeCheck ()) {
@@ -169,11 +175,6 @@ public class FBPath :
 		return this;
 	}
 
-	public bool CanTakePath (FBWaypoint wp) {
-		return mode == FBPathMode.TwoWay || (mode == FBPathMode.Normal ? start == wp : end == wp);
-		//return twoWays || start == wp;
-	}
-
 	public override void DrawOnScene (bool externalCall = false) {
 		if (spline == null)
 			return;
@@ -190,4 +191,9 @@ public class FBPath :
 			spline.DrawArrow (c, false);//*/
 	}
 #endif
+
+	public bool CanTakePath (FBWaypoint wp) {
+		return mode == FBPathMode.TwoWay || (mode == FBPathMode.Normal ? start == wp : end == wp);
+		//return twoWays || start == wp;
+	}
 }

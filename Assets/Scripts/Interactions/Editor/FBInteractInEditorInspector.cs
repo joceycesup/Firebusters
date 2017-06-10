@@ -21,5 +21,8 @@ public class FBInteractInEditorInspector : Editor {
 				iie.hittable.HitByAxe ();
 			}
 		}
+		if (iie.button && GUILayout.Button ("Click")) {
+			iie.button.Click ();
+		}
 	}
 }

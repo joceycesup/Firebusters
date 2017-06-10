@@ -5,6 +5,8 @@ public class FBDisplayHandler : MonoBehaviour {
 	public Canvas rightCanvas;
 
 	private void Start () {
+		AkSoundEngine.PostEvent ("Play_Music", FBGlobalSoundManager.instance);
+		AkSoundEngine.PostEvent ("Play_Fire", FBGlobalSoundManager.instance);
 #if !PLAYTEST
 		Cursor.visible = false;
 #endif
@@ -79,5 +81,9 @@ public class FBDisplayHandler : MonoBehaviour {
 #endif
 		}
 		Destroy (this);
+	}
+
+	private void OnDestroy () {
+		AkSoundEngine.SetRTPCValue ("Fire_Count", 0.0f, FBGlobalSoundManager.instance);
 	}
 }

@@ -13,11 +13,13 @@ public abstract class FBEditable : MonoBehaviour {
 	private static string[] names = { "Hello gorgeous ;)", "Pls name me :'(", "Monde de merde...", "My name is nobody", "Chuck Norris' favorite" };
 
 	public virtual FBEditable GUIField (string label = "") {
-		EditorGUI.indentLevel++;
+		EditorGUI.BeginChangeCheck ();
 		if (Name.Length <= 0)
 			Name = names[UnityEngine.Random.Range (0, names.Length)];
 		Name = EditorGUILayout.TextField ("Name", Name);
-		EditorGUI.indentLevel--;
+		if (EditorGUI.EndChangeCheck () && Name.Length > 0) {
+			name = GetType () + "_" + Name;
+		}
 		return this;
 	}
 

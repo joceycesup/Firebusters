@@ -56,12 +56,11 @@ public class FBPhoneDataHandler : MonoBehaviour {
 	private void OnEnable () {
 		connected = false;
 	}
-
+	/*
 	void Start () {
 		Debug.Log((char)10);
 		Debug.Log((char)255);
-
-	}
+}//*/
 
 	void parseValues (string av) {
 		string[] split = av.Split (',');
@@ -108,7 +107,7 @@ public class FBPhoneDataHandler : MonoBehaviour {
 					}
 					data += ((char) tmp);
 				} while (tmp != 10 && tmp != 255);
-				Debug.Log(avalues);
+				Debug.Log (avalues);
 				parseValues (avalues);
 			} catch (TimeoutException) {
 				//Debug.Log ("FBPhoneDataHandler : reached timeout");

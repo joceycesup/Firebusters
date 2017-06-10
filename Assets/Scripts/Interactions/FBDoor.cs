@@ -12,7 +12,7 @@ public class FBDoor : MonoBehaviour {
 		mr = GetComponent<MeshRenderer> ();
 		Rigidbody rb = GetComponent<Rigidbody> ();
 		rb.centerOfMass = Vector3.zero;
-		rb.inertiaTensor = Vector3.zero;
+		//rb.inertiaTensor = Vector3.zero;// new Vector3 (float.Epsilon, float.Epsilon, float.Epsilon);
 		rb.inertiaTensorRotation = Quaternion.identity;
 		emissiveColor = mr.material.GetColor ("_EmissionColor");
 		CanGrabDoorKnob (false);
@@ -31,6 +31,7 @@ public class FBDoor : MonoBehaviour {
 #endif
 		if (!isLocked)
 			return;
+		gameObject.layer = 1;
 		GetComponent<Rigidbody> ().isKinematic = false;
 		if (OnOpen != null)
 			OnOpen (gameObject);

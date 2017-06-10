@@ -9,4 +9,8 @@ public class FBInteractInEditor : MonoBehaviour {
 		get;
 		set;
 	}
+	public FBButton button {
+		get;
+		set;
+	}
 }

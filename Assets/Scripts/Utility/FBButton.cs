@@ -26,6 +26,9 @@ public class FBButton : MonoBehaviour {
 		emissiveColor = mr.material.GetColor ("_EmissionColor");
 		SetEmissive (0.0f);
 		SetAlbedo (Color.white);
+#if UNITY_EDITOR
+		gameObject.AddComponent<FBInteractInEditor> ().button = this;
+#endif
 	}
 
 	public void Click () {

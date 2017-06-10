@@ -40,11 +40,13 @@ FBEditable
 		paths.Add (path);
 		path.OnOpen += OpenPath;
 		path.OnClose += ClosePath;
+		path.OnDestroyed += RemovePath;
 	}
 	public void RemovePath (FBPath path) {
 		paths.Remove (path);
 		path.OnOpen -= OpenPath;
 		path.OnClose -= ClosePath;
+		path.OnDestroyed -= RemovePath;
 	}
 
 	public void OpenPath (FBPath path) {
@@ -72,7 +74,7 @@ FBEditable
 		int count = 0;
 		for (int i = 0; i < paths.Count; ++i) {
 			if (paths[i].open && paths[i] != ignored) {
-				if (paths[i].CanTakePath(this)) {
+				if (paths[i].CanTakePath (this)) {
 					res[count] = i;
 					count++;
 				}

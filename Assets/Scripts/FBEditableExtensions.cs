@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System;
@@ -6,6 +7,18 @@ using System;
 public static class FBEditableExtensions<T> where T : FBEditable, new() {
 
 	public static List<T> GUIField (List<T> list, GameObject attachedGameObject) {
+		if (list == null) {
+			list = new List<T> ();
+		}
+
+		List<int> removeIndexList = new List<int> ();
+		for (int i = 0; i < list.Count; ++i)
+			if (list[i] == null)
+				removeIndexList.Add (i);
+		if (removeIndexList.Count > 0)
+			for (int i = removeIndexList.Count - 1; i >= 0; --i)
+				list.RemoveAt (removeIndexList[i]);
+
 		int removeIndex = -1;
 		int moveUpIndex = -1;
 		int moveDownIndex = -1;
@@ -68,7 +81,7 @@ public static class FBEditableExtensions<T> where T : FBEditable, new() {
 			list[moveDownIndex + 1] = tmpItem;
 		}
 
-		if (GUILayout.Button ("Add element")) {
+		if (GUILayout.Button ("Add " + typeof (T).ToString ())) {
 			GameObject go = new GameObject ();
 			list.Add (go.AddComponent<T> ());
 			go.transform.SetParent (attachedGameObject.transform);
@@ -77,3 +90,4 @@ public static class FBEditableExtensions<T> where T : FBEditable, new() {
 		return list;
 	}
 }
+#endif

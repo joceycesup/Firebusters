@@ -16,21 +16,6 @@ public class FBPathsGroupInspector : Editor {
 			EditorUtility.SetDirty (group);
 		}
 
-		if (group.paths == null) {
-			group.paths = new List<FBPath> ();
-		}
-
-		if (group.paths == null) {
-			return;
-		}
-		List<int> removeIndexList = new List<int> ();
-		for (int i = 0; i < group.paths.Count; ++i)
-			if (group.paths[i] == null)
-				removeIndexList.Add (i);
-		if (removeIndexList.Count > 0)
-			for (int i = removeIndexList.Count - 1; i >= 0; --i)
-				group.paths.RemoveAt (removeIndexList[i]);
-
 		FBEditableExtensions<FBPath>.GUIField (group.paths, group.gameObject);
 	}
 

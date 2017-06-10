@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class FBMenuHandler : MonoBehaviour {
 	private enum State {
@@ -26,19 +27,39 @@ public class FBMenuHandler : MonoBehaviour {
 	public FBButton startButton;
 	private State state = State.Menu;
 
+	public GameObject LouisPaired;
+	public GameObject LouisNotPaired;
+	public GameObject MariusPaired;
+	public GameObject MariusNotPaired;
+
 	void Start () {
-		creditsPanel.pivot = new Vector2 (0.5f, -1.0f);
+		AkSoundEngine.PostEvent ("Play_MusicMenu", FBGlobalSoundManager.instance);
+		playPanel.pivot = creditsPanel.pivot = new Vector2 (0.5f, -1.0f);
 		cam.transform.position = menuCamPosition.position;
 		cam.transform.rotation = menuCamPosition.rotation;
-		menuCButton.enabled = false;
-		menuPButton.enabled = false;
-		startButton.enabled = false;
+		LouisPaired.SetActive (false);
+		MariusPaired.SetActive (false);
+	}
+
+	private void Update () {
+		if (FBPhonesContainer.sensors[0].connected) {
+			LouisNotPaired.SetActive (false);
+			LouisPaired.SetActive (true);
+		}
+		if (FBPhonesContainer.sensors[1].connected) {
+			MariusNotPaired.SetActive (false);
+			MariusPaired.SetActive (true);
+		}
+		if (state == State.Play && menuPButton.isActiveAndEnabled && FBPhonesContainer.sensors[0].connected && FBPhonesContainer.sensors[1].connected) {
+			startButton.enabled = true;
+		}
 	}
 
 	public void ShowCredits () {
 		creditsButton.enabled = false;
 		playButton.enabled = false;
 		quitButton.enabled = false;
+		menuCButton.enabled = false;
 		StartCoroutine (SlidePanel (creditsPanel, new Vector2 (0.5f, -1.0f), new Vector2 (0.5f, 0.0f), () => {
 			menuCButton.enabled = true;
 		}));
@@ -67,7 +88,9 @@ public class FBMenuHandler : MonoBehaviour {
 		creditsButton.enabled = false;
 		playButton.enabled = false;
 		quitButton.enabled = false;
-		StartCoroutine (SlidePanel (playPanel, new Vector2 (0.5f, 0.0f), new Vector2 (0.5f, -1.0f), () => {
+		menuPButton.enabled = false;
+		startButton.enabled = false;
+		StartCoroutine (SlidePanel (playPanel, new Vector2 (0.5f, -1.0f), new Vector2 (0.5f, 0.0f), () => {
 			menuPButton.enabled = true;
 		}));
 		StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.5f, 2.0f), new Vector2 (0.5f, 1.0f), () => { }));
@@ -77,6 +100,10 @@ public class FBMenuHandler : MonoBehaviour {
 
 	public void ExitGame () {
 		Application.Quit ();
+	}
+
+	public void StartGame () {
+		SceneManager.LoadScene (1);
 	}
 
 	public IEnumerator SlidePanel (RectTransform target, Vector2 start, Vector2 end, Action callback) {

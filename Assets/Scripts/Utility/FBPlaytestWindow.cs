@@ -64,22 +64,27 @@ public class FBPlaytestWindow : MonoBehaviour {
 		//Debug.LogWarning ("Start " + Application.isPlaying);
 		if (!Application.isPlaying)
 			SetPhoneDataHandlers ();
+		showWindow = false;
 	}
 #endif
 
 	void Update () {
 #if KONAMI
-		if (Input.GetKeyDown ("b")) {
-			StartCoroutine (KonamiCode ("bite", () => {
-				showWindow = !showWindow;
-			}, 1.0f));
-		}
+		KonamiCode ("bite", () => {
+			showWindow = !showWindow;
+		});
+		KonamiCode ("llz", () => {
+			SceneManager.LoadSceneAsync (0);
+		});
+		KonamiCode ("llu", () => {
+			SceneManager.LoadSceneAsync (1);
+		});
 #else
 		if (Input.GetKeyDown ("m")) {
 			showWindow = !showWindow;
 		}
 #endif
-		Cursor.visible = showWindow;
+		Cursor.visible = MariusMotion == null ? true : showWindow;
 	}
 
 	void OnGUI () {
@@ -111,15 +116,15 @@ public class FBPlaytestWindow : MonoBehaviour {
 		GUILayout.BeginHorizontal ();
 		GUILayout.Label ("Phone");
 		if (Application.isPlaying) {
-			if (MariusMotion.sensor.connected == LouisMotion.sensor.connected) {
-				if (GUILayout.Button ((MariusMotion.sensor.connected ? "Stop" : "Start") + " Both")) {
-					if (MariusMotion.sensor.connected) {
-						MariusMotion.sensor.close ();
-						LouisMotion.sensor.close ();
+			if (FBPhonesContainer.sensors[1].connected == FBPhonesContainer.sensors[0].connected) {
+				if (GUILayout.Button ((FBPhonesContainer.sensors[1].connected ? "Stop" : "Start") + " Both")) {
+					if (FBPhonesContainer.sensors[1].connected) {
+						FBPhonesContainer.sensors[1].close ();
+						FBPhonesContainer.sensors[0].close ();
 					}
 					else {
-						MariusMotion.sensor.connect ();
-						LouisMotion.sensor.connect ();
+						FBPhonesContainer.sensors[1].connect ();
+						FBPhonesContainer.sensors[0].connect ();
 					}
 				}
 			}
@@ -138,71 +143,73 @@ public class FBPlaytestWindow : MonoBehaviour {
 			GUI.enabled = tmpEnabled;
 			GUILayout.Label ("Marius");
 			tmpBGColor = GUI.backgroundColor;
-			GUI.backgroundColor = MariusMotion.sensor.connected ? Color.green : Color.red;
+			GUI.backgroundColor = FBPhonesContainer.sensors[1].connected ? Color.green : Color.red;
 			{
 				tmpEnabled = GUI.enabled;
 				GUI.enabled = false;
 				GUILayout.BeginVertical (GUI.skin.textArea);
 				GUI.enabled = tmpEnabled;
-				MariusMotion.usePhoneDataHandler = GUILayout.Toggle (MariusMotion.usePhoneDataHandler, "Marius use phone");
+				if (MariusMotion)
+					MariusMotion.usePhoneDataHandler = GUILayout.Toggle (MariusMotion.usePhoneDataHandler, "Marius use phone");
 
 				GUILayout.BeginHorizontal ();
 #if SENSODUINO
 				GUILayout.Label ("COM : ");
-				int tmp = IntField (MariusMotion.sensor.comNum, GUILayout.Width (20));
-				if (tmp != MariusMotion.sensor.comNum) {
-					MariusMotion.sensor.comNum = tmp;
+				int tmp = IntField (FBPhonesContainer.sensors[1].comNum, GUILayout.Width (20));
+				if (tmp != FBPhonesContainer.sensors[1].comNum) {
+					FBPhonesContainer.sensors[1].comNum = tmp;
 #else
 				GUILayout.Label ("ID : ");
-				int tmp = IntField (MariusMotion.sensor.id, GUILayout.Width (20));
-				if (tmp != MariusMotion.sensor.id) {
-					MariusMotion.sensor.id = tmp;
+				int tmp = IntField (FBPhonesContainer.sensors[1].id, GUILayout.Width (20));
+				if (tmp != FBPhonesContainer.sensors[1].id) {
+					FBPhonesContainer.sensors[1].id = tmp;
 #endif
-					if (MariusMotion.sensor.connected) {
-						MariusMotion.sensor.close ();
-						MariusMotion.sensor.connect ();
+					if (FBPhonesContainer.sensors[1].connected) {
+						FBPhonesContainer.sensors[1].close ();
+						FBPhonesContainer.sensors[1].connect ();
 					}
 				}
-				if (GUILayout.Button ((MariusMotion.sensor.connected ? "Stop" : "Start") + " Connection")) {
-					if (MariusMotion.sensor.connected)
-						MariusMotion.sensor.close ();
+				if (GUILayout.Button ((FBPhonesContainer.sensors[1].connected ? "Stop" : "Start") + " Connection")) {
+					if (FBPhonesContainer.sensors[1].connected)
+						FBPhonesContainer.sensors[1].close ();
 					else
-						MariusMotion.sensor.connect ();
+						FBPhonesContainer.sensors[1].connect ();
 				}
 				GUILayout.EndHorizontal ();
 				GUILayout.EndVertical ();
 			}
-			GUI.backgroundColor = LouisMotion.sensor.connected ? Color.green : Color.red;
+			GUI.backgroundColor = FBPhonesContainer.sensors[0].connected ? Color.green : Color.red;
 			GUILayout.Label ("Louis");
 			{
 				tmpEnabled = GUI.enabled;
 				GUI.enabled = false;
 				GUILayout.BeginVertical (GUI.skin.textArea);
 				GUI.enabled = tmpEnabled;
-				LouisMotion.usePhoneDataHandler = GUILayout.Toggle (LouisMotion.usePhoneDataHandler, "Louis use phone");
+				if (LouisMotion)
+					LouisMotion.usePhoneDataHandler = GUILayout.Toggle (LouisMotion.usePhoneDataHandler, "Louis use phone");
 
 				GUILayout.BeginHorizontal ();
 #if SENSODUINO
 				GUILayout.Label ("COM : ");
-				int tmp = IntField (LouisMotion.sensor.comNum, GUILayout.Width (20));
-				if (tmp != LouisMotion.sensor.comNum) {
-					LouisMotion.sensor.comNum = tmp;
+				int tmp = IntField (FBPhonesContainer.sensors[0].comNum, GUILayout.Width (20));
+				if (tmp != FBPhonesContainer.sensors[0].comNum) {
+					FBPhonesContainer.sensors[0].comNum = tmp;
 #else
 				GUILayout.Label ("ID : ");
-				int tmp = IntField (LouisMotion.sensor.id, GUILayout.Width (20));
-				if (tmp != LouisMotion.sensor.id) {
-					LouisMotion.sensor.id = tmp;
+				int tmp = IntField (FBPhonesContainer.sensors[0].id, GUILayout.Width (20));
+				if (tmp != FBPhonesContainer.sensors[0].id) {
+					FBPhonesContainer.sensors[0].id = tmp;
 #endif
-					if (LouisMotion.sensor.connected) {
-						LouisMotion.sensor.close ();
-						LouisMotion.sensor.connect ();
+					if (FBPhonesContainer.sensors[0].connected) {
+						FBPhonesContainer.sensors[0].close ();
+						FBPhonesContainer.sensors[0].connect ();
 					}
 				}
-				if (GUILayout.Button ((LouisMotion.sensor.connected ? "Stop" : "Start") + " Connection")) {
-					if (LouisMotion.sensor.connected)
-						LouisMotion.sensor.close ();
+				if (GUILayout.Button ((FBPhonesContainer.sensors[0].connected ? "Stop" : "Start") + " Connection")) {
+					if (FBPhonesContainer.sensors[0].connected)
+						FBPhonesContainer.sensors[0].close ();
 					else
-						LouisMotion.sensor.connect ();
+						FBPhonesContainer.sensors[0].connect ();
 				}
 				GUILayout.EndHorizontal ();
 				GUI.backgroundColor = tmpBGColor;
@@ -254,7 +261,12 @@ public class FBPlaytestWindow : MonoBehaviour {
 	 //*/
 
 #if KONAMI
-	private IEnumerator KonamiCode (string code, Action callback, float timeBetweenKeys = 0.5f) {
+	private void KonamiCode (string code, Action callback, float timeBetweenKeys = 0.5f) {
+		if (Input.GetKeyDown (code.Substring (0, 1))) {
+			StartCoroutine (CKonamiCode (code, callback, timeBetweenKeys));
+		}
+	}
+	private IEnumerator CKonamiCode (string code, Action callback, float timeBetweenKeys = 0.5f) {
 		float endTime = Time.time + timeBetweenKeys;
 		int currentKey = 1;
 		while (Time.time <= endTime) {
