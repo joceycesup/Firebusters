@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+[RequireComponent (typeof (Canvas))]
 public class FBMenuHandler : MonoBehaviour {
 	private enum State {
 		Menu,
@@ -10,7 +12,7 @@ public class FBMenuHandler : MonoBehaviour {
 		Credits
 	}
 
-	public Canvas canvas;
+	private Canvas canvas;
 	public RectTransform creditsPanel;
 	public RectTransform playPanel;
 	public RectTransform menuPanel;
@@ -32,9 +34,15 @@ public class FBMenuHandler : MonoBehaviour {
 	public GameObject MariusPaired;
 	public GameObject MariusNotPaired;
 
+	private AsyncOperation gameLoading;
+	public Image loadImage;
+	public float minLoadRotation = 0.0f;
+	public float maxLoadRotation = 360.0f;
+
 	void Start () {
 		AkSoundEngine.PostEvent ("Play_MusicMenu", FBGlobalSoundManager.instance);
-		playPanel.pivot = creditsPanel.pivot = new Vector2 (0.5f, -1.0f);
+		canvas = GetComponent<Canvas> ();
+		playPanel.position = creditsPanel.position = new Vector2 (0.0f, canvas.pixelRect.height);
 		cam.transform.position = menuCamPosition.position;
 		cam.transform.rotation = menuCamPosition.rotation;
 		LouisPaired.SetActive (false);
@@ -55,33 +63,35 @@ public class FBMenuHandler : MonoBehaviour {
 		}
 	}
 
-	public void ShowCredits () {
-		creditsButton.enabled = false;
-		playButton.enabled = false;
-		quitButton.enabled = false;
-		menuCButton.enabled = false;
-		StartCoroutine (SlidePanel (creditsPanel, new Vector2 (0.5f, -1.0f), new Vector2 (0.5f, 0.0f), () => {
-			menuCButton.enabled = true;
-		}));
-		if (menuPanel)
-			StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.5f, 1.0f), new Vector2 (0.5f, 2.0f), () => { }));
-		StartCoroutine (MoveCamera (menuCamPosition, creditsCamPosition));
-		state = State.Credits;
-	}
-
 	public void ShowMenu () {
 		menuCButton.enabled = false;
 		menuPButton.enabled = false;
 		startButton.enabled = false;
-		StartCoroutine (SlidePanel (state == State.Credits ? creditsPanel : playPanel, new Vector2 (0.5f, 0.0f), new Vector2 (0.5f, -1.0f), () => {
+		StartCoroutine (SlidePanel (state == State.Credits ? creditsPanel : playPanel, new Vector2 (0.0f, 0.0f), new Vector2 (0.0f, canvas.pixelRect.height), () => {
 			creditsButton.enabled = true;
 			playButton.enabled = true;
 			quitButton.enabled = true;
 		}));
 		if (menuPanel)
-			StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.5f, 2.0f), new Vector2 (0.5f, 1.0f), () => { }));
+			StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.0f, -canvas.pixelRect.height), new Vector2 (0.0f, 0.0f), () => { }));
 		StartCoroutine (MoveCamera (state == State.Credits ? creditsCamPosition : playCamPosition, menuCamPosition));
 		state = State.Menu;
+	}
+
+	public void ShowCredits () {
+		creditsButton.enabled = false;
+		playButton.enabled = false;
+		quitButton.enabled = false;
+		menuCButton.enabled = false;
+		menuPButton.enabled = false;
+		startButton.enabled = false;
+		StartCoroutine (SlidePanel (creditsPanel, new Vector2 (0.0f, canvas.pixelRect.height), new Vector2 (0.0f, 0.0f), () => {
+			menuCButton.enabled = true;
+		}));
+		if (menuPanel)
+			StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.0f, 0), new Vector2 (0.0f, -canvas.pixelRect.height), () => { }));
+		StartCoroutine (MoveCamera (menuCamPosition, creditsCamPosition));
+		state = State.Credits;
 	}
 
 	public void ShowPlay () {
@@ -90,11 +100,12 @@ public class FBMenuHandler : MonoBehaviour {
 		quitButton.enabled = false;
 		menuPButton.enabled = false;
 		startButton.enabled = false;
-		StartCoroutine (SlidePanel (playPanel, new Vector2 (0.5f, -1.0f), new Vector2 (0.5f, 0.0f), () => {
+		StartCoroutine (SlidePanel (playPanel, new Vector2 (0.0f, canvas.pixelRect.height), new Vector2 (0.0f, 0.0f), () => {
 			menuPButton.enabled = true;
 			FBPhonesContainer.instance.Connect ();
 		}));
-		StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.5f, 2.0f), new Vector2 (0.5f, 1.0f), () => { }));
+		if (menuPanel)
+			StartCoroutine (SlidePanel (menuPanel, new Vector2 (0.0f, 0), new Vector2 (0.0f, -canvas.pixelRect.height), () => { }));
 		StartCoroutine (MoveCamera (menuCamPosition, playCamPosition));
 		state = State.Play;
 	}
@@ -104,20 +115,33 @@ public class FBMenuHandler : MonoBehaviour {
 	}
 
 	public void StartGame () {
-		SceneManager.LoadScene (1);
+		menuPButton.enabled = false;
+		startButton.enabled = false;
+		gameLoading = SceneManager.LoadSceneAsync (1);
+		StartCoroutine (GameLoading ());
 	}
 
-	public IEnumerator SlidePanel (RectTransform target, Vector2 start, Vector2 end, Action callback) {
-		float startTime = Time.time;
-		while (Time.time < startTime + slideDelay) {
-			target.pivot = Vector2.Lerp (start, end, (Time.time - startTime) / slideDelay);
+	private IEnumerator GameLoading () {
+		loadImage.transform.rotation = Quaternion.identity;
+		loadImage.transform.parent.gameObject.SetActive (true);
+		while (!gameLoading.isDone) {
+			loadImage.transform.rotation = Quaternion.Euler (0.0f, 0.0f, Mathf.Lerp (minLoadRotation, maxLoadRotation, gameLoading.progress));
 			yield return null;
 		}
-		target.pivot = end;
+	}
+
+	private IEnumerator SlidePanel (RectTransform target, Vector2 start, Vector2 end, Action callback) {
+		float startTime = Time.time;
+		while (Time.time < startTime + slideDelay) {
+			//target.pivot = Vector2.Lerp (start, end, (Time.time - startTime) / slideDelay);
+			target.position = Vector2.Lerp (start, end, (Time.time - startTime) / slideDelay);
+			yield return null;
+		}
+		target.position = end;
 		callback ();
 	}
 
-	public IEnumerator MoveCamera (Transform start, Transform end) {
+	private IEnumerator MoveCamera (Transform start, Transform end) {
 		float startTime = Time.time;
 		while (Time.time < startTime + slideDelay) {
 			cam.transform.position = Vector3.Slerp (start.position, end.position, (Time.time - startTime) / slideDelay);

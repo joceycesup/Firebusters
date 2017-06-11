@@ -17,7 +17,7 @@ public class FBDoor : MonoBehaviour {
 		emissiveColor = mr.material.GetColor ("_EmissionColor");
 		CanGrabDoorKnob (false);
 		if (!isLocked)
-			Open ();
+			Open (true);
 	}
 
 	public void CanGrabDoorKnob (bool value) {
@@ -25,14 +25,14 @@ public class FBDoor : MonoBehaviour {
 			mr.material.SetColor ("_EmissionColor", emissiveColor * Mathf.LinearToGammaSpace (value ? emissiveWhenGrabbable : 0.0f));
 	}
 
-	public void Open () {
+	public void Open (bool start = false) {
 #if DEBUG_ENABLED
 		Debug.Log ("Door " + name + " try open");
 #endif
-		if (!isLocked)
+		if (!isLocked && !start)
 			return;
 		gameObject.layer = 0;
-		GetComponent<Rigidbody> ().isKinematic = false;
+		GetComponent<Rigidbody> ().isKinematic = start;
 		if (OnOpen != null)
 			OnOpen (gameObject);
 		isLocked = false;

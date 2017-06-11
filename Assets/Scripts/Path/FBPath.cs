@@ -110,11 +110,18 @@ public class FBPath : FBEditable {
 
 	public override FBEditable GUIField (string label = "") {
 		base.GUIField ();
+		GUILayout.BeginHorizontal ();
 		EditorGUI.BeginChangeCheck ();
 		highlight = GUILayout.Button ("Show");
 		if (EditorGUI.EndChangeCheck ()) {
 			SceneView.RepaintAll ();
 		}
+		if (GUILayout.Button ("Rename")) {
+			Name = start.Name + "_" + end.Name;
+			spline.name = "Spline_" + Name;
+			name = GetType () + "_" + Name;
+		}
+		GUILayout.EndHorizontal ();
 
 		start = _start;
 		end = _end;

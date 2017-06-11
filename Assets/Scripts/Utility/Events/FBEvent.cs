@@ -25,6 +25,9 @@ public class FBEvent : FBEditable {
 	public override FBEditable GUIField (string label = "") {
 		base.GUIField ();
 		repeat = EditorGUILayout.Toggle ("Repeat", repeat);
+		if (GUILayout.Button ("Trigger")) {
+			TriggerActions ();
+		}
 		EditorGUI.indentLevel++;
 		FBEditableExtensions<FBObjectEvent>.GUIField (Events, gameObject);
 		//###############################################################
@@ -107,6 +110,9 @@ public class FBEvent : FBEditable {
 	void CheckExit (GameObject source, GameObject trigger) { CheckEvent (FBTriggerEvent.Exit, source, trigger); }
 
 	void CheckEvent (FBTriggerEvent ev, GameObject source, GameObject trigger = null) {
+#if DEBUG_ENABLED
+		Debug.Log ("Checking event " + ev.ToString () + " from " + source + " in " + Name);
+#endif
 		FBObjectEvent found = null;
 		if (Events.Count <= 0)
 			return;
@@ -126,9 +132,23 @@ public class FBEvent : FBEditable {
 			if (Events.Count > 0)
 				return;
 		}
+		TriggerActions ();
+	}
+
+	private IEnumerator DestroyAfter (float delay) {
+		if (delay > 0.0f)
+			yield return new WaitForSeconds (delay);
+		Destroy (gameObject);
+	}
+
+	private void TriggerActions () {
 		float maxDelay = -1.0f;
 		foreach (FBObjectAction action in Actions) {
-			IEnumerator co = TriggerAction (action);
+			if (action.Target == null) {
+				Destroy (action.gameObject);
+				continue;
+			}
+			IEnumerator co = TriggerAction (action, !repeat);
 			if (action.Delay > maxDelay)
 				maxDelay = action.Delay;
 			if (action.Delay > 0.0f)
@@ -140,13 +160,7 @@ public class FBEvent : FBEditable {
 			StartCoroutine (DestroyAfter (maxDelay));
 	}
 
-	private IEnumerator DestroyAfter (float delay) {
-		if (delay > 0.0f)
-			yield return new WaitForSeconds (delay);
-		Destroy (gameObject);
-	}
-
-	private IEnumerator TriggerAction (FBObjectAction a) {
+	private IEnumerator TriggerAction (FBObjectAction a, bool destroyAfterExecution = true) {
 		if (a.Delay > 0.0f)
 			yield return new WaitForSeconds (a.Delay);
 		switch (a.Action) {
@@ -184,5 +198,7 @@ public class FBEvent : FBEditable {
 					SceneManager.LoadSceneAsync (a.strArg);
 				break;
 		}
+		if (destroyAfterExecution)
+			Destroy (a.gameObject);
 	}
 }
