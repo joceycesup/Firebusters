@@ -9,12 +9,13 @@ public class FBCat : MonoBehaviour {
 	}
 
 	void Update () {
-		float value = -8000;
+		float value = float.MaxValue;
 		foreach (FBPuppetController characatar in chars) {
 			float distance = Vector3.Distance (transform.position, characatar.transform.position);
 			if (distance < value)
 				value = distance;
 		}
 		AkSoundEngine.SetRTPCValue ("Cattenuation", value, gameObject);
+		//Debug.Log ("Cattenuation_RTPC : " + value.ToString ("F2"));
 	}
 }
