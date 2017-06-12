@@ -50,6 +50,9 @@ public class FBMenuHandler : MonoBehaviour {
 	}
 
 	private void Update () {
+#if KONAMI
+		FBPlaytestWindow.KonamiCode ("start", () => { startButton.enabled = true; });
+#endif
 		if (FBPhonesContainer.sensors[0].connected) {
 			LouisNotPaired.SetActive (false);
 			LouisPaired.SetActive (true);
@@ -122,12 +125,13 @@ public class FBMenuHandler : MonoBehaviour {
 	}
 
 	private IEnumerator GameLoading () {
-		loadImage.transform.rotation = Quaternion.identity;
+		loadImage.transform.rotation = Quaternion.Euler (0.0f, 0.0f, minLoadRotation);
 		loadImage.transform.parent.gameObject.SetActive (true);
 		while (!gameLoading.isDone) {
 			loadImage.transform.rotation = Quaternion.Euler (0.0f, 0.0f, Mathf.Lerp (minLoadRotation, maxLoadRotation, gameLoading.progress));
 			yield return null;
 		}
+		loadImage.transform.rotation = Quaternion.Euler (0.0f, 0.0f, maxLoadRotation);
 	}
 
 	private IEnumerator SlidePanel (RectTransform target, Vector2 start, Vector2 end, Action callback) {

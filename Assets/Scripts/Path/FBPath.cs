@@ -91,8 +91,6 @@ public class FBPath : FBEditable {
 		get { return _mode; }
 		set { _mode = value; }
 	}
-
-#if UNITY_EDITOR
 	public bool highlight {
 		get;
 		private set;
@@ -107,6 +105,13 @@ public class FBPath : FBEditable {
 		if (OnDestroyed != null)
 			OnDestroyed (this);
 	}
+
+	public bool CanTakePath (FBWaypoint wp) {
+		return mode == FBPathMode.TwoWay || (mode == FBPathMode.Normal ? start == wp : end == wp);
+		//return twoWays || start == wp;
+	}
+
+#if UNITY_EDITOR
 
 	public override FBEditable GUIField (string label = "") {
 		base.GUIField ();
@@ -192,9 +197,4 @@ public class FBPath : FBEditable {
 			spline.DrawArrow (c, false);//*/
 	}
 #endif
-
-	public bool CanTakePath (FBWaypoint wp) {
-		return mode == FBPathMode.TwoWay || (mode == FBPathMode.Normal ? start == wp : end == wp);
-		//return twoWays || start == wp;
-	}
 }

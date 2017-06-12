@@ -6,6 +6,7 @@ public class FBPuppetJointInspector : Editor {
 	private FBPuppetJoint joint;
 	private float breakDistance;
 	private float rebindDistance;
+	private float disableDistance;
 
 	private void OnEnable () {
 		joint = (FBPuppetJoint) target;
@@ -37,5 +38,16 @@ public class FBPuppetJointInspector : Editor {
 			joint.rebindSqrDistance = rebindDistance * rebindDistance;
 		else if (joint.rebindSqrDistance != rebindDistance * rebindDistance)
 			rebindDistance = Mathf.Sqrt (joint.rebindSqrDistance);
+		
+		EditorGUI.BeginChangeCheck ();
+		joint.disableColliderSqrDistance = Mathf.Max (EditorGUILayout.FloatField ("Disable collider square distance", joint.disableColliderSqrDistance), float.Epsilon);
+		if (EditorGUI.EndChangeCheck ())
+			disableDistance = Mathf.Sqrt (joint.disableColliderSqrDistance);
+		EditorGUI.BeginChangeCheck ();
+		disableDistance = Mathf.Max (EditorGUILayout.FloatField ("Disable collider distance", disableDistance), float.Epsilon);
+		if (EditorGUI.EndChangeCheck ())
+			joint.disableColliderSqrDistance = disableDistance * disableDistance;
+		else if (joint.disableColliderSqrDistance != disableDistance * disableDistance)
+			disableDistance = Mathf.Sqrt (joint.disableColliderSqrDistance);
 	}
 }

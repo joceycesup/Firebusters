@@ -9,6 +9,9 @@ using UnityEditor;
 
 [Serializable]
 public class FBEvent : FBEditable {
+	public delegate void TriggerEvent (GameObject source);
+	public event TriggerEvent OnTrigger;
+
 	[SerializeField, HideInInspector]
 	public bool repeat = true;
 
@@ -95,6 +98,9 @@ public class FBEvent : FBEditable {
 					case FBTriggerEvent.Grab:
 						oe.Source.GetComponent<FBPuppetController> ().OnGrab += CheckGrab;
 						break;
+					case FBTriggerEvent.Trigger:
+						oe.Source.GetComponent<FBEvent> ().OnTrigger += CheckTrigger;
+						break;
 				}
 			}
 		}//*/
@@ -108,19 +114,20 @@ public class FBEvent : FBEditable {
 	void CheckGrab (GameObject go) { CheckEvent (FBTriggerEvent.Grab, go); }
 	void CheckEnter (GameObject source, GameObject trigger) { CheckEvent (FBTriggerEvent.Enter, source, trigger); }
 	void CheckExit (GameObject source, GameObject trigger) { CheckEvent (FBTriggerEvent.Exit, source, trigger); }
+	void CheckTrigger (GameObject source) { CheckEvent (FBTriggerEvent.Trigger, source); }
 
-	void CheckEvent (FBTriggerEvent ev, GameObject source, GameObject trigger = null) {
+	void CheckEvent (FBTriggerEvent ev, GameObject source, GameObject trigger = null) {/*
 #if DEBUG_ENABLED
 		Debug.Log ("Checking event " + ev.ToString () + " from " + source + " in " + Name);
-#endif
+#endif//*/
 		FBObjectEvent found = null;
 		if (Events.Count <= 0)
 			return;
 		foreach (FBObjectEvent oe in Events) {
 			if (oe.Event != ev || oe.Source != source)
-				return;
+				continue;
 			if ((oe.Event == FBTriggerEvent.Enter || oe.Event == FBTriggerEvent.Exit) && oe.Trigger != trigger)
-				return;
+				continue;
 			found = oe;
 			break;
 		}
@@ -142,6 +149,8 @@ public class FBEvent : FBEditable {
 	}
 
 	private void TriggerActions () {
+		if (OnTrigger != null)
+			OnTrigger (gameObject);
 		float maxDelay = -1.0f;
 		foreach (FBObjectAction action in Actions) {
 			if (action.Target == null) {

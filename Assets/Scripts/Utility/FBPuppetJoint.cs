@@ -5,6 +5,7 @@ using System.Collections;
 [RequireComponent (typeof (Rigidbody)), RequireComponent (typeof (Collider))]
 public class FBPuppetJoint : MonoBehaviour {
 	private Rigidbody attachedObject;
+	private int initialLayer;
 	private CharacterJoint cj;
 	private CharacterJointValues cjv;
 	private Rigidbody rb;
@@ -24,8 +25,11 @@ public class FBPuppetJoint : MonoBehaviour {
 	public float breakSqrDistance = Mathf.Infinity;
 	[HideInInspector]
 	public float rebindSqrDistance = Mathf.Epsilon;
+	[HideInInspector]
+	public float disableColliderSqrDistance = Mathf.Infinity;
 
 	void Start () {
+		initialLayer = gameObject.layer;
 		rb = GetComponent<Rigidbody> ();
 		cj = GetComponent<CharacterJoint> ();
 		attachedObject = cj.connectedBody;
@@ -56,17 +60,16 @@ public class FBPuppetJoint : MonoBehaviour {
 			}
 		}
 		else if (cj == null) {
-			if (sqrDistance <= rebindSqrDistance)
+			if (sqrDistance <= rebindSqrDistance) {
+				gameObject.layer = initialLayer;
 				Rebind ();
+			}
 			else {
+				gameObject.layer = (sqrDistance >= disableColliderSqrDistance) ? 1 : initialLayer;
 				deltaAnchor = anchor.position - transform.position;
 				rb.velocity += -lastVelocity + (lastVelocity = deltaAnchor.normalized * Mathf.Min ((deltaAnchor.magnitude / distanceFactor) * speed, maxSpeed));
 				rb.AddForce (deltaAnchor * impulseFactor, ForceMode.Impulse);
 				rb.AddForce (Physics.gravity * rb.mass * dampenGravity);
-#if DEBUG_ENABLED
-				Debug.DrawLine (attachedObject.position, anchor.position);
-				//Debug.Log (lastVelocity.magnitude + " ; " + (deltaAnchor * impulseFactor).magnitude);
-#endif
 			}
 		}
 	}

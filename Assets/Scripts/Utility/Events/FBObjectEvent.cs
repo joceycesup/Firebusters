@@ -13,7 +13,8 @@ public enum FBTriggerEvent {
 	Open,
 	PutOut,
 	Draw,
-	Grab
+	Grab,
+	Trigger
 }
 
 [Serializable]
@@ -88,6 +89,14 @@ public class FBObjectEvent : FBEditable {
 					Source = tmpObject;
 				if (tmpObject && !tmpObject.GetComponent<FBPuppetController> ())
 					EditorGUILayout.HelpBox ("This object doesn't have a FBPuppetController", MessageType.Warning);
+				break;
+			case FBTriggerEvent.Trigger:
+				EditorGUI.BeginChangeCheck ();
+				tmpObject = (GameObject) EditorGUILayout.ObjectField ("Event source", Source, typeof (GameObject), true);
+				if (EditorGUI.EndChangeCheck ())
+					Source = tmpObject;
+				if (tmpObject && !tmpObject.GetComponent<FBEvent> ())
+					EditorGUILayout.HelpBox ("This object doesn't have a FBEvent", MessageType.Warning);
 				break;
 		}
 		return this;

@@ -5,6 +5,12 @@ using UnityEngine.SceneManagement;
 
 [ExecuteInEditMode]
 public class FBPlaytestWindow : MonoBehaviour {
+	private static FBPlaytestWindow _instance;
+	public static FBPlaytestWindow instance {
+		get { return _instance; }
+		private set { if (_instance == null) _instance = value; }
+	}
+
 	public Rect windowRect0 = new Rect (20, 20, 300, 200);
 	private bool showWindow = true;
 	public Rect margin = Rect.zero;
@@ -21,6 +27,7 @@ public class FBPlaytestWindow : MonoBehaviour {
 	private static bool instanciated = false;
 
 	void Awake () {
+		instance = this;
 #if !PLAYTEST
 		Destroy (this);
 #endif
@@ -95,6 +102,10 @@ public class FBPlaytestWindow : MonoBehaviour {
 	void DoMyWindow (int windowID) {
 		intFieldID = 0;
 		bounds = new Rect (GUI.skin.window.border.left + margin.x, GUI.skin.window.border.top + margin.y, windowRect0.width - margin.x - margin.width - GUI.skin.window.border.horizontal, windowRect0.height - margin.y - margin.height - GUI.skin.window.border.vertical);
+		float buttonSize = 17.0f;
+		if (GUI.Button (new Rect (windowRect0.width - buttonSize, 0, buttonSize, buttonSize), "x"))
+			showWindow = false;
+
 		GUILayout.BeginArea (bounds);
 
 		if (Application.isEditor)
@@ -261,9 +272,9 @@ public class FBPlaytestWindow : MonoBehaviour {
 	 //*/
 
 #if KONAMI
-	private void KonamiCode (string code, Action callback, float timeBetweenKeys = 0.5f) {
+	public static void KonamiCode (string code, Action callback, float timeBetweenKeys = 0.5f) {
 		if (Input.GetKeyDown (code.Substring (0, 1))) {
-			StartCoroutine (CKonamiCode (code, callback, timeBetweenKeys));
+			instance.StartCoroutine (instance.CKonamiCode (code, callback, timeBetweenKeys));
 		}
 	}
 	private IEnumerator CKonamiCode (string code, Action callback, float timeBetweenKeys = 0.5f) {

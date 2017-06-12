@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 
 public class FBInteractInEditor : MonoBehaviour {
 	public FBFire fire {
@@ -13,4 +14,9 @@ public class FBInteractInEditor : MonoBehaviour {
 		get;
 		set;
 	}
+	public FBDoor door {
+		get;
+		set;
+	}
 }
+#endif

@@ -10,6 +10,8 @@ public class FBDoor : MonoBehaviour {
 
 	void Start () {
 		mr = GetComponent<MeshRenderer> ();
+		if (mr == null)
+			mr = GetComponentInChildren<MeshRenderer> ();
 		Rigidbody rb = GetComponent<Rigidbody> ();
 		rb.centerOfMass = Vector3.zero;
 		//rb.inertiaTensor = Vector3.zero;// new Vector3 (float.Epsilon, float.Epsilon, float.Epsilon);
@@ -18,6 +20,11 @@ public class FBDoor : MonoBehaviour {
 		CanGrabDoorKnob (false);
 		if (!isLocked)
 			Open (true);
+		else
+			GetComponent<Rigidbody> ().isKinematic = true;
+#if UNITY_EDITOR
+		gameObject.AddComponent<FBInteractInEditor> ().door = this;
+#endif
 	}
 
 	public void CanGrabDoorKnob (bool value) {
@@ -31,11 +38,17 @@ public class FBDoor : MonoBehaviour {
 #endif
 		if (!isLocked && !start)
 			return;
-		gameObject.layer = 0;
-		GetComponent<Rigidbody> ().isKinematic = start;
 		if (OnOpen != null)
 			OnOpen (gameObject);
+		gameObject.layer = 13;//Door layer, doesn't interact with VerticalObstacle
+		GetComponent<Rigidbody> ().isKinematic = start;
 		isLocked = false;
 		//Destroy (this);
+	}
+
+	private void OnCollisionEnter (Collision collision) {
+		if (collision.gameObject.layer != 13 || collision.gameObject.GetComponent<FBDoor> ())
+			return;
+		GetComponent<Rigidbody> ().isKinematic = true;
 	}
 }

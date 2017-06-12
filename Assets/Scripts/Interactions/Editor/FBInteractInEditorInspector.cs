@@ -24,5 +24,8 @@ public class FBInteractInEditorInspector : Editor {
 		if (iie.button && GUILayout.Button ("Click")) {
 			iie.button.Click ();
 		}
+		if (iie.door && GUILayout.Button ("Open")) {
+			iie.door.Open ();
+		}
 	}
 }

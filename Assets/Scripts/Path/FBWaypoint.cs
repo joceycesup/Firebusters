@@ -17,13 +17,13 @@ public class FBWaypoint : FBEditable {
 	private void Awake () {
 #if !UNITY_EDITOR
 		Destroy (GetComponent<MeshRenderer> ());
-		}
-#else
+#endif
 		paths = new List<FBPath> ();
 		if (Name.Length <= 0)
 			Name = name;
 	}
 
+#if UNITY_EDITOR
 	public override FBEditable GUIField (string label = "") {
 		base.GUIField ();
 		return this;
