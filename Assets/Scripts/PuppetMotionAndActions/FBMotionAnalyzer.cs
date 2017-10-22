@@ -187,14 +187,10 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	public AnimationCurve pitchFactor = AnimationCurve.EaseInOut (0.2f, 0.0f, 1.0f, 1.0f);
 
 	public Vector3 rotation {
-#if USEKB
 #if DEBUG_ENABLED
 		get { return usePhoneDataHandler ? (sensor != null ? sensor.orientation : Vector3.zero) : kbRotation; }
 #else
 		get { return usePhoneDataHandler ? sensor.orientation : kbRotation; }
-#endif
-#else
-		get { return sensor.orientation; }
 #endif
 	}
 	public Vector3 acceleration {
@@ -241,6 +237,8 @@ public class FBMotionAnalyzer : MonoBehaviour {
 	}
 
 	void Update () {
+		if (Time.timeScale <= 0.0f)
+			return;
 #if DEBUG_ENABLED
 		if (sensor == null) {
 			debugText.gameObject.SetActive (true);
@@ -279,9 +277,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			if (TestMask (FBAction.Grab)) {
 				DetectMotionStart (grabMotion, () => OnGrab ());
 			}
-#if USEKB
 			kbRotation = sensor.orientation;
-#endif
 		}
 		else {
 			float horizontal = Input.GetAxis ("Horizontal" + (useKbRight ? "R" : "L"));
@@ -335,9 +331,7 @@ public class FBMotionAnalyzer : MonoBehaviour {
 			walking = Mathf.Sign (sensor.orientation.x) * rollFactor.Evaluate (sensor.orientation.x / maxRoll);
 			//walking = Mathf.Sign (sensor.orientation.x) * rollFactor.Evaluate (Mathf.Abs (sensor.orientation.x / maxRoll));
 
-#if USEKB
 			kbRotation = sensor.orientation;
-#endif
 		}
 		else {
 			walking = Input.GetAxis ("Vertical" + (useKbRight ? "R" : "L"));

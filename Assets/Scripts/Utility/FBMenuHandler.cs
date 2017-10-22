@@ -41,6 +41,7 @@ public class FBMenuHandler : MonoBehaviour {
 
 	void Start () {
 		AkSoundEngine.PostEvent ("Play_MusicMenu", FBGlobalSoundManager.instance);
+		FBGlobals.ResetCursor (FBGlobals.CursorLayer.Menu);
 		canvas = GetComponent<Canvas> ();
 		playPanel.position = creditsPanel.position = new Vector2 (0.0f, canvas.pixelRect.height);
 		cam.transform.position = menuCamPosition.position;

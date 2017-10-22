@@ -14,6 +14,8 @@ public class SplineWalker : MonoBehaviour {
 	private bool goingForward = true;
 
 	private void Update () {
+		if (Time.timeScale <= 0.0f)
+			return;
 		if (goingForward) {
 			progress += Time.deltaTime / duration;
 			if (progress > 1f) {

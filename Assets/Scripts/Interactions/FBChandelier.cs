@@ -10,7 +10,7 @@ public class FBChandelier : MonoBehaviour {
 		AkSoundEngine.PostEvent ("Play_Squeak", gameObject);
 	}
 
-	void Update () {
+	void FixedUpdate () {
 		if (lastVelocity.z * rb.velocity.z < 0.0f && rb.velocity.z < 0.0f) {
 			AkSoundEngine.SetRTPCValue ("Angle_Lustre", Vector3.Angle (Vector3.up, transform.up), gameObject);
 		}

@@ -9,7 +9,7 @@ public class FBTutoHandler : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		Cursor.visible = false;
+		FBGlobals.ResetCursor ();
 		trolleyFire.OnPutOut += EnableTrolley;
 		trolley.OnDestroyed += EnableStairs;
 	}

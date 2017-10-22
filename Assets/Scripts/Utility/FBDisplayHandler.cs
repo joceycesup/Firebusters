@@ -7,9 +7,7 @@ public class FBDisplayHandler : MonoBehaviour {
 	private void Start () {
 		AkSoundEngine.PostEvent ("Play_Music", FBGlobalSoundManager.instance);
 		AkSoundEngine.PostEvent ("Play_Fire", FBGlobalSoundManager.instance);
-#if !PLAYTEST
-		Cursor.visible = false;
-#endif
+
 		Camera fstCamera = null;
 		Camera sndCamera = null;
 		foreach (Camera cam in Camera.allCameras) {

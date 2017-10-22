@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 
 [Serializable]
@@ -72,6 +73,8 @@ public struct CharacterJointValues {
 	public CharacterJoint characterJoint;
 	public Quaternion relativeRotation;
 
+	public Transform transform { get { return gameObject.transform; } }
+
 	public CharacterJointValues (CharacterJoint cj) {
 		//Debug.Log ("Creating CJV on " + cj.gameObject);
 
@@ -133,5 +136,23 @@ public struct CharacterJointValues {
 		characterJoint.enableCollision = EnableCollision;
 
 		return characterJoint;
+	}
+
+	public CharacterJoint Join (MonoBehaviour callingObject, Rigidbody target, CharacterJoint lastJoint, float delay, Action callback) {
+		CharacterJointValues reference = this;
+		UnityEngine.Object.Destroy (lastJoint);
+		Quaternion tmpRot = reference.transform.rotation;
+		reference.transform.rotation = target.transform.rotation * reference.relativeRotation;
+		lastJoint = reference.CreateJoint (reference.gameObject, target);
+		reference.transform.rotation = tmpRot;
+
+		float grabSpeed = Vector3.Distance (lastJoint.connectedAnchor, reference.connectedAnchor) / delay;
+		callingObject.StartCoroutine (FBCoroutinesLibrary.DoItAfter ((dt) => {
+			float factor = (grabSpeed * dt) / Vector3.Distance (lastJoint.connectedAnchor, reference.connectedAnchor);
+			reference.Lerp (lastJoint, factor);
+		}, () => {
+			callback ();
+		}, delay));
+		return lastJoint;
 	}
 }

@@ -64,6 +64,8 @@ public class SplineDecorator : MonoBehaviour {
 	}
 
 	void Update () {
+		if (Time.timeScale <= 0.0f)
+			return;
 		if (precision <= 0 || items == null || items.Length == 0 || overlap <= 0.0f) {
 			return;
 		}

@@ -55,6 +55,8 @@ public class FBPuppetWalker : MonoBehaviour {
 	}
 
 	void Update () {
+		if (Time.timeScale <= 0.0f)
+			return;
 		//walking = Input.GetAxis ("Forward");
 		//walking = Input.GetAxis ("VerticalL");
 

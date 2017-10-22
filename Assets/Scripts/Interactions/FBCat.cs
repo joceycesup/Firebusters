@@ -9,6 +9,8 @@ public class FBCat : MonoBehaviour {
 	}
 
 	void Update () {
+		if (Time.timeScale <= 0.0f)
+			return;
 		float value = float.MaxValue;
 		foreach (FBPuppetController characatar in chars) {
 			float distance = Vector3.Distance (transform.position, characatar.transform.position);

@@ -76,6 +76,10 @@ public class FBPlaytestWindow : MonoBehaviour {
 #endif
 
 	void Update () {
+		if (Time.timeScale <= 0.0f)
+			return;
+		if (Input.GetKeyDown (KeyCode.Escape))
+			FBPause.Pause ();
 #if KONAMI
 		KonamiCode ("bite", () => {
 			showWindow = !showWindow;
@@ -91,7 +95,7 @@ public class FBPlaytestWindow : MonoBehaviour {
 			showWindow = !showWindow;
 		}
 #endif
-		Cursor.visible = MariusMotion == null ? true : showWindow;
+		FBGlobals.SetCursorLayer (FBGlobals.CursorLayer.DebugPanel, MariusMotion == null ? true : showWindow);
 	}
 
 	void OnGUI () {

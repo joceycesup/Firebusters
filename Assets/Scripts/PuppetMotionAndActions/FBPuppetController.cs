@@ -225,38 +225,10 @@ public class FBPuppetController : MonoBehaviour {
 			doorKnob.transform.parent.GetComponent<FBDoor> ().Open ();
 
 			//*
-			GrabItem (doorKnobReference, doorKnob, () => {
+			leftHandCJ = doorKnobReference.Join (this, doorKnob, leftHandCJ, grabDelay, () => {
 				AkSoundEngine.PostEvent ("Play_DoorGrab", doorKnob.gameObject);
 				StartCoroutine (LetGoDoor (doorKnob));
-			});/*/
-			CharacterJoint doorKnobCJ = null;
-			Destroy (leftHandCJ);
-			doorKnobCJ = AttachItem (doorKnob.gameObject, doorKnobReference, leftHand, () => {
-				StartCoroutine (DoItLater (() => {
-					doorKnob.tag = "DoorKnob";
-					Destroy (doorKnobCJ);
-					GrabItem (toolReference, toolBottom, () => {
-						actions &= ~FBAction.Grab;
-						motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
-						Debug.Log (FBAction.Grab + " available");
-					});
-				}, 1.0f));
 			});
-			//*/
-			   /*
-			   StartCoroutine (DoItLater (() => {
-				   GrabItem (toolReference, toolBottom, () => {
-					   actions &= ~FBAction.Grab;
-					   motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
-					   Debug.Log (FBAction.Grab + " available");
-				   });
-			   }, 1.0f));//*/
-
-
-
-
-
-
 		}
 	}
 
@@ -289,7 +261,7 @@ public class FBPuppetController : MonoBehaviour {
 			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Sheathe | FBAction.Walk | FBAction.Aim);
 			actions &= ~(FBAction.Draw | FBAction.Aim);
 			actions |= FBAction.Sheathe;
-			StartCoroutine (DoItLater (() => {
+			StartCoroutine (FBCoroutinesLibrary.DoItLater (() => {
 				actions &= ~FBAction.Sheathe;
 				tool.isKinematic = false;
 				tool.constraints = RigidbodyConstraints.None;
@@ -311,7 +283,7 @@ public class FBPuppetController : MonoBehaviour {
 			}
 			tool.velocity = Vector3.zero;
 			toolTip.Enable ();
-			StartCoroutine (DoItAfter ((dt) => {
+			StartCoroutine (FBCoroutinesLibrary.DoItAfter ((dt) => {
 				Vector3 right = Vector3.Normalize (Vector3.ProjectOnPlane (tool.transform.right, Vector3.up));
 				tool.AddForce ((transform.forward * strikeBladeDirection.z + right * strikeBladeDirection.x) * dt * bladeForce, ForceMode.Impulse);
 				toolBottom.AddForce ((strikeBottomDirection.x * right + strikeBottomDirection.z * transform.forward) * dt * bottomForce, ForceMode.Impulse);
@@ -324,7 +296,7 @@ public class FBPuppetController : MonoBehaviour {
 				motion.ToggleAbilities (FBAction.Grab | FBAction.Walk);
 				Debug.Log ("Ended action " + FBAction.Strike);
 			}, strikeDuration));
-			StartCoroutine (DoItLater (() => {
+			StartCoroutine (FBCoroutinesLibrary.DoItLater (() => {
 				actions &= ~FBAction.Strike;
 				motion.ToggleAbilities (FBAction.Strike);
 				Debug.Log (FBAction.Strike + " available");
@@ -350,35 +322,12 @@ public class FBPuppetController : MonoBehaviour {
 				Debug.Log ("Thowing " + carriedItem);
 				Debug.Log ("Started action " + FBAction.Throw);
 				actions |= FBAction.Throw;
-				StartCoroutine (DoItLater (() => {
+				StartCoroutine (FBCoroutinesLibrary.DoItLater (() => {
 					actions &= ~FBAction.Throw;
 					Debug.Log ("Ended action " + FBAction.Throw);
 				}, 0.5f));
 			}
 		}
-	}
-
-	private IEnumerator DoItLater (Action callback, float delay = 0.0f) {
-		yield return new WaitForSeconds (delay);
-		callback ();
-	}
-
-	private IEnumerator DoItAfter (Action<float> a, Action callback, float delay = 0.0f) {
-		float endTime = Time.time + delay;
-		StartCoroutine (DoWhileThen (
-			(dt) => { return Time.time < endTime; },
-			a,
-			callback
-			));
-		yield return null;
-	}
-
-	private IEnumerator DoWhileThen (Func<float, bool> predicate, Action<float> a, Action callback) {
-		do {
-			a (Time.deltaTime);
-			yield return null;
-		} while (predicate (Time.deltaTime));
-		callback ();
 	}
 
 	private IEnumerator LetGoDoor (Rigidbody doorKnob) {
@@ -393,7 +342,7 @@ public class FBPuppetController : MonoBehaviour {
 			yield return null;
 		}
 		doorKnob.tag = "DoorKnob";
-		GrabItem (toolReference, toolBottom, () => {
+		leftHandCJ = toolReference.Join (this, toolBottom, leftHandCJ, grabDelay, () => {
 			actions &= ~FBAction.Grab;
 			motion.ToggleAbilities (FBAction.Grab | FBAction.Draw | FBAction.Strike);
 			Debug.Log (FBAction.Grab + " available");
@@ -401,63 +350,19 @@ public class FBPuppetController : MonoBehaviour {
 	}
 
 	private void GrabItem (CharacterJointValues reference, Rigidbody target, Action callback) {
-		Debug.Log ("GrabItem : " + target);/*
-		if (!leftHandCJ)
-			return;//*/
-
-		Transform leftHandTransform = leftHand.transform;
-		Destroy (leftHandCJ);
-		Quaternion tmpRot = leftHandTransform.rotation;
-		leftHandTransform.rotation = target.transform.rotation * reference.relativeRotation;
-		leftHandCJ = reference.CreateJoint (leftHandTransform.gameObject, target);
-		leftHandTransform.rotation = tmpRot;
-
-		float grabSpeed = Vector3.Distance (leftHandCJ.connectedAnchor, reference.connectedAnchor) / grabDelay;
-		StartCoroutine (DoItAfter ((dt) => {
-			float factor = (grabSpeed * dt) / Vector3.Distance (leftHandCJ.connectedAnchor, reference.connectedAnchor);
-			reference.Lerp (leftHandCJ, factor);
-		}, () => {
-			//reference.Apply (leftHandCJ);
-
-			callback ();
-		}, grabDelay));
-	}
-
-	private CharacterJoint AttachItem (GameObject source, CharacterJointValues reference, Rigidbody target, Action callback) {
-		Debug.Log ("AttachItem : " + target + " to " + source);
-
-		CharacterJoint cj = null;
-		Transform originalTransform = source.transform;
-		Quaternion tmpRot = originalTransform.rotation;
-		originalTransform.rotation = target.transform.rotation * reference.relativeRotation;
-		cj = reference.CreateJoint (source, target);
-		originalTransform.rotation = tmpRot;
-
-		float grabSpeed = Vector3.Distance (cj.connectedAnchor, reference.connectedAnchor) / grabDelay;
-		StartCoroutine (DoItAfter ((dt) => {
-			float factor = (grabSpeed * dt) / Vector3.Distance (cj.connectedAnchor, reference.connectedAnchor);
-			reference.Lerp (cj, factor);
-		}, () => {
-			//reference.Apply (cj);
-
-			callback ();
-		}, grabDelay));
-
-		return cj;
+		leftHandCJ = reference.Join (this, target, leftHandCJ, grabDelay, callback);
 	}
 
 	//-------------------- game loops --------------------
 
 	private void Awake () {
-#if USEKB
-		Debug.Log ("Using keyboard on " + (motion.isAxePuppet ? "axe" : "extinguisher") + " puppet");
-#endif
 		if (motion == null)
 			motion = GetComponent<FBMotionAnalyzer> ();
 		toolTip = tool.transform.GetChild (0).GetComponent<FBTool> ();
 		detectionSphere = GetComponent<SphereCollider> ();
 		toolBottom = tool.transform.GetChild (1).gameObject.GetComponent<Rigidbody> ();
 		leftHandCJ = leftHand.GetComponents<CharacterJoint> ()[1];
+		doorKnobReference.gameObject = leftHand.gameObject;
 		toolReference = new CharacterJointValues (leftHandCJ);
 		cameraPosition = camera.transform.parent;
 
@@ -478,7 +383,9 @@ public class FBPuppetController : MonoBehaviour {
 		yRotation = transform.rotation.eulerAngles.y;
 	}
 
-	void Update () {/*
+	void Update () {
+		if (Time.timeScale <= 0.0f)
+			return;/*
 		if (leftHand) {
 			Debug.Log (Quaternion.Angle (leftHand.transform.rotation, toolBottom.transform.rotation));
 		}//*/
