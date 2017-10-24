@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using UnityEngine;
 
 [Serializable]
@@ -154,5 +153,25 @@ public struct CharacterJointValues {
 			callback ();
 		}, delay));
 		return lastJoint;
+	}
+
+	public CharacterJoint Reset (MonoBehaviour callingObject, CharacterJoint targetJoint, float delay, Action callback) {
+		CharacterJointValues reference = this;
+		targetJoint.connectedBody = ConnectedBody;
+		targetJoint.axis = Axis;
+		targetJoint.autoConfigureConnectedAnchor = AutoConfigureConnectedAnchor;
+		characterJoint.swingAxis = SwingAxis;
+		targetJoint.breakForce = BreakForce;
+		targetJoint.breakTorque = BreakTorque;
+		targetJoint.enableCollision = EnableCollision;
+
+		float endTime = Time.time + delay;
+		callingObject.StartCoroutine (FBCoroutinesLibrary.DoItAfter ((dt) => {
+			float factor = (endTime - Time.time) / delay;
+			reference.Lerp (targetJoint, factor);
+		}, () => {
+			callback ();
+		}, delay));
+		return targetJoint;
 	}
 }
